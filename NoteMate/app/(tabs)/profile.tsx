@@ -151,12 +151,12 @@ const Profile = () => {
 
       const data = await response.json();
       if (!response.ok)
-        throw new Error(data.message || "Failed to delete book");
+        throw new Error(data.message || "Failed to delete trip plan");
 
       const updatedBooks = books.filter((book) => book._id !== bookId);
       setBooks(updatedBooks);
       calculateStats(updatedBooks);
-      Alert.alert("Success", "Book deleted successfully");
+      Alert.alert("Success", "Trip plan deleted successfully");
     } catch (error) {
       Alert.alert(
         "Error",
@@ -226,11 +226,11 @@ const Profile = () => {
     }
   };
 
-   const handleEditPress = (bookId: string) => {
+  const handleEditPress = (bookId: string) => {
     // router.push(`/(page)/detail?id=${bookId}`)
     console.log("Book edit: ", bookId);
-    
-   router.push({ pathname: 'edit', params: { id: bookId } })
+
+    router.push({ pathname: "edit", params: { id: bookId } });
   };
 
   const renderBookItem = ({ item }: { item: any }) => (
@@ -246,7 +246,7 @@ const Profile = () => {
           {new Date(item.createdAt).toLocaleDateString()}
         </Text>
       </View>
-      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+      <View style={{ flexDirection: "row", alignItems: "center" }}>
         <TouchableOpacity
           style={styles.deleteButton}
           onPress={() => confirmDelete(item._id)}
@@ -273,7 +273,7 @@ const Profile = () => {
     <View style={styles.container}>
       <View style={styles.profileHeader}>
         {/* Avatar and buttons in a vertical column */}
-        <View style={{ alignItems: 'center', marginRight: 16 }}>
+        <View style={{ alignItems: "center", marginRight: 16 }}>
           {newAvatar ? (
             <Image source={{ uri: newAvatar }} style={styles.avatar} />
           ) : (
@@ -284,17 +284,28 @@ const Profile = () => {
             />
           )}
           {/* Two buttons in a horizontal row below avatar */}
-          <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 8, gap: 12 }}>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "center",
+              marginTop: 8,
+              gap: 12,
+            }}
+          >
             <TouchableOpacity onPress={handlePickAvatar}>
               <Ionicons name="image-outline" size={24} color={colors.primary} />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => router.push("/setting") }>
-              <Ionicons name="settings-outline" size={24} color={colors.primary} />
+            <TouchableOpacity onPress={() => router.push("/setting")}>
+              <Ionicons
+                name="settings-outline"
+                size={24}
+                color={colors.primary}
+              />
             </TouchableOpacity>
           </View>
         </View>
         {/* User info in a separate column */}
-        <View style={{ flex: 1, justifyContent: 'center' }}>
+        <View style={{ flex: 1, justifyContent: "center" }}>
           <Text style={styles.username}>{userInfo?.username}</Text>
           <Text style={styles.email}>{userInfo?.email}</Text>
           <View style={{ marginTop: 8 }}>
@@ -308,7 +319,7 @@ const Profile = () => {
 
       <View style={styles.booksHeader}>
         <Text style={styles.bookTitle}>Your Recommendations</Text>
-        <Text style={styles.booksCount}>{books?.length} books</Text>
+        <Text style={styles.booksCount}>{books?.length} trips</Text>
       </View>
 
       <FlatList

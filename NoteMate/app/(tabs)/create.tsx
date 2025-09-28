@@ -129,7 +129,7 @@ const Create = () => {
       if (!response.ok) {
         throw new Error(data.message || "Something went wrong");
       }
-      Alert.alert("Success", "Book recommendation added successfully!");
+      Alert.alert("Success", "Trip plan recommendation added successfully!");
       setTitle("");
       setCaption("");
       setImage("");
@@ -137,7 +137,7 @@ const Create = () => {
       setRating(3);
       router.push("/");
     } catch (error) {
-      console.log("Error submitting book recommendation:", error);
+      console.log("Error submitting trip plan recommendation:", error);
       const errorMessage =
         error instanceof Error && error.message
           ? error.message
@@ -191,16 +191,16 @@ const Create = () => {
       >
         <View style={styles.card}>
           <View style={styles.header}>
-            <Text style={styles.title}>Add Book Recommendation</Text>
+            <Text style={styles.title}>Add Trip Plan Recommendation</Text>
             <Text style={styles.subtitle}>
-              Share your favorite reads with others
+              Share your trip plan with others
             </Text>
           </View>
 
           <View style={styles.form}>
-            {/* Book title */}
+            {/* Trip title */}
             <View style={styles.formGroup}>
-              <Text style={styles.label}>Book Title</Text>
+              <Text style={styles.label}>Trip Title</Text>
               <View style={styles.inputContainer}>
                 <Ionicons
                   name="book-outline"
@@ -211,7 +211,7 @@ const Create = () => {
 
                 <TextInput
                   style={styles.input}
-                  placeholder="Enter book title"
+                  placeholder="Enter trip title"
                   placeholderTextColor={colors.placeholderText}
                   value={title}
                   onChangeText={setTitle}
@@ -230,7 +230,7 @@ const Create = () => {
 
             {/* IMAGE */}
             <View style={styles.formGroup}>
-              <Text style={styles.label}>Book Cover Image</Text>
+              <Text style={styles.label}>Trip Cover Image</Text>
               <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
                 {image ? (
                   <Image source={{ uri: image }} style={styles.previewImage} />

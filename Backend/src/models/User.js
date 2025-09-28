@@ -5,7 +5,7 @@ const userSchema = new mongoose.Schema(
   {
     username: {
       type: String,
-      require: true,
+      required: true,
       unique: true,
     },
     email: {
@@ -18,6 +18,7 @@ const userSchema = new mongoose.Schema(
       require: true,
       minlength: 6,
     },
+    googleId: { type: String, unique: true, sparse: true },
     profileImage: {
       type: String,
       default:

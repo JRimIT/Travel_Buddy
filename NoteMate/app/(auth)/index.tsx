@@ -19,6 +19,11 @@ import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../../contexts/ThemeContext";
 import createLoginStyles from "../../assets/styles/login.styles";
 
+// Google Auth
+import * as Google from "expo-auth-session/providers/google";
+import * as WebBrowser from "expo-web-browser";
+WebBrowser.maybeCompleteAuthSession();
+
 const Login = () => {
   const { colors, theme, setTheme } = useTheme();
   const styles = createLoginStyles(colors);
@@ -26,7 +31,19 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   // const [isLoading, setIsLoading] = useState(false);
-  const { user, isLoading, login, isCheckingAuth } = useAuthStore();
+  // const { user, isLoading, login, isCheckingAuth } = useAuthStore();
+  const { user, isLoading, login, isCheckingAuth, loginWithGoogle } =
+    useAuthStore();
+
+  // Google sign-in
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    androidClientId:
+      "767810819511-rlgj58da677pbms1eqpbd36qlqf380hl.apps.googleusercontent.com",
+    iosClientId:
+      "767810819511-aus5dh8nl8utpefg6r1kk336vgidh7k0.apps.googleusercontent.com",
+    clientId:
+      "767810819511-9djkodonnna2l9jq9on6q8l929ji4d9r.apps.googleusercontent.com",
+  });
 
   const handleLogin = async () => {
     const result = await login(email, password);
@@ -76,7 +93,6 @@ const Login = () => {
                 />
               </View>
             </View>
-
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Password</Text>
               <View style={styles.inputContainer}>
@@ -103,7 +119,6 @@ const Login = () => {
                 />
               </View>
             </View>
-
             <TouchableOpacity
               style={styles.button}
               onPress={handleLogin}
@@ -115,7 +130,24 @@ const Login = () => {
                 <Text style={styles.buttonText}>Login</Text>
               )}
             </TouchableOpacity>
-
+            {/* Google Login Button */}
+            <TouchableOpacity
+              style={[
+                styles.button,
+                { backgroundColor: "#fff", flexDirection: "row", gap: 8 },
+              ]}
+              onPress={() => promptAsync()}
+              // disabled={!request}
+            >
+              <Image
+                source={require("../../assets/images/ggicon.jpg")}
+                style={{ width: 20, height: 20 }}
+              />
+              <Text style={{ color: "#000", fontWeight: "600" }}>
+                Sign in with Google
+              </Text>
+            </TouchableOpacity>
+            {/*  */}
             <View style={styles.footer}>
               <Text style={styles.footerText}>Don t have an account? </Text>
               <Link href="/signup" asChild>

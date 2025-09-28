@@ -349,38 +349,42 @@ const Home = () => {
               : books
         }
         keyExtractor={(item: any) => item._id}
-        renderItem={searchText ? ({ item }: any) => (
-          <TouchableOpacity
-            onPress={() => handleDetailPress(item._id)}
-            style={styles.bookCard}
-          >
-            <View style={styles.bookHeader}>
-              <View style={styles.userInfo}>
-                <Image
-                  source={{ uri: item.user.profileImage }}
-                  style={styles.avatar}
-                />
-                <Text style={styles.username}>{item.user.username}</Text>
-              </View>
-            </View>
-            <View style={styles.bookImageContainer}>
-              <Image
-                source={{ uri: item.image }}
-                style={styles.bookImage}
-              />
-            </View>
-            <View style={styles.bookDetails}>
-              <Text style={styles.bookTitle}>{item.title}</Text>
-              <View style={styles.ratingContainer}>
-                {renderRatingStars(item.rating)}
-              </View>
-              <Text style={styles.caption}>{item.caption}</Text>
-              <Text style={styles.date}>
-                Shared on {formatPublishDate(item.createdAt)}
-              </Text>
-            </View>
-          </TouchableOpacity>
-        ) : renderItem}
+        renderItem={
+          searchText
+            ? ({ item }: any) => (
+                <TouchableOpacity
+                  onPress={() => handleDetailPress(item._id)}
+                  style={styles.bookCard}
+                >
+                  <View style={styles.bookHeader}>
+                    <View style={styles.userInfo}>
+                      <Image
+                        source={{ uri: item.user.profileImage }}
+                        style={styles.avatar}
+                      />
+                      <Text style={styles.username}>{item.user.username}</Text>
+                    </View>
+                  </View>
+                  <View style={styles.bookImageContainer}>
+                    <Image
+                      source={{ uri: item.image }}
+                      style={styles.bookImage}
+                    />
+                  </View>
+                  <View style={styles.bookDetails}>
+                    <Text style={styles.bookTitle}>{item.title}</Text>
+                    <View style={styles.ratingContainer}>
+                      {renderRatingStars(item.rating)}
+                    </View>
+                    <Text style={styles.caption}>{item.caption}</Text>
+                    <Text style={styles.date}>
+                      Shared on {formatPublishDate(item.createdAt)}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              )
+            : renderItem
+        }
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -396,19 +400,21 @@ const Home = () => {
         ListHeaderComponent={
           searchText ? null : (
             <View style={styles.header}>
-              <Text style={styles.headerTitle}>Book Note</Text>
-              <Text style={styles.headerSubtitle}>Note it. Mate it. Done.</Text>
+              <Text style={styles.headerTitle}>Travel Buddy</Text>
+              <Text style={styles.headerSubtitle}>
+                Plan Now. Travel Wow. Done.
+              </Text>
             </View>
           )
         }
         ListFooterComponent={
-          searchText ? null : (hasMore && books.length > 0 ? (
+          searchText ? null : hasMore && books.length > 0 ? (
             <ActivityIndicator
               style={styles.footerLoader}
               size="large"
               color={colors.primary}
             />
-          ) : null)
+          ) : null
         }
         ListEmptyComponent={
           searchText ? (

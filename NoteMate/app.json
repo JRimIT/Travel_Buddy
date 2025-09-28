@@ -1,15 +1,15 @@
 {
   "expo": {
-    "name": "NoteMate",
+    "name": "TravelBuddy",
     "slug": "NoteMate",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/logo.png",
+    "icon": "./assets/logoTB.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "scheme": "NoteMate",
     "splash": {
-      "image": "./assets/logo.png",
+      "image": "./assets/logoTB.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -18,17 +18,14 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/logo.png",
+        "foregroundImage": "./assets/logoTB.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true
     },
     "web": {
-      "favicon": "./assets/logo.png"
+      "favicon": "./assets/logoTB.png"
     },
-    "plugins": [
-      "expo-audio",
-      "expo-router"
-    ]
+    "plugins": ["expo-audio", "expo-router"]
   }
 }
