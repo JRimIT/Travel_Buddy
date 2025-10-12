@@ -107,13 +107,9 @@ const Detail = () => {
   
 
     if (!result.canceled) {
-      const uri = result.assets[0].uri;
-      const formData = new FormData();
-      formData.append("image", {
-        uri,
-        name: "photo.jpg",
-        type: "image/jpeg",
-      } as any);
+    const uri = result.assets[0].uri;
+    const formData = new FormData();
+    formData.append("image", { uri, name: "photo.jpg", type: "image/jpeg" } as any);
 
       try {
         setLoading(true);
@@ -173,28 +169,19 @@ const Detail = () => {
             />
           </View>
 
-          {
-            bookUserId !== userRequestId ? (
-              <Text style={{ color: COLORS.textSecondary, marginBottom: 10 }}>
-                Bạn không có quyền chỉnh sửa ghi chú này.
-              </Text>
-            ) : (
-                    <View style={style.footer}>
-                      <TouchableOpacity style={styles.AIbutton} onPress={pickImage}>
-                        <Image
-                          source={require("../../assets/images/i.png")}
-                          style={style.AIicon}
-                          />
-                        <Text style={style.AIlabel}>NOTE AI</Text>
-                      </TouchableOpacity>
-                          <AiVoice note={note} setNote={setNote} />
-
-                    </View>
-            )
-          }
-
-          
-
+          {bookUserId !== userRequestId ? (
+            <Text style={{ color: COLORS.textSecondary, marginBottom: 10 }}>
+              Bạn không có quyền chỉnh sửa ghi chú này.
+            </Text>
+          ) : (
+            <View style={style.footer}>
+              <TouchableOpacity style={styles.AIbutton} onPress={pickImage}>
+                <Image source={require("../../assets/images/i.png")} style={style.AIicon} />
+                <Text style={style.AIlabel}>NOTE AI</Text>
+              </TouchableOpacity>
+              <AiVoice note={note} setNote={handleChange} />
+            </View>
+          )}
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
