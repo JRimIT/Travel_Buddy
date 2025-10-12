@@ -76,6 +76,26 @@ const createDetailStyles = (colors: ThemeType) =>
       paddingHorizontal: 10,
       borderRadius: 10,
     },
+    compareContainer: {
+    marginTop: 20,
+    padding: 12,
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  transportRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f1f1f1",
+  },
+  mode: { fontSize: 16, fontWeight: "600", color: "#276ef1" },
+  time: { fontSize: 15, color: "#374151" },
+  distance: { fontSize: 15, fontWeight: "500", color: "#111827" },
   });
 
 export default createDetailStyles;

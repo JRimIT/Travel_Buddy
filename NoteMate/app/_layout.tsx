@@ -1,3 +1,4 @@
+
 import { SplashScreen, Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
@@ -38,7 +39,6 @@ export default function RootLayout() {
     console.log("inAuthGroup: ", segments[0]);
     console.log("user: ", user);
     console.log("Token: ", token);
-    
 
     if (!user && !token && !inAuthGroup) {
       router.replace("/(auth)");

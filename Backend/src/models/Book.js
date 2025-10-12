@@ -28,7 +28,7 @@ const bookSchema = new mongoose.Schema({
         type: String,
     },
     tag: {
-       type: String,
+        type: String,
     }
 }, {
     timestamps: true

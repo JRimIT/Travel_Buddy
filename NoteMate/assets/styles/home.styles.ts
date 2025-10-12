@@ -124,6 +124,33 @@ const createHomeStyles = (colors: ThemeType) =>
     footerLoader: {
       marginVertical: 20,
     },
+   page: {
+    flex: 1,
+    backgroundColor: colors.background,
+    padding: 16,
+  },
+  searchContainer: {
+    marginBottom: 16,
+  },
+  searchInput: {
+    backgroundColor: "#fff",
+    borderRadius: 24,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  suggestionText: {
+    padding: 12,
+    fontSize: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
   });
 
 export default createHomeStyles;
