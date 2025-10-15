@@ -1,8 +1,12 @@
+"use client"
+
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card"
 import { Users, Calendar, MapPin, TrendingUp } from "lucide-react"
 import { OverviewChart } from "../../components/admin/overview-chart"
 import { RecentTrips } from "../../components/admin/recent-trips"
 import { PopularDestinations } from "../../components/admin/popular-destinations"
+import { useAuth } from "../../lib/auth-context"
+import { SupportDashboard } from "../../components/admin/support-dashboard"
 
 const stats = [
   {
@@ -36,6 +40,12 @@ const stats = [
 ]
 
 export default function AdminDashboard() {
+  const { user } = useAuth()
+
+  if (user?.role === "support") {
+    return <SupportDashboard />
+  }
+
   return (
     <div className="space-y-6">
       <div>

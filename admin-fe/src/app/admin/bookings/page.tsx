@@ -1,9 +1,13 @@
+"use client"
+
 import { BookingsTable } from "../../../components/admin/bookings-table"
 import { Input } from "../../../components/ui/input"
 import { Search } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card"
 import { DollarSign, CheckCircle, Clock } from "lucide-react"
+import { useAuth } from "../../../lib/auth-context"
+import { SupportDashboard } from "../../../components/admin/support-dashboard"
 
 const stats = [
   {
@@ -33,6 +37,12 @@ const stats = [
 ]
 
 export default function BookingsPage() {
+  const { user } = useAuth()
+
+  if (user?.role === "support") {
+    return <SupportDashboard />
+  }
+
   return (
     <div className="space-y-6">
       <div>

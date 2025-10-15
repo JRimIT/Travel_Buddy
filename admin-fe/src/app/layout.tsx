@@ -8,6 +8,9 @@ export const metadata: Metadata = {
   title: 'Travel Buddy Admin',
   description: 'Admin panel for Travel Buddy application',
   generator: 'Next.js',
+  icons: {
+    icon: '/travelbuddy.png', 
+  },
 }
 
 export default function RootLayout({
