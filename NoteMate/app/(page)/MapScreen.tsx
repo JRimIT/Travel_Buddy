@@ -9,13 +9,12 @@ const GOOGLE_MAPS_KEY = "AIzaSyBOWUisngh3ZqtyWm8zKfVwUOYVOMouxhI"; // Thay bằn
 
 const MapScreen = () => {
   // Nhận params từ router, chú ý image có thể là mảng hoặc chuỗi
-  const { lat, lon, name, address, phone, website, image } = useLocalSearchParams() || {};
+  const { lat, lon, name, address, phone, website } = useLocalSearchParams() || {};
 
   const latitude = parseFloat(Array.isArray(lat) ? lat[0] : lat);
   const longitude = parseFloat(Array.isArray(lon) ? lon[0] : lon);
 
-  // Đảm bảo image luôn là chuỗi
-  const imageSrc = image ? (Array.isArray(image) ? image[0] : image) : null;
+
 
   const [region, setRegion] = useState({
     latitude,
@@ -76,20 +75,6 @@ const MapScreen = () => {
                 shadowColor: "#bbb",
               }}
             >
-              {/* Hiển thị ảnh nếu có */}
-              {imageSrc && (
-                <Image
-                  source={{ uri: imageSrc }}
-                  style={{
-                    width: "100%",
-                    height: 96,
-                    borderRadius: 10,
-                    marginBottom: 8,
-                    backgroundColor: "#eee",
-                  }}
-                  resizeMode="cover"
-                />
-              )}
               <Text
                 style={{
                   fontWeight: "bold",
@@ -124,7 +109,7 @@ const MapScreen = () => {
         </Marker>
       </MapView>
 
-      {/* Nút phóng to/thu nhỏ ở góc phải */}
+      {/* Nút phóng to/thu nhỏ ở góc phải => đang làm cái cái này */}
       <View
         style={{
           position: "absolute",
@@ -145,7 +130,7 @@ const MapScreen = () => {
         </TouchableOpacity>
       </View>
       {/* Nút nhanh chỉ đường sang Google Maps */}
-      <TouchableOpacity
+      {/* <TouchableOpacity
         onPress={() =>
           Linking.openURL(
             `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`
@@ -169,7 +154,7 @@ const MapScreen = () => {
         <Text style={{ color: "#fff", fontWeight: "700", fontSize: 16 }}>
           Chỉ đường đến {name || "địa điểm này"}
         </Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </View>
   );
 };

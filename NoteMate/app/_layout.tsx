@@ -7,6 +7,8 @@ import { useFonts } from "expo-font";
 import { useAuthStore } from "../store/authStore";
 import SafeScreen from "../components/SafeScreen";
 import { ThemeProvider } from "../contexts/ThemeContext";
+import { Provider } from "react-redux";
+import { store } from "../redux/store";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -48,17 +50,20 @@ export default function RootLayout() {
   }, [user, token, segments, isLoading, isReady]);
 
   return (
-    <ThemeProvider>
-      <SafeAreaProvider>
-        <SafeScreen>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="(tabs)" />
-            <Stack.Screen name="(auth)" />
-            <Stack.Screen name="(page)" />
-          </Stack>
-        </SafeScreen>
-        <StatusBar style="dark" />
-      </SafeAreaProvider>
-    </ThemeProvider>
+    <Provider store={store}>
+
+      <ThemeProvider>
+        <SafeAreaProvider>
+          <SafeScreen>
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="(tabs)" />
+              <Stack.Screen name="(auth)" />
+              <Stack.Screen name="(page)" />
+            </Stack>
+          </SafeScreen>
+          <StatusBar style="dark" />
+        </SafeAreaProvider>
+      </ThemeProvider>
+    </Provider>
   );
 }

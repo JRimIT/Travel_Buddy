@@ -280,7 +280,7 @@ const NoteComponent = () => {
   return (
     <View style={styles.container}>
           {/* Search Input */}
-          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 20, marginTop: 20, justifyContent: "center" }}>
+          <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 20, marginTop: 20, justifyContent: "center", padding: 10 }}>
             <TextInput
               style={{
                 flex: 1,
@@ -362,6 +362,32 @@ const NoteComponent = () => {
               )
             }
           />
+                {/* NÚT TẠO NOTE HOẶC ĐI FORM */}
+          <TouchableOpacity
+            style={{
+              position: "absolute",
+              bottom: 36,
+              right: 30,
+              width: 62,
+              height: 62,
+              backgroundColor: colors.primary || "#276ef1",
+              borderRadius: 31,
+              justifyContent: "center",
+              alignItems: "center",
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 3 },
+              shadowOpacity: 0.18,
+              shadowRadius: 6,
+              elevation: 8,
+              zIndex: 100,
+            }}
+            activeOpacity={0.85}
+            onPress={() => router.push("/FormTravel")}
+          >
+            <Ionicons name="add" size={38} color="#fff" />
+          </TouchableOpacity>
+
+
         </View>
   )
 }

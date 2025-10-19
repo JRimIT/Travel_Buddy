@@ -7,7 +7,7 @@ const createProfileStyles = (colors: ThemeType) =>
     container: {
       flex: 1,
       backgroundColor: colors.background,
-      padding: 16,
+      // padding: 16,
       paddingBottom: 0,
     },
     loadingContainer: {

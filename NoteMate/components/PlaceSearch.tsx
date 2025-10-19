@@ -101,7 +101,7 @@ const PlaceSearch = ({ onSelect }) => {
                     item.properties.name ||
                     item.properties.formatted;
 
-                  setSelectedCity(cityName); // ✅ lưu tên thành phố được chọn
+                  setSelectedCity(cityName); 
                   onSelect(item);
                   setIsFocused(false);
                   setQuery(cityName);
@@ -124,7 +124,7 @@ const PlaceSearch = ({ onSelect }) => {
           />
         )}
 
-        {/* ✅ Nút chỉ hiện khi đã chọn thành phố */}
+        {/*  Nút chỉ hiện khi đã chọn thành phố */}
         {selectedCity && (
           <TouchableOpacity
             style={{

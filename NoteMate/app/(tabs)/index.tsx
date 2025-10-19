@@ -9,10 +9,10 @@ const Home = () => {
   const router = useRouter();
 
   return (<>
-    <Button
+    {/* <Button
       title="Lên kế hoạch du lịch"
       onPress={() => router.push('/TravelPlanner')}
-    />
+    /> */}
     <NoteComponent/>
   </>
     
