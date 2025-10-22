@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card"
 import { DollarSign, CheckCircle, Clock } from "lucide-react"
 import { useAuth } from "../../../lib/auth-context"
-import { SupportDashboard } from "../../../components/admin/support-dashboard"
+import { SupportDashboard } from "../../support/support-dashboard"
 
 const stats = [
   {

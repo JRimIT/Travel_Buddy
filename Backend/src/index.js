@@ -6,6 +6,9 @@ import authRoutes from "./routes/authRoutes.js";
 import bookRoutes from "./routes/bookRoutes.js";
 import aiRoutes from "./routes/aiRoutes.js";
 import profileRoutes from "./routes/profileRoutes.js";
+import placesRoutes from "./routes/placesRoutes.js";
+import routingRoutes from "./routes/routingRoutes.js";
+
 
 import dotenv from "dotenv";
 import { connectToMongoDB } from "./lib/db.js";
@@ -36,6 +39,9 @@ app.use("/api/auth", authRoutes);
 app.use("/api/books", bookRoutes);
 app.use("/api/AI", aiRoutes);
 app.use("/api/profile", profileRoutes);
+
+app.use("/api/places", placesRoutes);
+app.use("/api/routing", routingRoutes);
 
 const port = 3000;
 app.listen(port, () => {
