@@ -8,7 +8,7 @@ import aiRoutes from "./routes/aiRoutes.js";
 import profileRoutes from "./routes/profileRoutes.js";
 import placesRoutes from "./routes/placesRoutes.js";
 import routingRoutes from "./routes/routingRoutes.js";
-
+import tripScheduleRoutes from "./routes/tripScheduleRoutes.js";
 
 import dotenv from "dotenv";
 import { connectToMongoDB } from "./lib/db.js";
@@ -42,6 +42,7 @@ app.use("/api/profile", profileRoutes);
 
 app.use("/api/places", placesRoutes);
 app.use("/api/routing", routingRoutes);
+app.use("/api/tripSchedule", tripScheduleRoutes);
 
 const port = 3000;
 app.listen(port, () => {
