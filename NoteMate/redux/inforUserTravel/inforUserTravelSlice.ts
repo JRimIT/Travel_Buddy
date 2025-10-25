@@ -2,6 +2,7 @@ import { createSlice } from '@reduxjs/toolkit';
 import { set } from 'lodash';
 
 const initialState = {
+
     userTravelDays: 0,
     userProvince: {},
     userCurrentLocation: {},
@@ -10,7 +11,7 @@ const initialState = {
     userStartDate: '',
     userEndDate: '',
     userHotelBudget: '',
-    userInforHotel: {},
+    userInforHotel: [],
     userFunBudget: '',
     userFlightBudget: '',
     userFlightTicket: [],

@@ -191,6 +191,8 @@ const DaySchedule = () => {
     ) {
       const sch = autoArrangeSchedule(places, numDays, fundNumber);
       setSchedule(sch);
+      // console.log("SCH: ", sch);
+      
       dispatch(setUserSchedule(sch));
     }
   }, [places, loading, numDays, fundNumber, userSchedule]);

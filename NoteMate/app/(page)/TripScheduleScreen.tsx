@@ -18,6 +18,7 @@ import { useSelector } from "react-redux";
 import HotelTab from "../../components/RouteTabsSchedule/HotelTab";
 import DaySchedule from "../../components/RouteTabsSchedule/DaySchedule";
 import MoveTab from "../../components/RouteTabsSchedule/MoveTab";
+import CostTab from "../../components/RouteTabsSchedule/CostTab";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -96,40 +97,7 @@ const TripScheduleScreen = () => {
 
   // Tab Quỹ tiền: card nổi và shadow vàng
   const CostRoute = () => (
-    <ScrollView contentContainerStyle={styles.infoTabBox}>
-      <View
-        style={[
-          styles.infoCard,
-          { backgroundColor: "#fff6db", borderColor: "#ffecb3" },
-        ]}
-      >
-        <MaterialCommunityIcons
-          name="cash-multiple"
-          size={37}
-          color="#f4b400"
-          style={{ marginBottom: 7 }}
-        />
-        <Text style={[styles.infoCardTitle, { color: "#b67c10" }]}>
-          Quỹ chi tiêu
-        </Text>
-        <Text style={styles.infoField}>
-          Khách sạn: <Text style={styles.boldText}>{budgetHotel} VNĐ</Text>
-        </Text>
-        <Text style={styles.infoField}>
-          Vé máy bay: <Text style={styles.boldText}>
-            {budgetFlight} VNĐ</Text>
-        </Text>
-        <Text style={styles.infoField}>
-          Quỹ đi chơi: <Text style={styles.boldText}>{budgetFun} VNĐ</Text>
-        </Text>
-        <TouchableOpacity style={styles.resetBtn}>
-          <Ionicons name="refresh-outline" size={17} color="#e53935" />
-          <Text style={{ color: "#e53935", marginLeft: 7, fontWeight: "600" }}>
-            Thiết lập lại
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+   <CostTab/>
   );
 
   const renderScene = SceneMap({

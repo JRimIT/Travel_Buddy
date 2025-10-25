@@ -96,6 +96,18 @@ const createDetailStyles = (colors: ThemeType) =>
   mode: { fontSize: 16, fontWeight: "600", color: "#276ef1" },
   time: { fontSize: 15, color: "#374151" },
   distance: { fontSize: 15, fontWeight: "500", color: "#111827" },
+   caption: {
+      color: colors.textSecondary,
+      fontSize: 15,
+      fontStyle: "italic",
+      marginTop: 4,
+      marginBottom: 2,
+    },
+    date: {
+      color: colors.placeholderText,
+      fontSize: 13,
+      marginTop: 2,
+    },
   });
 
 export default createDetailStyles;
