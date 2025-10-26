@@ -52,25 +52,31 @@ export const verifyUser = (req, res, next) => {
 };
 
 export const verifyAdmin = (req, res, next) => {
-    const authHeader = req.headers['authorization'] || `Bearer ${req.session.token}`;
+    const authHeader = req.headers['authorization'];
+    console.log("Authorization Header:", authHeader);
+  
     const token = authHeader && authHeader.split(' ')[1]; // 'Bearer <token>'
-
     if (!token) {
-        return res.status(403).json({ message: 'No token provided!' });
+      console.log("No token provided");
+      return res.status(403).json({ message: 'No token provided!' });
     }
-    console.log("token verify: ", token);
+  
     jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-        if (err) {
-            return res.status(401).json({ message: 'Invalid token!' });
-        }
-
-        if (decoded.role !== 'admin') {
-            return res.status(403).json({ message: 'Admin access required.' });
-        }
-
-        req.user = decoded;
-        next();
+      console.log("Token:", token);
+      console.log("Decoded:", decoded);
+      if (err) {
+        console.error("JWT verification error:", err);
+        return res.status(401).json({ message: 'Invalid token!' });
+      }
+  
+      if (decoded.role !== 'admin') {
+        console.log("User role:", decoded.role);
+        return res.status(403).json({ message: 'Admin access required.' });
+      }
+  
+      req.user = decoded;
+      next();
     });
-};
+  };
 
 export const jwtPassport = passport;
