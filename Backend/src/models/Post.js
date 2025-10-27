@@ -26,7 +26,10 @@ const postSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Comment',
   }],
+  hashtags: [{ type: String, trim: true }],
 }, { timestamps: true });
+
+postSchema.index({ title: 'text', content: 'text', hashtags: 'text' });
 
 const Post = mongoose.model('Post', postSchema);
 export default Post;

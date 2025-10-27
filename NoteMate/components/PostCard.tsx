@@ -4,7 +4,7 @@ import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-
+import ParsedText from 'react-native-parsed-text';
 // Interface cho props, giúp code rõ ràng hơn
 interface PostCardProps {
   post: {
@@ -22,13 +22,36 @@ interface PostCardProps {
   };
   onLike: (postId: string) => void;
   onCommentPress: (postId: string) => void;
+  onDelete: (postId: string) => void;
   currentUserId?: string;
 }
 
-const PostCard: React.FC<PostCardProps> = ({ post, onLike, onCommentPress, currentUserId }) => {
+const PostCard: React.FC<PostCardProps> = ({ post, onLike, onCommentPress, onDelete, currentUserId }) => {
   const router = useRouter();
   const isLiked = currentUserId ? post.likes.includes(currentUserId) : false;
   const isOwner = currentUserId === post.user?._id;
+  const handleHashtagPress = (hashtag: string) => {
+    // Bỏ dấu # ở đầu trước khi tìm kiếm
+    const query = hashtag.substring(1); 
+    // Điều hướng đến một trang tìm kiếm riêng hoặc xử lý tại trang feed
+    // Ở đây ta giả sử có một trang /search để xử lý query
+    router.push({ pathname: '/search', params: { query } });
+  };
+  const handleDelete = () => {
+    // Hỏi lại lần nữa để chắc chắn
+    Alert.alert(
+      'Xác nhận xóa',
+      'Bạn có chắc chắn muốn xóa bài viết này không? Hành động này không thể hoàn tác.',
+      [
+        { text: 'Hủy', style: 'cancel' },
+        { 
+          text: 'Xóa', 
+          style: 'destructive', 
+          onPress: () => onDelete(post._id) // Gọi hàm được truyền từ component cha
+        },  
+      ]
+    );
+  };
 
   const showOptions = () => {
     Alert.alert(
@@ -50,7 +73,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, onLike, onCommentPress, curre
         },
         {
           text: 'Xóa bài viết',
-          onPress: () => { /* Logic xóa ở đây */ },
+          onPress: handleDelete,
           style: 'destructive',
         },
         {
@@ -81,7 +104,18 @@ const PostCard: React.FC<PostCardProps> = ({ post, onLike, onCommentPress, curre
 
       {/* Tiêu đề và nội dung bài đăng */}
       <Text style={styles.title}>{post.title}</Text>
-      <Text style={styles.content}>{post.content}</Text>
+      <ParsedText
+        style={styles.content}
+        parse={[
+          {
+            pattern: /#(\w+)/, // Regex để tìm hashtag
+            style: styles.hashtag,
+            onPress: handleHashtagPress,
+          },
+        ]}
+      >
+        {post.content}
+      </ParsedText>
 
       {/* Ảnh của bài đăng */}
       {post.imageUrl && (
@@ -155,6 +189,10 @@ const styles = StyleSheet.create({
     color: '#444',
     marginBottom: 12,
     lineHeight: 22,
+  },
+  hashtag: {
+    color: '#007AFF', // Màu xanh dương cho hashtag
+    fontWeight: '500',
   },
   postImage: {
     width: '100%',

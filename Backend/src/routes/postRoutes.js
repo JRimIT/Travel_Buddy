@@ -6,6 +6,13 @@ import Post from '../models/Post.js'; // Thêm .js
 import Comment from '../models/Comment.js'; // Thêm .js
 import authMiddleware from '../middleware/auth.middleware.js'; // Giả sử bạn có middleware này để xác thực user
 
+const extractHashtags = (text) => {
+  if (!text) return [];
+  const regex = /#(\w+)/g;
+  const matches = text.match(regex);
+  return matches ? [...new Set(matches.map(tag => tag.substring(1).toLowerCase()))] : [];
+};
+
 // Lấy tất cả bài đăng (cho feed)
 router.get('/', async (req, res) => {
   try {
@@ -21,18 +28,36 @@ router.get('/', async (req, res) => {
 // Tạo bài đăng mới
 router.post('/', authMiddleware, async (req, res) => {
     const { title, content, imageUrl } = req.body; // <-- Nhận thêm title
-
-    const post = new Post({
-    title, // <-- Thêm title vào post mới
-    content,
-    imageUrl,
-    user: req.user.id,
-    });
+    if (!title || !content) {
+    return res.status(400).json({ message: 'Title and content are required' });
+    }
+    // const post = new Post({
+    // title, // <-- Thêm title vào post mới
+    // content,
+    // imageUrl,
+    // hashtags,
+    // user: req.user.id,
+    // });
   try {
-    const newPost = await post.save();
-    res.status(201).json(newPost);
+    const hashtags = extractHashtags(content);
+
+    const newPost = new Post({
+      title,
+      content,
+      imageUrl,
+      hashtags,
+      user: req.user.id,
+    });
+
+    const savedPost = await newPost.save();
+    
+    // Populate thông tin user để trả về cho client, giống như các hàm khác
+    const populatedPost = await Post.findById(savedPost._id).populate('user', 'username profileImage');
+    
+    res.status(201).json(populatedPost);
   } catch (err) {
-    res.status(400).json({ message: err.message });
+    console.error('Error creating post:', error);
+    res.status(500).json({ message: 'Server error while creating post', details: error.message });
   }
 });
 
@@ -150,10 +175,67 @@ router.put('/:id', authMiddleware, async (req, res) => {
 
     // Cập nhật các trường được cung cấp
     post.title = title || post.title;
-    post.content = content || post.content;
+    if (content) {
+    post.content = content;
+    post.hashtags = extractHashtags(content); // <-- Cập nhật lại hashtags
+    }
 
     const updatedPost = await post.save();
     res.json(updatedPost);
+
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+router.get('/search', authMiddleware, async (req, res) => {
+  let searchQuery = req.query.q ? req.query.q.toString() : '';
+
+  if (!searchQuery) {
+    return res.status(400).json({ message: 'Search query is required' });
+  }
+
+  // --- CẢI TIẾN LOGIC ---
+  // Nếu người dùng tìm kiếm '#danang', ta chỉ nên tìm 'danang'
+  if (searchQuery.startsWith('#')) {
+    searchQuery = searchQuery.substring(1);
+  }
+
+  try {
+    const posts = await Post.find(
+      { $text: { $search: searchQuery } },
+      { score: { $meta: "textScore" } }
+    )
+    .sort({ score: { $meta: "textScore" } })
+    .populate('user', 'username profileImage');
+
+    res.json(posts);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+router.delete('/:id', authMiddleware, async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    // --- KIỂM TRA QUYỀN SỞ HỮU ---
+    if (post.user.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'User not authorized' });
+    }
+
+    // --- XÓA BÀI VIẾT VÀ DỌN DẸP ---
+    // 1. Xóa tất cả các bình luận thuộc về bài viết này
+    await Comment.deleteMany({ post: req.params.id });
+
+    // 2. Xóa chính bài viết đó
+    await post.deleteOne(); // Hoặc post.remove() tùy phiên bản Mongoose
+
+    res.json({ message: 'Post removed successfully' });
 
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
