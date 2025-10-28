@@ -1,360 +1,116 @@
-import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  ActivityIndicator,
-  StyleSheet,
-} from "react-native";
-import {
-  MaterialCommunityIcons,
-  FontAwesome,
-  Feather,
-  Ionicons,
-} from "@expo/vector-icons";
-import { useSelector, useDispatch } from "react-redux";
-import {
-  setUserChosenFlight,
-  setUserFlightTicket,
-} from "../../redux/inforUserTravel/inforUserTravelSlice";
+import React, { useEffect, useState, useRef } from "react";
+import { View, Text, ScrollView, ActivityIndicator, StyleSheet } from "react-native";
+import { useSelector } from "react-redux";
+import axios from "axios";
+import { API_URL } from "../../constants/api";
+import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from "@expo/vector-icons";
 
-const usdRate = 25000;
+const iconMap = {
+  "Xe máy": <Ionicons name="bicycle-outline" size={20} color="#49bb4b" />,
+  "Ô tô": <MaterialCommunityIcons name="car" size={20} color="#1976d2" />,
+  "Taxi": <Ionicons name="car-sport-outline" size={20} color="#eaa620" />,
+  "Xe bus": <Ionicons name="bus" size={20} color="#37a6ce" />,
+  "Xe đạp": <FontAwesome5 name="bicycle" size={20} color="#30bc3e" />,
+  "Máy bay": <MaterialCommunityIcons name="airplane" size={20} color="#1593ed" />,
+  "Tàu hỏa": <FontAwesome5 name="train" size={20} color="#8c39d2" />,
+  "Xe khách": <Ionicons name="bus" size={20} color="#f2b122" />
+  // ...thêm nếu cần
+};
 
-const MoveRoute = () => {
-  const [flights, setFlights] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [chosenFlight, setChosenFlight] = useState(null);
-  const [showAll, setShowAll] = useState(false);
+const MoveTabScreen = () => {
+  const hotel = useSelector((state:any) => state.inforUserTravel.userInforHotel);
+  const playgrounds = useSelector((state:any) => state.inforUserTravel.userPlaygrounds || []);
+  const mainTransport = useSelector((state:any) => state.inforUserTravel.userTransportMain); // ví dụ: "Máy bay"
+  const innerTransport = useSelector((state:any) => state.inforUserTravel.userTransportType); // ví dụ: "Xe máy"
+  const fromLocation = useSelector((state:any) => state.inforUserTravel.userCurrentLocation);
 
-  const dispatch = useDispatch();
-  const userFlightTicket = useSelector(
-    (state:any) => state.inforUserTravel.userFlightTicket
-  );
-  const userChosenFlight = useSelector(
-    (state:any) => state.inforUserTravel.userChosenFlight
-  );
-  const flightBudget = useSelector(
-    (state:any) => state.inforUserTravel.userFlightBudget
-  );
-  const flightBudgetNumber = flightBudget
-    ? parseInt(flightBudget.replace(/\./g, ""))
-    : 0;
-  const flightBudgetUSD = Math.round(flightBudgetNumber / usdRate);
+  const [aiData, setAiData] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
 
-  const userProvince = useSelector(
-    (state:any) => state.inforUserTravel.userProvince
-  );
-  const fromEntityId = "DAD";
-  const cityIATAMap = {
-    "Ho Chi Minh City": "SGN",
-    "Ha Noi": "HAN",
-    "Da Nang": "DAD",
-    "Hai Phong": "HPH",
-    "Can Tho": "VCA",
-    "Nha Trang": "CXR",
-    "Phu Quoc": "PQC",
-    "Hue": "HUI",
-    "Da Lat": "DLI",
-    "Vinh": "VII",
-    "Thanh Hoa": "THD",
-    "Buon Ma Thuot": "BMV",
-    "Pleiku": "PXU",
-    "Dong Hoi": "VDH",
-    "Tuy Hoa": "TBB",
-    "Chu Lai": "VCL",
-    "Rach Gia": "VKG",
-    "Dien Bien Phu": "DIN",
-    "Ca Mau": "CAH",
-    "Con Dao": "VCS",
-  };
-  const toEntityId = cityIATAMap[userProvince.name.trim()] || "SGN";
-
-  // --------- API fetch function ----------
-  const RAPIDAPI_KEY = "cef2578525mshc4105b66e0a5c49p181ee7jsn45dfb9a44da8";
-  const RAPIDAPI_HOST = "flights-sky.p.rapidapi.com";
-
-  const searchFlightsEverywhere = async (params) => {
-    let url = `https://flights-sky.p.rapidapi.com/flights/search-everywhere?fromEntityId=${params.fromEntityId}`;
-    if (params.toEntityId) url += `&toEntityId=${params.toEntityId}`;
-    url += `&type=oneway&year=2025&month=10&adults=1&cabinClass=economy`;
-    const res = await fetch(url, {
-      method: "GET",
-      headers: {
-        "X-RapidAPI-Key": RAPIDAPI_KEY,
-        "X-RapidAPI-Host": RAPIDAPI_HOST,
-      },
-    });
-    return await res.json();
-  };
-
-  // --------- Only fetch list one time, keep cache ---------
+  const loadedRef = useRef(false);
   useEffect(() => {
-    // Nếu đã cache vé máy bay đúng destination, chỉ load local + set chosen
-    if (
-      userFlightTicket &&
-      userFlightTicket.length > 0 &&
-      (userFlightTicket[0]?.content?.outboundLeg?.destinationAirport?.skyCode === toEntityId ||
-        userFlightTicket[0]?.content?.outboundLeg?.destinationAirport === toEntityId)
-    ) {
-      setFlights(userFlightTicket);
-      setLoading(false);
-      setChosenFlight(userChosenFlight || null);
-    } else {
-      setLoading(true);
-      searchFlightsEverywhere({
-        fromEntityId,
-        toEntityId,
-      }).then((res) => {
-        
-        console.log("toEntity: ", toEntityId);
-        
-        setFlights(res.data.flightQuotes.results || []);
-        dispatch(setUserFlightTicket(res.data.flightQuotes.results));
-        setLoading(false);
-      });
-    }
-    // eslint-disable-next-line
-  }, [fromEntityId, toEntityId, userFlightTicket, userChosenFlight]);
-
-  // Nếu Redux state có chosen vé bay thì load vào state local khi quay lại tab
-  useEffect(() => {
-    setChosenFlight(userChosenFlight || null);
-  }, [userChosenFlight]);
-
-  // Vé đề xuất (lọc giá hợp với quỹ, biến về USD cho dữ liệu API)
-  const filtered = flights.filter((f) => {
-    const p = parseInt(f.content.rawPrice);
-    return !isNaN(p) && p <= flightBudgetUSD;
-  });
-  // Vé suggest phù hợp nhất hoặc rẻ nhất
-  const suggested =
-    (filtered.length > 0 ? filtered : flights).reduce(
-      (minF, f) =>
-        parseInt(f.content.rawPrice) < parseInt(minF.content.rawPrice) ? f : minF,
-      flights[0] || {}
-    );
-
-  // Xử lý chọn/xoá vé bay để sync Redux
-  const handleChooseFlight = (flight) => {
-    setChosenFlight(flight);
-    setShowAll(false);
-    dispatch(setUserChosenFlight(flight));
-  };
-  const handleResetChosenFlight = () => {
-    setChosenFlight(null);
-    dispatch(setUserChosenFlight(null));
-  };
-
-  // UI helper hiển thị vé bay
-  const displayFlightCard = (flight, isSuggested = false) => {
-    if (!flight) return null;
-    const from = flight.content?.outboundLeg?.originAirport;
-    const to = flight.content?.outboundLeg?.destinationAirport;
-    const rawPrice = parseInt(flight.content?.rawPrice || 0);
-    const priceVND = Math.round(rawPrice * usdRate);
-
-    return (
-      <View
-        style={[
-          styles.infoCard,
-          isSuggested && {
-            borderColor: "#21b7fa",
-            borderWidth: 2,
-            backgroundColor: "#f5fbff",
-          },
-        ]}
-      >
-        <MaterialCommunityIcons
-          name="airplane"
-          size={44}
-          color="#1694d1"
-          style={{ marginBottom: 10 }}
-        />
-        <Text style={styles.infoCardTitle}>
-          {isSuggested ? "Vé máy bay đề xuất" : "Vé máy bay"}
-        </Text>
-        <Text style={styles.infoField}>
-          <FontAwesome name="ticket" size={14} color="#f18701" /> Giá vé:{" "}
-          <Text style={styles.boldText}>{priceVND.toLocaleString()} VNĐ</Text>
-          <Text style={{ color: "#999", fontSize: 14 }}>  (~${rawPrice})</Text>
-        </Text>
-        <Text style={styles.infoField}>
-          <Feather name="map-pin" size={14} color="#48c6ef" /> Điểm đến:{" "}
-          <Text style={styles.boldText}>{to?.name || "?"}</Text>
-        </Text>
-        <Text style={styles.infoField}>
-          <Feather name="clock" size={14} color="#64b8f6" /> Khởi hành:{" "}
-          <Text style={styles.boldText}>
-            {flight.content?.outboundLeg?.localDepartureDateLabel || "?"}
-          </Text>
-        </Text>
-        <Text style={styles.infoField}>
-          <Ionicons name="airplane-outline" size={16} color="#33bc7f" /> Mã
-          chuyến:{" "}
-          <Text style={{ fontWeight: "bold", color: "#318cff" }}>
-            {flight?.id?.split("*").slice(-1)[0]}
-          </Text>
-        </Text>
-        {isSuggested && filtered.length === 0 && (
-          <Text style={{ color: "#ec8805", marginTop: 10 }}>
-            Không có vé nào trong quỹ, đây là vé rẻ nhất hệ thống!
-          </Text>
-        )}
-      </View>
-    );
-  };
+    if (!hotel || playgrounds.length === 0 || !mainTransport || !innerTransport) return;
+    if (loadedRef.current) return;
+    setLoading(true);
+    axios.post(`${API_URL}/AI/transport-analysis`, {
+      hotel, playgrounds, mainTransport, innerTransport, fromLocation
+    })
+      .then(res => setAiData(res.data))
+      .catch(() => setAiData(null))
+      .finally(() => { setLoading(false); loadedRef.current = true; });
+  }, [hotel, playgrounds, mainTransport, innerTransport, fromLocation]);
+// console.log("aiData: ", aiData);
 
   return (
-    <ScrollView contentContainerStyle={styles.infoTabBox}>
-      <Text
-        style={{
-          color: "#1da765",
-          fontWeight: "700",
-          fontSize: 16,
-          marginVertical: 12,
-        }}
-      >
-        Quỹ vé máy bay:{" "}
-        {flightBudgetNumber ? flightBudgetNumber.toLocaleString() : "?"} VNĐ (~$
-        {flightBudgetUSD})
+    <ScrollView style={styles.scroll} contentContainerStyle={styles.container}>
+      <Text style={styles.header}>Phương tiện và lộ trình chuyến đi</Text>
+      <Text style={styles.vehicle}>
+        {iconMap[mainTransport] || ""} Phương tiện chính: <Text style={{color:"#156ff4", fontWeight:"bold"}}>{mainTransport}</Text>
       </Text>
-      {loading ? (
-        <ActivityIndicator
-          size="large"
-          color="#4175fa"
-          style={{ marginTop: 40 }}
-        />
-      ) : (
-        <>
-          {/* Card đề xuất chuyến phù hợp nhất */}
-          {!chosenFlight && displayFlightCard(suggested, true)}
-          {/* --- Nút chọn lại / hiển thị hết vé --- */}
-          <TouchableOpacity
-            style={{
-              alignSelf: "center",
-              marginVertical: 10,
-              backgroundColor: "#e6eaff",
-              padding: 10,
-              borderRadius: 9,
-              flexDirection: "row",
-              alignItems: "center",
-            }}
-            onPress={() => setShowAll((s) => !s)}
-          >
-            <Ionicons
-              name={showAll ? "chevron-up" : "chevron-down"}
-              size={20}
-              color="#1694d1"
-            />
-            <Text
-              style={{
-                marginLeft: 9,
-                color: "#1694d1",
-                fontWeight: "700",
-                fontSize: 15,
-              }}
-            >
-              {showAll ? "Thu gọn danh sách vé" : "Chọn lại chuyến bay khác"}
-            </Text>
-          </TouchableOpacity>
-          {/* --- Render tất cả chuyến bay bằng .map(), không FlatList --- */}
-          {showAll && (
-            <>
-              {flights.map((item, idx) => (
-                <TouchableOpacity
-                  key={item.id + idx}
-                  onPress={() => handleChooseFlight(item)}
-                >
-                  {displayFlightCard(item, false)}
-                </TouchableOpacity>
-              ))}
-              {flights.length === 0 && (
-                <View style={{ alignItems: "center", marginTop: 40 }}>
-                  <Ionicons
-                    name="cloud-offline-outline"
-                    size={48}
-                    color="#aaa"
-                  />
-                  <Text style={{ marginTop: 18, color: "#333" }}>
-                    Không tìm thấy chuyến bay
-                  </Text>
-                </View>
-              )}
-            </>
-          )}
-          {/* Card chuyến đã chọn */}
-          {chosenFlight && (
-            <View>
-              {displayFlightCard(chosenFlight, true)}
-              <TouchableOpacity
-                style={{
-                  alignSelf: "center",
-                  padding: 10,
-                  margin: 8,
-                  borderRadius: 8,
-                  backgroundColor: "#e4f5fc",
-                }}
-                onPress={handleResetChosenFlight}
-              >
-                <Ionicons name="arrow-back" size={18} color="#1274fa" />
-                <Text
-                  style={{
-                    color: "#1274fa",
-                    fontWeight: "bold",
-                    marginLeft: 6,
-                    fontSize: 15,
-                  }}
-                >
-                  Quay về đề xuất hệ thống
-                </Text>
-              </TouchableOpacity>
+      <Text style={styles.vehicle}>
+        {iconMap[innerTransport] || ""} Phương tiện nội thành: <Text style={{color:"#156ff4", fontWeight:"bold"}}>{innerTransport}</Text>
+      </Text>
+      {loading && (
+        <ActivityIndicator color="#2196f3" style={{marginVertical:18}} />
+      )}
+      {aiData && (
+        <View>
+          <Text style={styles.sectionLabel}>Chặng di chuyển chính:</Text>
+          {aiData.mainLeg &&
+            <View style={styles.mainLegCard}>
+              <Text style={styles.legTitle}><Text style={{color:"#2176be"}}>{aiData.mainLeg.from}</Text> → <Text style={{color:"#218d69"}}>{aiData.mainLeg.to}</Text> ({aiData.mainLeg.transport})</Text>
+              <Text style={styles.legInfo}>
+                <Ionicons name="swap-vertical" size={16} color="#888" /> {aiData.mainLeg.distance}, 
+                <Ionicons name="time-outline" size={16} color="#f2942e" /> {aiData.mainLeg.duration},
+                <MaterialCommunityIcons name="cash" size={15} color="#14843e" /> {aiData.mainLeg.cost?.toLocaleString()} VNĐ
+              </Text>
+              {aiData.mainLeg.note && <Text style={styles.legNote}>{aiData.mainLeg.note}</Text>}
             </View>
-          )}
-        </>
+          }
+          <Text style={styles.sectionLabel}>Các chặng nội thành:</Text>
+          <View style={styles.legList}>
+            {aiData.legs?.map((leg:any, idx:number) => (
+              <View key={idx} style={styles.legCard}>
+                <Text style={styles.legTitle}>Chặng {idx+1}: <Text style={{color:"#2176be", fontWeight:"bold"}}>{leg.from}</Text> → <Text style={{color:"#218d69"}}>{leg.to}</Text> ({leg.transport})</Text>
+                <Text style={styles.legInfo}>
+                  <Ionicons name="swap-vertical" size={16} color="#888" /> {leg.distance}, 
+                  <Ionicons name="time-outline" size={16} color="#f2942e" /> {leg.duration},
+                  <MaterialCommunityIcons name="cash" size={15} color="#14843e" /> {leg.cost?.toLocaleString()} VNĐ
+                </Text>
+                {leg.note && <Text style={styles.legNote}>{leg.note}</Text>}
+              </View>
+            ))}
+          </View>
+          <View style={styles.summaryBox}>
+            <Text style={styles.summaryHead}>Tổng di chuyển:</Text>
+            <Text style={styles.summary}>🛣 Tổng thời gian: <Text style={{fontWeight:"bold", color:"#1976d2"}}>{aiData.totalTime}</Text></Text>
+            <Text style={styles.summary}>💸 Tổng chi phí: <Text style={{fontWeight:"bold", color:"#248a3b"}}>{aiData.totalCost?.toLocaleString()} VNĐ</Text></Text>
+            {aiData.summary && <Text style={styles.summary}>{aiData.summary}</Text>}
+          </View>
+        </View>
+      )}
+      {!loading && !aiData && (
+        <Text style={{ color: "#888", marginTop: 32, alignSelf: "center" }}>Chưa có dữ liệu lộ trình.</Text>
       )}
     </ScrollView>
   );
 };
 
-export default MoveRoute;
-
 const styles = StyleSheet.create({
-  // ...Giữ nguyên như cũ...
-  infoTabBox: {
-    flexGrow: 1,
-    alignItems: "center",
-    backgroundColor: "#f0f6ff",
-    padding: 28,
-    minHeight: 540,
-    justifyContent: "flex-start",
-  },
-  infoCard: {
-    padding: 28,
-    borderRadius: 21,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    width: "100%",
-    elevation: 7,
-    shadowColor: "#91caff",
-    shadowOpacity: 0.18,
-    borderWidth: 1.2,
-    borderColor: "#dae6f9",
-    marginBottom: 15,
-  },
-  infoCardTitle: {
-    fontWeight: "bold",
-    fontSize: 21,
-    color: "#2188ea",
-    marginBottom: 6,
-  },
-  infoField: {
-    color: "#446e9b",
-    fontSize: 16,
-    marginBottom: 5,
-    marginTop: 2,
-    fontWeight: "500",
-  },
-  boldText: { fontWeight: "bold" },
+  scroll: { flex: 1, backgroundColor:"#f8fafb" },
+  container: { padding: 20, flexGrow:1 },
+  header: { fontWeight:"bold", fontSize:19, color:"#1273d4", marginBottom:13, alignSelf:"center" },
+  vehicle: { color:"#1676c1", fontWeight:"600", fontSize:16, marginBottom:6 },
+  sectionLabel: { fontSize: 15, fontWeight: "600", color: "#3373da", marginTop: 12, marginBottom: 7 },
+  mainLegCard: { marginBottom:14, backgroundColor:"#f7fafd", borderRadius:12, padding:12, shadowColor:"#ddd", elevation:2, borderLeftWidth:5, borderLeftColor:"#61b1e9" },
+  legList: { marginTop: 5 },
+  legCard: { marginBottom:12, backgroundColor:"#fff", borderRadius:12, padding:12, shadowColor:"#f2f2f2", elevation:2, borderLeftWidth:4, borderLeftColor:"#18a9ef" },
+  legTitle: { fontSize:15, fontWeight:"bold", color:"#194a93" },
+  legInfo: { fontSize:14, color:"#157f33", marginTop:2 },
+  legNote: { color:"#795008", fontSize:13, fontStyle:"italic", marginTop:1 },
+  summaryBox: { marginTop:18, backgroundColor:"#e5f6fb", borderRadius:13, padding:12, borderLeftWidth:5, borderLeftColor:"#17b1e7" },
+  summaryHead: { fontWeight:"bold", fontSize:15, marginBottom:2, color:"#1a7ddd" },
+  summary: { color:"#2d3748", marginTop:1 },
 });
 
+export default MoveTabScreen;

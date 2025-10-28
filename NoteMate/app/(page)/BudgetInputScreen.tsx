@@ -35,7 +35,7 @@ const BudgetInputScreen = () => {
   const goToTravelTransportScreen = () => {
     dispatch(setUserHotelBudget(hotelBudget ? formatMoney(hotelBudget) : "0"));
     dispatch(setUserFunBudget(funBudget ? formatMoney(funBudget) : "0"));
-    router.push("TravelTransportScreen");
+    router.push("ChooseHotelScreen");
   };
 
   return (

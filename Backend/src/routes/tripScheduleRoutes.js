@@ -7,33 +7,35 @@ const router = express.Router();
 // Tạo mới lịch trình
 router.post("/create", verifyUser, async (req, res) => {
     try {
-        const { title, description, budget, days, hotelDefault, flightTicket, isPublic, image } = req.body;
-        const userId = req.user.userId;
-        // console.log("tile: ", title);
-        // console.log("description: ", description);
-        // console.log("isPublic: ", isPublic);
-        // console.log("budgets: ", budget);
-        // console.log("schedule: ", days);
-        // console.log("hotelDefault: ", hotelDefault);
-        // console.log("ticketChosen: ", flightTicket);
-        // console.log("User: ", userId);
-        const uploadResponse = await cloudinary.uploader.upload(image)
-        const imageUrl = uploadResponse.secure_url;
+        const {
+            title, description, isPublic, budget,
+            days, hotelDefault, flightTicket, image,
+            mainTransport, innerTransport, fromLocation, province
+        } = req.body;
 
-        const schedule = await TripSchedule.create({
+        const userId = req.user.userId;
+
+        if (!image) return res.status(400).json({ error: "Ảnh đại diện bắt buộc" });
+
+        const trip = await TripSchedule.create({
             user: userId,
             title,
             description,
+            isPublic,
             budget,
             days,
             hotelDefault,
             flightTicket,
-            image: imageUrl,
-            isPublic: !!isPublic,
+            image,
+            mainTransport,
+            innerTransport,
+            fromLocation,
+            province
         });
-        res.status(201).json({ success: true, schedule });
+        res.json({ success: true, tripId: trip._id });
     } catch (err) {
-        res.status(500).json({ success: false, error: err.message });
+        console.error("[TripSchedule.create]", err);
+        res.status(500).json({ error: "Lưu lịch trình thất bại!" });
     }
 });
 

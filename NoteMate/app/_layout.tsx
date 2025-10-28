@@ -49,6 +49,7 @@ export default function RootLayout() {
     }
   }, [user, token, segments, isLoading, isReady]);
 
+  
   return (
     <Provider store={store}>
 

@@ -1,0 +1,356 @@
+import React, { useEffect, useState } from "react";
+import {
+  View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Image, Modal, Alert, FlatList, Dimensions
+} from "react-native";
+import { Ionicons } from '@expo/vector-icons';
+import { useSelector, useDispatch } from "react-redux";
+import MapView, { Marker } from 'react-native-maps';
+import { setUserPlaygrounds } from "../../redux/inforUserTravel/inforUserTravelSlice";
+import { API_URL } from "../../constants/api";
+import { router } from "expo-router";
+
+const GEOAPIFY_KEY = process.env.GEOAPIFY_KEY || "2ad8114410b44c76baf6c71f5ab23f3a";
+const CATEGORY = "entertainment";
+const PAGE_SIZE = 10;
+
+const PlaygroundTab = () => {
+  const dispatch = useDispatch();
+  const hotel = useSelector((state:any) => state.inforUserTravel.userInforHotel);
+  const playBudget = useSelector((state:any) => state.inforUserTravel.userFunBudget || "0");
+  const reduxSelected = useSelector((state:any) => state.inforUserTravel.userPlaygrounds || []);
+  const playBudgetNumber = Number((playBudget || "0").toString().replace(/\./g, "")) || 0;
+
+  const [playgrounds, setPlaygrounds] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [chosen, setChosen] = useState<string[]>([]);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalPlace, setModalPlace] = useState<any>(null);
+  const [aiDetail, setAIDetail] = useState("");
+  const [aiLoading, setAILoading] = useState(false);
+  const [mapMode, setMapMode] = useState(false);
+  const [mapPlace, setMapPlace] = useState<any>(null);
+
+  // Paging state
+  const [page, setPage] = useState(1); // Trang hiện tại
+  const [allLoaded, setAllLoaded] = useState(false);
+
+  useEffect(() => {
+    if (hotel?.lat && hotel?.lon) {
+      setPlaygrounds([]);
+      setPage(1);
+      setAllLoaded(false);
+      fetchPOIs(hotel.lat, hotel.lon, 1, true);
+    }
+  }, [hotel]);
+
+  useEffect(() => {
+    setChosen((reduxSelected || []).map((p:any) => p._cardKey || p.place_id));
+  }, [reduxSelected]);
+
+  // Lấy list vui chơi từng trang, merge vào state
+  const fetchPOIs = async (lat:number, lon:number, pageNum:number, reset = false) => {
+    if (reset) setLoading(true);
+    const offset = (pageNum-1)*PAGE_SIZE;
+    const url = `https://api.geoapify.com/v2/places?categories=${CATEGORY}&filter=circle:${lon},${lat},4500&limit=${PAGE_SIZE}&offset=${offset}&apiKey=${GEOAPIFY_KEY}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    const mapped = (data.features||[]).map((item:any, idx:number) => ({
+      ...item,
+      image: item.properties?.preview?.source_url || null,
+      price: parseInt(item.properties?.entrance_fee || Math.round(Math.random()*120000+20000)),
+      distance: getDistance(lat, lon, item.geometry.coordinates[1], item.geometry.coordinates[0]),
+      _cardKey: item.place_id || (item.properties?.name + "-" + (offset + idx))
+    }));
+    if (mapped.length < PAGE_SIZE) setAllLoaded(true);
+    setPlaygrounds(prev => reset ? mapped : [...prev, ...mapped]);
+    if (reset) setLoading(false);
+  };
+
+  // Haversine tính km
+  const getDistance = (lat1:number, lon1:number, lat2:number, lon2:number) => {
+    const R = 6371;
+    const dLat = (lat2-lat1)*Math.PI/180;
+    const dLon = (lon2-lon1)*Math.PI/180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+    return Math.round(R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a))*1000)/1000;
+  };
+
+  // Multi-choice select bằng _cardKey
+  const toggleSelect = (key:string, item:any) => {
+    let newChosen = [...chosen];
+    let newRedux = reduxSelected ? [...reduxSelected] : [];
+    if (!newChosen.includes(key)) {
+      newChosen.push(key);
+      newRedux.push(item);
+    } else {
+      newChosen = newChosen.filter(id => id !== key);
+      newRedux = newRedux.filter(i => (i._cardKey || i.place_id) !== key);
+    }
+    setChosen(newChosen);
+    dispatch(setUserPlaygrounds(newRedux));
+  };
+
+  // Tổng chi phí đã chọn
+  const selectedPlaygrounds = playgrounds.filter(p => chosen.includes(p._cardKey));
+  const totalCost = selectedPlaygrounds.reduce((sum, p) => sum + (p.price || 0), 0);
+  const overBudget = playBudgetNumber > 0 && totalCost > playBudgetNumber;
+
+  // AI detail
+  const openAIModal = async (poi:any) => {
+    setModalPlace(poi);
+    setModalVisible(true);
+    setAIDetail("");
+    setAILoading(true);
+    try {
+      const res = await fetch(`${API_URL}/AI/playground-details`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: poi.properties.name, address: poi.properties.address_line2 || "", city: poi.properties.city || "" }),
+      });
+      const data = await res.json();
+      setAIDetail(data.details || "Không lấy được thông tin AI.");
+    } catch {
+      setAIDetail("Lỗi gọi AI.");
+    } finally {
+      setAILoading(false);
+    }
+  };
+
+  // Map
+  const openMapWithPlace = (poi:any) => {
+    setMapPlace(poi);
+    setMapMode(true);
+  };
+
+  // Load more khi kéo tới cuối
+  const handleLoadMore = () => {
+    if (!allLoaded && !loading) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      fetchPOIs(hotel.lat, hotel.lon, nextPage);
+    }
+  };
+
+  // Render 1 card
+  const renderCard = ({item}: {item: any}) => {
+    const { properties: p, image, distance, price, _cardKey } = item;
+    const checked = chosen.includes(_cardKey);
+    return (
+      <View key={_cardKey} style={{
+        backgroundColor: "#fffefa",
+        borderRadius: 17,
+        marginBottom: 18,
+        padding: 16,
+        shadowColor: "#ff78ca",
+        shadowOpacity: 0.13,
+        elevation: 2.5,
+        borderWidth: checked ? 2 : 1,
+        borderColor: checked ? "#ec407a" : "#eee"
+      }}>
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          {image && <Image source={{uri: image}} style={{width: 55, height: 55, borderRadius: 13, marginRight:11}} />}
+          <View style={{flex:1, marginRight:7}}>
+            <Text style={{ fontSize: 17, fontWeight: "bold", color: "#ea408a" }}>{p.name}</Text>
+            <Text numberOfLines={2} style={{ color: "#7d2150" }}>{p.address_line2}</Text>
+            <Text style={{ color: "#627" }}>
+              <Ionicons name="navigate" size={14} color="#95c" /> {distance} km từ khách sạn
+            </Text>
+            <Text style={{color:"#f49e1b",fontWeight: "bold"}}>
+              <Ionicons name="cash-outline" size={15} color="#f49e1b" /> Vé: {price.toLocaleString()} VNĐ
+            </Text>
+          </View>
+          <TouchableOpacity onPress={() => toggleSelect(_cardKey, item)} style={{
+            marginLeft:3, padding:3, borderRadius:11, backgroundColor: checked ? "#e94e94" : "#f5f5f5"
+          }}>
+            <Ionicons name={checked ? "checkbox" : "square-outline"} color={checked ? "#fff" : "#aaa"} size={26}/>
+          </TouchableOpacity>
+        </View>
+        <View style={{ flexDirection:"row", marginTop:10, flexWrap:"wrap" }}>
+          <TouchableOpacity style={[styles.choseBtn, {backgroundColor:'#f6efff', borderColor:"#7e5cda"}]}
+            onPress={() => openAIModal(item)}>
+            <Ionicons name="information-circle-outline" size={19} color="#7754db" />
+            <Text style={{marginLeft:7, color:"#7754db", fontWeight:"bold"}}>Chi tiết AI</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.choseBtn, {backgroundColor:'#e6f6ff', borderColor:"#29b6e9", marginLeft:8}]}
+            onPress={() => openMapWithPlace(item)}>
+            <Ionicons name="map-outline" size={19} color="#29b6e9" />
+            <Text style={{marginLeft:7, color:"#29b6e9", fontWeight:"bold"}}>Bản đồ</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    )
+  };
+
+  // Header của list (quỹ, tổng tiền, cảnh báo)
+  const ListHeaderComponent = (
+    <View style={{paddingTop:10, paddingBottom:3, marginBottom:2}}>
+      <Text style={{ fontSize:20, fontWeight:"bold", color:"#ec407a", marginBottom:9 }}>
+        Quỹ vui chơi đã đặt: <Text style={{color:"#1eb183", fontWeight:"bold"}}>{playBudgetNumber.toLocaleString()} VNĐ</Text>
+      </Text>
+      <Text style={{color:"#555", marginBottom:7, fontSize:14}}>
+        Số điểm đã chọn: {chosen.length} | Tổng chi phí:{" "}
+        <Text style={{fontWeight:"bold", color: (overBudget ? "#e53935" : "#14af59")}}>{totalCost.toLocaleString()} VNĐ</Text>
+      </Text>
+      {overBudget && (
+        <Text style={{color:"#e53935",fontWeight:"bold",fontSize:16,marginBottom:10}}>
+          <Ionicons name="warning" size={17} color="#e53935" /> Tổng chi phí đã vượt quá quỹ!
+        </Text>
+      )}
+    </View>
+  );
+
+  // Footer (nút Xem thêm nếu chưa hết)
+  const ListFooterComponent = (
+    !allLoaded &&
+    <TouchableOpacity
+      style={{
+        marginVertical: 8, alignSelf:"center", paddingHorizontal:44, paddingVertical:11, borderRadius:10,
+        backgroundColor: "#faf3ff", borderWidth:1, borderColor:"#d0b0f7",
+        flexDirection:"row", alignItems:"center"
+      }}
+      onPress={() => {
+        const nextPage = page + 1;
+        setPage(nextPage);
+        fetchPOIs(hotel.lat, hotel.lon, nextPage);
+      }}>
+      {loading
+        ? <ActivityIndicator size="small" color="#d15dec"/>
+        : <>
+            <Ionicons name="add-circle-outline" size={21} color="#a875ff"/>
+            <Text style={{marginLeft:7, color:"#a875ff", fontWeight:"bold", fontSize:16}}>
+              Xem thêm khu vui chơi
+            </Text>
+          </>
+      }
+    </TouchableOpacity>
+  );
+
+  // ---- Render ----
+  return (
+    <View style={{flex:1, backgroundColor:"#f8fafd"}}>
+      {/* Nút TIẾP TỤC nổi trên cùng bên phải */}
+      <View style={{
+        position:"absolute", right:15, top:15, zIndex: 10,
+        shadowColor: "#c6a7f9", elevation:5
+      }}>
+        <TouchableOpacity
+          style={{
+            backgroundColor: overBudget ? "#c8c8c8" : "#EC407A",
+            borderRadius: 22, paddingHorizontal:22, paddingVertical:9,
+            flexDirection:"row", alignItems:"center",
+            opacity: (overBudget || chosen.length===0) ? 0.65 : 1
+          }}
+          onPress={() => {
+            if (overBudget) {
+              Alert.alert("Vượt quỹ!", "Bạn cần bỏ bớt khu vui chơi để phù hợp quỹ.");
+              return;
+            }
+            if (chosen.length === 0){
+              Alert.alert("Chọn ít nhất 1 khu vui chơi!");
+              return;
+            }
+            // Chuyển tiếp sang bước tiếp theo, thay "/MoveTab" bằng route phù hợp
+            router.push("/TravelTransportScreen");
+          }}
+          disabled={overBudget || chosen.length===0}
+        >
+          <Ionicons name="arrow-forward-circle" size={23} color="#fff" />
+          <Text style={{
+            color: "#fff",
+            fontWeight: "bold",
+            marginLeft: 7,
+            fontSize: 16
+          }}>Tiếp tục</Text>
+        </TouchableOpacity>
+      </View>
+      <FlatList
+        data={playgrounds}
+        renderItem={renderCard}
+        keyExtractor={item => item._cardKey}
+        ListHeaderComponent={ListHeaderComponent}
+        ListFooterComponent={ListFooterComponent}
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.5}
+        contentContainerStyle={{paddingHorizontal:13, paddingBottom:110, paddingTop:66}}
+        showsVerticalScrollIndicator={false}
+      />
+
+      {/* Modal AI info */}
+      <Modal visible={modalVisible} transparent animationType="slide" onRequestClose={()=>setModalVisible(false)}>
+        <View style={{backgroundColor:"rgba(0,0,0,0.16)",flex:1,justifyContent:'center',alignItems:'center'}}>
+          <View style={{
+            width:"95%",backgroundColor:"#fff",borderRadius:22,elevation:16,maxHeight:"82%",paddingBottom:7}}>
+            <View style={{flexDirection:"row", alignItems:"center",padding:19,borderBottomWidth:1,borderColor:"#eee"}}>
+              <Ionicons name="sparkles" size={23} color="#ec407a"/>
+              <Text style={{fontSize:18,fontWeight:"bold", color:"#ec407a",marginLeft:12,flex:1}}>
+                {modalPlace?.properties?.name || "Chi tiết"}
+              </Text>
+              <TouchableOpacity onPress={()=>setModalVisible(false)}>
+                <Ionicons name="close-circle" size={27} color="#666" />
+              </TouchableOpacity>
+            </View>
+            <View style={{padding:18, maxHeight: Dimensions.get("window").height * 0.5}}>
+              {aiLoading
+                ? <ActivityIndicator size="large" color="#ec407a"/> 
+                : <Text style={{fontSize:16,color:"#2a2a2a",lineHeight:23}}>{aiDetail}</Text>}
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal/View dùng Map (hotel + playground) */}
+      <Modal visible={mapMode} transparent animationType="slide" onRequestClose={()=>setMapMode(false)}>
+        <View style={{backgroundColor:"rgba(0,0,0,0.16)",flex:1,justifyContent:'center',alignItems:'center'}}>
+          <View style={{
+            width:"97%",height:"60%",backgroundColor:"#fff",borderRadius:22,elevation:12,overflow:'hidden'}}>
+            <MapView
+              style={{flex:1}}
+              initialRegion={{
+                latitude: hotel.lat, longitude: hotel.lon,
+                latitudeDelta: 0.03, longitudeDelta: 0.03
+              }}>
+              <Marker coordinate={{latitude:hotel.lat, longitude:hotel.lon}} pinColor="#ec407a"
+                title={hotel.name||hotel.formatted} description="Khách sạn của bạn"/>
+              {mapPlace &&
+                <Marker coordinate={{
+                  latitude: mapPlace.geometry.coordinates[1],
+                  longitude: mapPlace.geometry.coordinates[0]
+                }}
+                  title={mapPlace.properties.name}
+                  pinColor="#1976d2"
+                />
+              }
+            </MapView>
+            <View style={{padding:10,flexDirection:"row",justifyContent:"space-between",alignItems:"center"}}>
+              <Text style={{color:"#ea408a",fontWeight:"bold"}}>
+                {hotel.name} → {mapPlace?.properties?.name}{"\n"}
+                <Text style={{color:"#3b327d"}}>Khoảng cách: {
+                    mapPlace && getDistance(hotel.lat,hotel.lon,mapPlace.geometry.coordinates[1],mapPlace.geometry.coordinates[0])
+                  } km
+                </Text>
+              </Text>
+              <TouchableOpacity onPress={()=>setMapMode(false)}>
+                <Ionicons name="close-circle" size={25} color="#666" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  choseBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 2,
+    borderRadius: 9,
+    paddingVertical: 7,
+    paddingHorizontal: 15,
+    minWidth: 85,
+  },
+});
+
+export default PlaygroundTab;
