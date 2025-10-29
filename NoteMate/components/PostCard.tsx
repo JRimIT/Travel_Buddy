@@ -1,7 +1,7 @@
 // components/PostCard.tsx
 
 import React from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, Alert, Share } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import ParsedText from 'react-native-parsed-text';
@@ -24,9 +24,11 @@ interface PostCardProps {
   onCommentPress: (postId: string) => void;
   onDelete: (postId: string) => void;
   currentUserId?: string;
+  userSavedPosts: string[]; 
+  onSave: (postId: string) => void;
 }
 
-const PostCard: React.FC<PostCardProps> = ({ post, onLike, onCommentPress, onDelete, currentUserId }) => {
+const PostCard: React.FC<PostCardProps> = ({ post, onLike, onCommentPress, onDelete, currentUserId,userSavedPosts,onSave }) => {
   const router = useRouter();
   const isLiked = currentUserId ? post.likes.includes(currentUserId) : false;
   const isOwner = currentUserId === post.user?._id;
@@ -84,6 +86,18 @@ const PostCard: React.FC<PostCardProps> = ({ post, onLike, onCommentPress, onDel
       { cancelable: true }
     );
   };
+  
+  const handleShare = async () => {
+    try {
+      await Share.share({
+        message: `Hãy xem bài viết này từ ${post.user.username}: ${post.title}\n\n${post.content}`, 
+      });
+    } catch (error) {
+      Alert.alert(error.message);
+    }
+  };
+
+  const isSaved = userSavedPosts.includes(post._id);
 
   return (
     <View style={styles.card}>
@@ -124,21 +138,24 @@ const PostCard: React.FC<PostCardProps> = ({ post, onLike, onCommentPress, onDel
 
       {/* Các nút hành động */}
       <View style={styles.actionsContainer}>
-        <TouchableOpacity style={styles.actionButton} onPress={() => onLike(post._id)}>
-          <Ionicons name={isLiked ? 'heart' : 'heart-outline'} size={24} color={isLiked ? '#e91e63' : '#555'} />
-          <Text style={styles.actionText}>{post.likes.length}</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={styles.actionButton}
-          onPress={() => onCommentPress(post._id)}
-        >
-          <Ionicons name="chatbubble-outline" size={24} color="#555" />
-          <Text style={styles.actionText}>{post.comments.length}</Text>
-        </TouchableOpacity>
+        <View style={styles.leftActions}>
+          <TouchableOpacity style={styles.actionButton} onPress={() => onLike(post._id)}>
+            <Ionicons name={isLiked ? 'heart' : 'heart-outline'} size={24} color={isLiked ? '#e91e63' : '#555'} />
+            <Text style={styles.actionText}>{post.likes.length}</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.actionButton} onPress={() => onCommentPress(post._id)}>
+            <Ionicons name="chatbubble-outline" size={24} color="#555" />
+            <Text style={styles.actionText}>{post.comments.length}</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.actionButton, { marginLeft: 'auto' }]}>
-          <Ionicons name="share-social-outline" size={24} color="#555" />
+          <TouchableOpacity style={styles.actionButton} onPress={handleShare}>
+            <Ionicons name="share-social-outline" size={24} color="#555" />
+          </TouchableOpacity>
+        </View>
+
+         <TouchableOpacity style={{ marginLeft: 'auto' }} onPress={() => onSave(post._id)}>
+          <Ionicons name={isSaved ? "bookmark" : "bookmark-outline"} size={24} color="#555" />
         </TouchableOpacity>
       </View>
     </View>
@@ -202,13 +219,18 @@ const styles = StyleSheet.create({
   },
   actionsContainer: {
     flexDirection: 'row',
+    justifyContent: 'space-between', // Quan trọng nhất: đẩy 2 nhóm ra 2 bên
     alignItems: 'center',
     paddingTop: 8,
+  },
+  leftActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: 20, // Tăng khoảng cách giữa các nút
   },
   actionText: {
     marginLeft: 6,

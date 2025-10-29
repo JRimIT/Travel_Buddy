@@ -16,6 +16,15 @@ const commentSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  parent: { // ID của bình luận cha (nếu là một trả lời)
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Comment',
+    default: null,
+  },
+  replies: [{ // Mảng các ID của bình luận con
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Comment'
+  }]
 }, { timestamps: true });
 
 const Comment = mongoose.model('Comment', commentSchema);
