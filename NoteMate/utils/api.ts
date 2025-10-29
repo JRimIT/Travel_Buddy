@@ -1,8 +1,6 @@
 import { Alert } from "react-native";
 import { API_URL } from "../constants/api";
 
-
-
 export const confirmSchedule = async (
   title,
   description,
@@ -11,7 +9,11 @@ export const confirmSchedule = async (
   days,
   hotelDefault,
   flightTicket,
-  token, 
+  mainTransport,
+  innerTransport,
+  fromLocation,
+  province,
+  token,
   imageDataUrl,
 ) => {
   try {
@@ -25,33 +27,26 @@ export const confirmSchedule = async (
         title,
         description,
         isPublic,
-        budget: budgets,          
-        days,                    
-        hotelDefault,            
-        flightTicket, 
-        image: imageDataUrl           
+        budget: budgets,
+        days,
+        hotelDefault,
+        flightTicket,
+        image: imageDataUrl,
+        mainTransport,
+        innerTransport,
+        fromLocation,
+        province,
       }),
     });
-  
+
     const result = await response.json();
 
     if (!response.ok) {
-      console.log("Server returned Error (status", response.status, "):", result);
-      
-      Alert.alert("Error", result.error || "Server returned error");
+      Alert.alert("Lỗi", result.error || "Server returned error");
       return;
     }
-
-    console.log("Response OK:", result);
     return result;
-
   } catch (error) {
-    console.log("Error submitting schedule:", error);
-    const errorMessage =
-      error instanceof Error && error.message
-        ? error.message
-        : "Something went wrong. Please try again.";
-    Alert.alert("Error", errorMessage);
+    Alert.alert("Lỗi", "Không thể lưu lịch trình!");
   }
 };
-

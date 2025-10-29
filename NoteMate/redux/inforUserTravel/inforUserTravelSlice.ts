@@ -5,7 +5,7 @@ const initialState = {
 
     userTravelDays: 0,
     userProvince: {},
-    userCurrentLocation: {},
+    userCurrentLocation: '',
     userDistrict: '',
     userHomeType: '',
     userStartDate: '',
@@ -16,10 +16,12 @@ const initialState = {
     userFlightBudget: '',
     userFlightTicket: [],
     userChosenFlight: [],
+    userTransportMain: '',
     userTransportType: '',
     userTransportBudget: '',
     userActivities: [],
     userSchedule: [],
+    userPlaygrounds: [],
 };
 
 const inforUserTravelSlice = createSlice({
@@ -64,6 +66,9 @@ const inforUserTravelSlice = createSlice({
             state.userFlightBudget = action.payload;
         }
         ,
+        setUserTransportMain: (state, action) => {
+            state.userTransportMain = action.payload;
+        },
         setUserTransportType: (state, action) => {
             state.userTransportType = action.payload;
         }
@@ -82,9 +87,12 @@ const inforUserTravelSlice = createSlice({
         },
         setUserChosenFlight: (state, action) => {
             state.userChosenFlight = action.payload;
+        },
+        setUserPlaygrounds: (state, action) => {
+            state.userPlaygrounds = action.payload;
         }
     },
 });
 
-export const { setUserProvince, setUserDistrict, setUserStartDate, setUserEndDate, setUserHomeType, setUserHotelBudget, setUserActivities, setUserFlightBudget, setUserFunBudget, setUserTransportBudget, setUserTransportType, setUserCurrentLocation, setUserInforHotel, setUserTravelDays, setUserSchedule, setUserFlightTicket, setUserChosenFlight } = inforUserTravelSlice.actions;
+export const { setUserProvince, setUserDistrict, setUserStartDate, setUserEndDate, setUserHomeType, setUserHotelBudget, setUserActivities, setUserFlightBudget, setUserFunBudget, setUserTransportBudget, setUserTransportType, setUserCurrentLocation, setUserInforHotel, setUserTravelDays, setUserSchedule, setUserFlightTicket, setUserChosenFlight, setUserPlaygrounds, setUserTransportMain } = inforUserTravelSlice.actions;
 export default inforUserTravelSlice.reducer;
