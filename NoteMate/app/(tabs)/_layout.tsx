@@ -1,5 +1,6 @@
 import { View, Text } from "react-native";
-import React, { use } from "react";
+import React from "react";
+import 'react-native-gesture-handler';
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -8,8 +9,6 @@ import { useTheme } from "../../contexts/ThemeContext";
 import createProfileStyles from "../../assets/styles/profile.styles";
 const TabLayout = () => {
   const { colors } = useTheme();
-  const styles = createProfileStyles(colors);
-
   const insets = useSafeAreaInsets();
 
   return (
@@ -22,14 +21,13 @@ const TabLayout = () => {
           fontWeight: "600",
         },
         headerShadowVisible: false,
-
         tabBarStyle: {
           backgroundColor: colors.cardBackground,
           borderTopWidth: 1,
           borderTopColor: colors.border,
           paddingTop: 5,
-          paddingBottom: insets.bottom, // Add padding for bottom safe area
-          height: 60 + insets.bottom, // Adjust height to include bottom safe area
+          paddingBottom: insets.bottom,
+          height: 60 + insets.bottom,
         },
       }}
     >
@@ -42,12 +40,13 @@ const TabLayout = () => {
           ),
         }}
       />
+      {/* Đổi "create" thành "feed" như đã làm trước đó */}
       <Tabs.Screen
-        name="create"
+        name="feed" 
         options={{
-          title: "Create",
+          title: "Feed",
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="add-circle-outline" size={size} color={color} />
+            <Ionicons name="newspaper-outline" size={size} color={color} />
           ),
         }}
       />
@@ -55,8 +54,8 @@ const TabLayout = () => {
         name="profile"
         options={{
           title: "Profile",
-          tabBarIcon: ({ color }) => (
-            <Ionicons name="person-outline" size={24} color={color} />
+          tabBarIcon: ({ color, size }) => ( // Thêm size để nhất quán
+            <Ionicons name="person-outline" size={size} color={color} />
           ),
         }}
       />
@@ -64,8 +63,8 @@ const TabLayout = () => {
         name="setting"
         options={{
           title: "Setting",
-          tabBarIcon: ({ color }) => (
-            <Ionicons name="settings-outline" size={24} color={color} />
+          tabBarIcon: ({ color, size }) => ( // Thêm size để nhất quán
+            <Ionicons name="settings-outline" size={size} color={color} />
           ),
         }}
       />
