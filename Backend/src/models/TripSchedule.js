@@ -19,8 +19,11 @@ const TripScheduleSchema = new mongoose.Schema({
             place: Object
         }],
     }],
+    startDate: String,
+    endDate: String,
     hotelDefault: Object,
     flightTicket: Object,
+    home: Object,
     image: { type: String, required: true },
     mainTransport: { type: String },
     innerTransport: { type: String },

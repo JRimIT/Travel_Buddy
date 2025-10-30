@@ -40,7 +40,7 @@ const TravelSchedulePublicScreen = () => {
         },
       });
       const res = await response.json();
-      console.log("res: ", res);
+      // console.log("res: ", res);
       
       setData(res); // có thể là res.schedules tùy backend
     } catch (e) {

@@ -169,7 +169,7 @@ Trả về thông tin rõ ràng từng mục giống cấu trúc liệt kê trê
 });
 
 router.post("/schedule-optimize", async (req, res) => {
-    const { places, numDays, budget } = req.body;
+    const { places, numDays, budget, startDate } = req.body;
     const listPOI = (places || [])
         .map((p, idx) => {
             const name =
@@ -184,6 +184,7 @@ router.post("/schedule-optimize", async (req, res) => {
 Bạn là hướng dẫn viên du lịch, hãy lên lịch trình tham quan hợp lý cho khách dựa trên:
 - Danh sách điểm vui chơi dưới đây
 - Số ngày: ${numDays}
+- Ngày bắt đầu chuyến đi: ${startDate}
 - Tổng ngân sách: ${budget} VNĐ
 
 Yêu cầu:
@@ -192,11 +193,12 @@ Yêu cầu:
 - Hiển thị chi phí từng hoạt động (giá vé) và tổng chi phí mỗi ngày.
 - Không vượt quá tổng ngân sách.
 - Đảm bảo không trùng lặp thời gian giữa các hoạt động.
+- Trường "date" của mỗi ngày phải là ngày thực tế (ISO, yyyy-mm-dd), tính từ ngày bắt đầu ("${startDate}") cộng dần cho mỗi ngày tiếp theo.
 - Trả về hoàn toàn dưới dạng JSON (không markdown, không mô tả ngoài json) với cấu trúc:
 [
   {
     "day": 1,
-    "date": "",
+    "date": "yyyy-mm-dd",
     "activities": [
       { "name": "", "time": "09:00", "cost": 0, "address": "", "note": "" }
     ],

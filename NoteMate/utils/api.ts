@@ -7,6 +7,7 @@ export const confirmSchedule = async (
   isPublic,
   budgets,
   days,
+  baseStay,
   hotelDefault,
   flightTicket,
   mainTransport,
@@ -15,6 +16,9 @@ export const confirmSchedule = async (
   province,
   token,
   imageDataUrl,
+  isHome,
+  startDate,
+  endDate 
 ) => {
   try {
     const response = await fetch(`${API_URL}/tripSchedule/create`, {
@@ -29,6 +33,7 @@ export const confirmSchedule = async (
         isPublic,
         budget: budgets,
         days,
+        baseStay,
         hotelDefault,
         flightTicket,
         image: imageDataUrl,
@@ -36,17 +41,24 @@ export const confirmSchedule = async (
         innerTransport,
         fromLocation,
         province,
+        baseStayType: isHome ? "home" : "hotel",
+        startDate,
+        endDate
       }),
     });
 
     const result = await response.json();
-
+   
+    
     if (!response.ok) {
+      console.log("result.error: ", response);
+      
       Alert.alert("Lỗi", result.error || "Server returned error");
       return;
     }
     return result;
   } catch (error) {
     Alert.alert("Lỗi", "Không thể lưu lịch trình!");
+    return error;
   }
 };

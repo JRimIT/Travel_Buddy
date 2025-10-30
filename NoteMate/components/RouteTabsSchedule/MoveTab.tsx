@@ -19,28 +19,46 @@ const iconMap = {
 
 const MoveTabScreen = () => {
   const hotel = useSelector((state:any) => state.inforUserTravel.userInforHotel);
+  const home = useSelector((state:any) => state.inforUserTravel.userHomeAddress);
   const playgrounds = useSelector((state:any) => state.inforUserTravel.userPlaygrounds || []);
-  const mainTransport = useSelector((state:any) => state.inforUserTravel.userTransportMain); // ví dụ: "Máy bay"
-  const innerTransport = useSelector((state:any) => state.inforUserTravel.userTransportType); // ví dụ: "Xe máy"
+  const mainTransport = useSelector((state:any) => state.inforUserTravel.userTransportMain); // "Máy bay", ...
+  const innerTransport = useSelector((state:any) => state.inforUserTravel.userTransportType); // "Xe máy", ...
   const fromLocation = useSelector((state:any) => state.inforUserTravel.userCurrentLocation);
 
-  const [aiData, setAiData] = useState<any>(null);
+  // --- Ưu tiên dùng Home nếu có, fallback hotel ---
+  const isHome = !!(home && home.lat && home.lon);
+  const baseLocation = isHome
+    ? { lat: Number(home.lat), lon: Number(home.lon), label: home.name || home.address || "Nhà của bạn" }
+    : hotel && hotel.lat && hotel.lon
+      ? { lat: Number(hotel.lat), lon: Number(hotel.lon), label: hotel.name || hotel.address_line1 || hotel.datasource?.raw?.name }
+      : { lat: 0, lon: 0, label: "?" };
+
+  const [aiData, setAiData] = useState(null);
   const [loading, setLoading] = useState(false);
 
   const loadedRef = useRef(false);
   useEffect(() => {
-    if (!hotel || playgrounds.length === 0 || !mainTransport || !innerTransport) return;
+    if ((!isHome && !hotel) || playgrounds.length === 0 || !mainTransport || !innerTransport)
+      return;
     if (loadedRef.current) return;
     setLoading(true);
+
+    const pointData = isHome
+      ? { home } // gửi thông tin home qua backend thay cho hotel
+      : { hotel };
+
     axios.post(`${API_URL}/AI/transport-analysis`, {
-      hotel, playgrounds, mainTransport, innerTransport, fromLocation
+      ...pointData,
+      playgrounds,
+      mainTransport,
+      innerTransport,
+      fromLocation
     })
       .then(res => setAiData(res.data))
       .catch(() => setAiData(null))
       .finally(() => { setLoading(false); loadedRef.current = true; });
-  }, [hotel, playgrounds, mainTransport, innerTransport, fromLocation]);
-// console.log("aiData: ", aiData);
-
+  }, [hotel, home, playgrounds, mainTransport, innerTransport, fromLocation, isHome]);
+  //console.log("aiData: ", aiData);
   return (
     <ScrollView style={styles.scroll} contentContainerStyle={styles.container}>
       <Text style={styles.header}>Phương tiện và lộ trình chuyến đi</Text>
@@ -49,6 +67,9 @@ const MoveTabScreen = () => {
       </Text>
       <Text style={styles.vehicle}>
         {iconMap[innerTransport] || ""} Phương tiện nội thành: <Text style={{color:"#156ff4", fontWeight:"bold"}}>{innerTransport}</Text>
+      </Text>
+      <Text style={styles.sectionLabel}>
+        Điểm xuất phát: <Text style={{fontWeight:"bold", color: isHome ? "#00b496" : "#156ff4"}}>{baseLocation.label}</Text>
       </Text>
       {loading && (
         <ActivityIndicator color="#2196f3" style={{marginVertical:18}} />
@@ -69,7 +90,7 @@ const MoveTabScreen = () => {
           }
           <Text style={styles.sectionLabel}>Các chặng nội thành:</Text>
           <View style={styles.legList}>
-            {aiData.legs?.map((leg:any, idx:number) => (
+            {aiData.legs?.map((leg, idx) => (
               <View key={idx} style={styles.legCard}>
                 <Text style={styles.legTitle}>Chặng {idx+1}: <Text style={{color:"#2176be", fontWeight:"bold"}}>{leg.from}</Text> → <Text style={{color:"#218d69"}}>{leg.to}</Text> ({leg.transport})</Text>
                 <Text style={styles.legInfo}>
