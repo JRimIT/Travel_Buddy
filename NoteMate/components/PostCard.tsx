@@ -19,6 +19,7 @@ interface PostCardProps {
     imageUrl?: string;
     likes: string[];
     comments: any[];
+    commentCount?: number;
   };
   onLike: (postId: string) => void;
   onCommentPress: (postId: string) => void;
@@ -146,7 +147,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, onLike, onCommentPress, onDel
           
           <TouchableOpacity style={styles.actionButton} onPress={() => onCommentPress(post._id)}>
             <Ionicons name="chatbubble-outline" size={24} color="#555" />
-            <Text style={styles.actionText}>{post.comments.length}</Text>
+            <Text style={styles.actionText}>{post.commentCount ?? post.comments?.length ?? 0}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.actionButton} onPress={handleShare}>

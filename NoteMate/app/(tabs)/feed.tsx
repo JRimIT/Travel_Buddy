@@ -138,7 +138,7 @@ const CommentModal = ({ visible, onClose, postId, onCommentPosted }: {
             console.log("--- SERVER RESPONSE (POST) ---", JSON.stringify(postedComment, null, 2)); // <--- THÊM DÒNG NÀY
 
             if (!response.ok) {
-                throw new Error(postedComment.message || '[translate:Không thể đăng bình luận]');
+                throw new Error(postedComment.message || 'Không thể đăng bình luận');
             }
 
             // *** Chuyển hàm đệ quy ra ngoài, không cần nó ở đây nữa ***
@@ -162,7 +162,7 @@ const CommentModal = ({ visible, onClose, postId, onCommentPosted }: {
             setNewComment('');
             setReplyingTo(null);
         } catch (error) {
-            Alert.alert('[translate:Lỗi]', error.message);
+            Alert.alert('Lỗi', error.message);
         } finally {
             setIsPosting(false);
         }
@@ -178,7 +178,7 @@ const CommentModal = ({ visible, onClose, postId, onCommentPosted }: {
                 <TouchableOpacity style={StyleSheet.absoluteFill} onPress={onClose} />
                 <View style={styles.modalContainer}>
                     <View style={styles.handle} />
-                    <Text style={styles.headerTitle}>[translate:Bình luận]</Text>
+                    <Text style={styles.headerTitle}>Bình luận</Text>
                     {replyingTo && (
                         <View style={styles.replyingContainer}>
                             <Text style={styles.replyingText}>
@@ -195,21 +195,21 @@ const CommentModal = ({ visible, onClose, postId, onCommentPosted }: {
                             renderItem={({ item }) => <CommentItem comment={item} onReplyPress={handleReplyPress} />}
                             keyExtractor={(item) => item._id.toString()}
                             contentContainerStyle={styles.listContent}
-                            ListEmptyComponent={<Text style={styles.emptyText}>[translate:Chưa có bình luận nào]</Text>}
+                            ListEmptyComponent={<Text style={styles.emptyText}>Chưa có bình luận nào</Text>}
                         />
                     )}
                     <View style={styles.inputContainer}>
                         <Image source={{ uri: user?.profileImage || 'https://via.placeholder.com/40' }} style={styles.inputAvatar} />
                         <TextInput
                             style={styles.commentInput} // Dùng style đã tối ưu
-                            placeholder={replyingTo ? `[translate:Trả lời] @${replyingTo.user?.username || 'user'}...` : "[translate:Viết bình luận...]"}
+                            placeholder={replyingTo ? `Trả lời @${replyingTo.user?.username || 'user'}...` : "Viết bình luận..."}
                             placeholderTextColor="#8e8e8e"
                             value={newComment}
                             onChangeText={setNewComment}
                             multiline
                         />
                         <TouchableOpacity onPress={handlePostComment} disabled={isPosting}>
-                            {isPosting ? <ActivityIndicator size="small" /> : <Text style={styles.postButton}>[translate:Đăng]</Text>}
+                            {isPosting ? <ActivityIndicator size="small" /> : <Text style={styles.postButton}>Đăng</Text>}
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -332,19 +332,32 @@ export default function FeedScreen() {
   };
 
   const onCommentPosted = (postId: string, newComment: any, parentId: string | null) => {
-    setPosts(currentPosts =>
-        currentPosts.map(post => {
-            if (post._id === postId) {
-                const existingComments = post.comments || [];
-                const updatedComments = parentId
-                    ? addReplyRecursively(existingComments, parentId, newComment)
-                    : [newComment, ...existingComments];
-                
-                return { ...post, comments: updatedComments };
-            }
-            return post;
-        })
-    );
+      setPosts(currentPosts =>
+          currentPosts.map(post => {
+              // Tìm đúng bài viết đã được bình luận
+              if (post._id === postId) {
+                  // Logic cập nhật cây bình luận (giữ nguyên, đã đúng)
+                  const existingComments = post.comments || [];
+                  const updatedComments = parentId
+                      ? addReplyRecursively(existingComments, parentId, newComment)
+                      : [newComment, ...existingComments];
+
+                  // *** THÊM LOGIC CẬP NHẬT SỐ BÌNH LUẬN ***
+                  // Lấy số bình luận hiện tại (hoặc 0 nếu chưa có) và cộng thêm 1.
+                  // Kỹ thuật này được gọi là "Optimistic Update" - cập nhật giao diện ngay lập tức.
+                  const newCommentCount = (post.commentCount || 0) + 1;
+
+                  // Trả về đối tượng post đã được cập nhật hoàn chỉnh
+                  return {
+                      ...post,
+                      comments: updatedComments,       // Cập nhật cây bình luận
+                      commentCount: newCommentCount, // Cập nhật số đếm bình luận
+                  };
+              }
+              // Trả về các bài viết khác không thay đổi
+              return post;
+          })
+      );
   };
 
   const handleDeletePost = async (postId: string) => {
@@ -374,7 +387,7 @@ export default function FeedScreen() {
                         setSearchResults(prevResults => prevResults.filter(p => p._id !== postId));
 
                     } catch (error) {
-                        Alert.alert("[translate:Lỗi]", error.message);
+                        Alert.alert("Lỗi", error.message);
                     }
                 },
             },
