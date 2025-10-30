@@ -311,7 +311,9 @@ export default function FeedScreen() {
   const closeCommentModal = () => {
     setCommentModalVisible(false);
     setSelectedPostId(null);
-  };
+    fetchPosts(); // 🔁 Đồng bộ lại dữ liệu từ server (bao gồm commentCount)
+    };
+
   const addReplyRecursively = (commentsList: any[], parentId: string, newReply: any): any[] => {
       return commentsList.map(comment => {
           if (comment._id === parentId) {
@@ -331,34 +333,26 @@ export default function FeedScreen() {
       });
   };
 
-  const onCommentPosted = (postId: string, newComment: any, parentId: string | null) => {
-      setPosts(currentPosts =>
-          currentPosts.map(post => {
-              // Tìm đúng bài viết đã được bình luận
-              if (post._id === postId) {
-                  // Logic cập nhật cây bình luận (giữ nguyên, đã đúng)
-                  const existingComments = post.comments || [];
-                  const updatedComments = parentId
-                      ? addReplyRecursively(existingComments, parentId, newComment)
-                      : [newComment, ...existingComments];
+    const onCommentPosted = (postId: string, newComment: any, parentId: string | null) => {
+    setPosts(prevPosts => 
+        prevPosts.map(post => {
+        if (post._id === postId) {
+            const existingComments = post.comments ? [...post.comments] : [];
+            const updatedComments = parentId
+            ? addReplyRecursively(existingComments, parentId, newComment)
+            : [newComment, ...existingComments];
 
-                  // *** THÊM LOGIC CẬP NHẬT SỐ BÌNH LUẬN ***
-                  // Lấy số bình luận hiện tại (hoặc 0 nếu chưa có) và cộng thêm 1.
-                  // Kỹ thuật này được gọi là "Optimistic Update" - cập nhật giao diện ngay lập tức.
-                  const newCommentCount = (post.commentCount || 0) + 1;
-
-                  // Trả về đối tượng post đã được cập nhật hoàn chỉnh
-                  return {
-                      ...post,
-                      comments: updatedComments,       // Cập nhật cây bình luận
-                      commentCount: newCommentCount, // Cập nhật số đếm bình luận
-                  };
-              }
-              // Trả về các bài viết khác không thay đổi
-              return post;
-          })
-      );
-  };
+            return {
+            ...post,
+            comments: updatedComments,
+            commentCount: (post.commentCount || 0) + 1, // 🔼 tăng count
+            };
+            
+        }
+        return post;
+        })
+    );
+    };
 
   const handleDeletePost = async (postId: string) => {
     Alert.alert(
@@ -436,8 +430,10 @@ export default function FeedScreen() {
             <FlatList
                 data={displayedPosts}
                 keyExtractor={(item) => item._id}
+                extraData={posts}
                 renderItem={({ item }) => (
-                    <PostCard 
+                    <PostCard
+                        key={item._id + '-' + (item.commentCount ?? 0)}
                         post={item} 
                         onLike={handleLike} 
                         onCommentPress={handleCommentPress}
