@@ -138,7 +138,7 @@ const CommentModal = ({ visible, onClose, postId, onCommentPosted }: {
             console.log("--- SERVER RESPONSE (POST) ---", JSON.stringify(postedComment, null, 2)); // <--- THÊM DÒNG NÀY
 
             if (!response.ok) {
-                throw new Error(postedComment.message || '[translate:Không thể đăng bình luận]');
+                throw new Error(postedComment.message || 'Không thể đăng bình luận');
             }
 
             // *** Chuyển hàm đệ quy ra ngoài, không cần nó ở đây nữa ***
@@ -162,7 +162,7 @@ const CommentModal = ({ visible, onClose, postId, onCommentPosted }: {
             setNewComment('');
             setReplyingTo(null);
         } catch (error) {
-            Alert.alert('[translate:Lỗi]', error.message);
+            Alert.alert('Lỗi', error.message);
         } finally {
             setIsPosting(false);
         }
@@ -178,7 +178,7 @@ const CommentModal = ({ visible, onClose, postId, onCommentPosted }: {
                 <TouchableOpacity style={StyleSheet.absoluteFill} onPress={onClose} />
                 <View style={styles.modalContainer}>
                     <View style={styles.handle} />
-                    <Text style={styles.headerTitle}>[translate:Bình luận]</Text>
+                    <Text style={styles.headerTitle}>Bình luận</Text>
                     {replyingTo && (
                         <View style={styles.replyingContainer}>
                             <Text style={styles.replyingText}>
@@ -195,21 +195,21 @@ const CommentModal = ({ visible, onClose, postId, onCommentPosted }: {
                             renderItem={({ item }) => <CommentItem comment={item} onReplyPress={handleReplyPress} />}
                             keyExtractor={(item) => item._id.toString()}
                             contentContainerStyle={styles.listContent}
-                            ListEmptyComponent={<Text style={styles.emptyText}>[translate:Chưa có bình luận nào]</Text>}
+                            ListEmptyComponent={<Text style={styles.emptyText}>Chưa có bình luận nào</Text>}
                         />
                     )}
                     <View style={styles.inputContainer}>
                         <Image source={{ uri: user?.profileImage || 'https://via.placeholder.com/40' }} style={styles.inputAvatar} />
                         <TextInput
                             style={styles.commentInput} // Dùng style đã tối ưu
-                            placeholder={replyingTo ? `[translate:Trả lời] @${replyingTo.user?.username || 'user'}...` : "[translate:Viết bình luận...]"}
+                            placeholder={replyingTo ? `Trả lời @${replyingTo.user?.username || 'user'}...` : "Viết bình luận..."}
                             placeholderTextColor="#8e8e8e"
                             value={newComment}
                             onChangeText={setNewComment}
                             multiline
                         />
                         <TouchableOpacity onPress={handlePostComment} disabled={isPosting}>
-                            {isPosting ? <ActivityIndicator size="small" /> : <Text style={styles.postButton}>[translate:Đăng]</Text>}
+                            {isPosting ? <ActivityIndicator size="small" /> : <Text style={styles.postButton}>Đăng</Text>}
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -311,7 +311,9 @@ export default function FeedScreen() {
   const closeCommentModal = () => {
     setCommentModalVisible(false);
     setSelectedPostId(null);
-  };
+    fetchPosts(); // 🔁 Đồng bộ lại dữ liệu từ server (bao gồm commentCount)
+    };
+
   const addReplyRecursively = (commentsList: any[], parentId: string, newReply: any): any[] => {
       return commentsList.map(comment => {
           if (comment._id === parentId) {
@@ -331,21 +333,26 @@ export default function FeedScreen() {
       });
   };
 
-  const onCommentPosted = (postId: string, newComment: any, parentId: string | null) => {
-    setPosts(currentPosts =>
-        currentPosts.map(post => {
-            if (post._id === postId) {
-                const existingComments = post.comments || [];
-                const updatedComments = parentId
-                    ? addReplyRecursively(existingComments, parentId, newComment)
-                    : [newComment, ...existingComments];
-                
-                return { ...post, comments: updatedComments };
-            }
-            return post;
+    const onCommentPosted = (postId: string, newComment: any, parentId: string | null) => {
+    setPosts(prevPosts => 
+        prevPosts.map(post => {
+        if (post._id === postId) {
+            const existingComments = post.comments ? [...post.comments] : [];
+            const updatedComments = parentId
+            ? addReplyRecursively(existingComments, parentId, newComment)
+            : [newComment, ...existingComments];
+
+            return {
+            ...post,
+            comments: updatedComments,
+            commentCount: (post.commentCount || 0) + 1, // 🔼 tăng count
+            };
+            
+        }
+        return post;
         })
     );
-  };
+    };
 
   const handleDeletePost = async (postId: string) => {
     Alert.alert(
@@ -374,7 +381,7 @@ export default function FeedScreen() {
                         setSearchResults(prevResults => prevResults.filter(p => p._id !== postId));
 
                     } catch (error) {
-                        Alert.alert("[translate:Lỗi]", error.message);
+                        Alert.alert("Lỗi", error.message);
                     }
                 },
             },
@@ -423,8 +430,10 @@ export default function FeedScreen() {
             <FlatList
                 data={displayedPosts}
                 keyExtractor={(item) => item._id}
+                extraData={posts}
                 renderItem={({ item }) => (
-                    <PostCard 
+                    <PostCard
+                        key={item._id + '-' + (item.commentCount ?? 0)}
                         post={item} 
                         onLike={handleLike} 
                         onCommentPress={handleCommentPress}

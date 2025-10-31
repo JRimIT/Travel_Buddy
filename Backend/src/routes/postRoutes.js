@@ -89,29 +89,6 @@ router.post('/:id/like', authMiddleware, async (req, res) => {
     }
 });
 
-
-// Thêm bình luận
-router.post('/:id/comments', authMiddleware, async (req, res) => {
-  const { text, parentId } = req.body; // Nhận thêm parentId
-  
-  const comment = new Comment({
-    text: text.trim(),
-    post: req.params.id,
-    user: req.user.id,
-    parent: parentId || null, // Gán parentId nếu có
-  });
-  const newComment = await comment.save();
-
-  // Nếu đây là một trả lời, cập nhật mảng `replies` của comment cha
-  if (parentId) {
-    await Comment.findByIdAndUpdate(parentId, { $push: { replies: newComment._id } });
-  }
-
-  // Populate và trả về
-  const populatedComment = await Comment.findById(newComment._id).populate('user', 'username profileImage');
-  res.status(201).json(populatedComment);
-});
-
 router.get('/:id/comments', authMiddleware, async (req, res) => {
     const comments = await Comment.find({ post: req.params.id, parent: null }) // Chỉ lấy các comment gốc
         .populate('user', 'username profileImage')
@@ -123,36 +100,6 @@ router.get('/:id/comments', authMiddleware, async (req, res) => {
             }
         });
     res.json(comments);
-});
-
-// THÊM MỘT BÌNH LUẬN MỚI
-router.post('/:id/comments', authMiddleware, async (req, res) => {
-  const { text } = req.body;
-  if (!text || text.trim() === '') {
-    return res.status(400).json({ message: 'Comment text cannot be empty' });
-  }
-
-  try {
-    // 1. Tạo comment mới
-    const comment = new Comment({
-      text: text.trim(),
-      post: req.params.id,
-      user: req.user.id, // Lấy từ middleware xác thực
-    });
-    const newComment = await comment.save();
-
-    // 2. Thêm ID của comment mới vào mảng `comments` của bài đăng
-    const post = await Post.findById(req.params.id);
-    post.comments.push(newComment._id);
-    await post.save();
-    
-    // 3. Populate thông tin user và trả về comment hoàn chỉnh
-    const populatedComment = await newComment.populate('user', 'username profileImage');
-
-    res.status(201).json(populatedComment);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
 });
 
 router.put('/:id', authMiddleware, async (req, res) => {
@@ -344,48 +291,40 @@ router.get('/:id', protectRoute, async (req, res) => {
 });
 
 router.post('/:postId/comments', protectRoute, async (req, res) => {
-    try {
-        const { postId } = req.params;
-        const { text, parentId } = req.body; // parentId là ID của bình luận cha
-        const userId = req.user._id;
+  try {
+    const { postId } = req.params;
+    const { text, parentId } = req.body;
+    const userId = req.user._id;
 
-        if (!text) {
-            return res.status(400).json({ message: "Comment text is required" });
-        }
-
-        // 1. Luôn tạo một document Comment mới
-        const newComment = new Comment({
-            text,
-            user: userId,
-            post: postId,
-        });
-        await newComment.save();
-
-        if (parentId) {
-            // 2a. Nếu đây là một câu trả lời, dùng $push để thêm ID của nó vào mảng 'replies' của bình luận cha.
-            // Đây là cách làm đáng tin cậy và hiệu quả nhất.
-            await Comment.updateOne(
-                { _id: parentId },
-                { $push: { replies: newComment._id } }
-            );
-        } else {
-            // 2b. Nếu đây là bình luận gốc, thêm ID của nó vào mảng 'comments' của bài viết.
-            await Post.updateOne(
-                { _id: postId },
-                { $push: { comments: newComment._id } }
-            );
-        }
-        
-        // 3. Lấy lại thông tin đầy đủ của bình luận vừa tạo và gửi về cho client
-        const populatedComment = await Comment.findById(newComment._id)
-                                             .populate('user', 'username profileImage');
-
-        res.status(201).json(populatedComment);
-
-    } catch (error) {
-        console.error("Error creating comment:", error);
-        res.status(500).json({ message: "Internal server error" });
+    if (!text || text.trim() === '') {
+      return res.status(400).json({ message: "Comment text is required" });
     }
+
+    const newComment = new Comment({
+      text: text.trim(),
+      user: userId,
+      post: postId,
+      parent: parentId || null,
+    });
+    await newComment.save();
+
+    if (parentId) {
+      await Comment.findByIdAndUpdate(parentId, { $push: { replies: newComment._id } });
+    } else {
+      await Post.findByIdAndUpdate(postId, { $push: { comments: newComment._id } });
+    }
+
+    // ✅ Dù là comment gốc hay reply thì đều tăng tổng commentCount
+    await Post.findByIdAndUpdate(postId, { $inc: { commentCount: 1 } });
+
+    const populatedComment = await Comment.findById(newComment._id)
+      .populate("user", "username profileImage");
+
+    res.status(201).json(populatedComment);
+  } catch (error) {
+    console.error("Error creating comment:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 });
 
 export default router;

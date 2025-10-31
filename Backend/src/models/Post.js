@@ -27,6 +27,7 @@ const postSchema = new mongoose.Schema({
     ref: 'Comment',
   }],
   hashtags: [{ type: String, trim: true }],
+  commentCount: { type: Number, default: 0 },
 }, { timestamps: true });
 
 postSchema.index({ title: 'text', content: 'text', hashtags: 'text' });
