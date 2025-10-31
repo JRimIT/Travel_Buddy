@@ -33,10 +33,15 @@ const userSchema = new mongoose.Schema(
     //     type: Date,
     //     default: Date.now
     // },
-    role: { 
-      type: String, 
-      enum: ['user', 'admin', 'support'], 
-      default: 'user' },
+    role: {
+      type: String,
+      enum: ['user', 'admin', 'support'],
+      default: 'user'
+    },
+    isLocked: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,

@@ -227,7 +227,7 @@ router.post("/register", async (req, res) => {
  *               - password
  *           example:
  *             email: admin@gmail.com
- *             password: password123
+ *             password: admin123
  *     responses:
  *       200:
  *         description: Login successful

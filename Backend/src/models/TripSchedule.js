@@ -34,9 +34,15 @@ const TripSchedule = new mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now
-    }
-
-
+    },
+    startDate: { 
+        type: Date, 
+        required: true 
+    },
+    endDate: { 
+        type: Date, 
+        required: true 
+    },
 })
 
 export default mongoose.models.TripSchedule || mongoose.model('TripSchedule', TripSchedule);
