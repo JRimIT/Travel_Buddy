@@ -309,15 +309,13 @@ router.post('/:postId/comments', protectRoute, async (req, res) => {
     await newComment.save();
 
     if (parentId) {
-      await Comment.findByIdAndUpdate(parentId, {
-        $push: { replies: newComment._id },
-      });
+      await Comment.findByIdAndUpdate(parentId, { $push: { replies: newComment._id } });
     } else {
-      await Post.findByIdAndUpdate(postId, {
-        $push: { comments: newComment._id },
-        $inc: { commentCount: 1 },
-      });
+      await Post.findByIdAndUpdate(postId, { $push: { comments: newComment._id } });
     }
+
+    // ✅ Dù là comment gốc hay reply thì đều tăng tổng commentCount
+    await Post.findByIdAndUpdate(postId, { $inc: { commentCount: 1 } });
 
     const populatedComment = await Comment.findById(newComment._id)
       .populate("user", "username profileImage");
