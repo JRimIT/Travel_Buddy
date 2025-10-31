@@ -89,29 +89,6 @@ router.post('/:id/like', authMiddleware, async (req, res) => {
     }
 });
 
-
-// Thêm bình luận
-router.post('/:id/comments', authMiddleware, async (req, res) => {
-  const { text, parentId } = req.body; // Nhận thêm parentId
-  
-  const comment = new Comment({
-    text: text.trim(),
-    post: req.params.id,
-    user: req.user.id,
-    parent: parentId || null, // Gán parentId nếu có
-  });
-  const newComment = await comment.save();
-
-  // Nếu đây là một trả lời, cập nhật mảng `replies` của comment cha
-  if (parentId) {
-    await Comment.findByIdAndUpdate(parentId, { $push: { replies: newComment._id } });
-  }
-
-  // Populate và trả về
-  const populatedComment = await Comment.findById(newComment._id).populate('user', 'username profileImage');
-  res.status(201).json(populatedComment);
-});
-
 router.get('/:id/comments', authMiddleware, async (req, res) => {
     const comments = await Comment.find({ post: req.params.id, parent: null }) // Chỉ lấy các comment gốc
         .populate('user', 'username profileImage')
@@ -123,36 +100,6 @@ router.get('/:id/comments', authMiddleware, async (req, res) => {
             }
         });
     res.json(comments);
-});
-
-// THÊM MỘT BÌNH LUẬN MỚI
-router.post('/:id/comments', authMiddleware, async (req, res) => {
-  const { text } = req.body;
-  if (!text || text.trim() === '') {
-    return res.status(400).json({ message: 'Comment text cannot be empty' });
-  }
-
-  try {
-    // 1. Tạo comment mới
-    const comment = new Comment({
-      text: text.trim(),
-      post: req.params.id,
-      user: req.user.id, // Lấy từ middleware xác thực
-    });
-    const newComment = await comment.save();
-
-    // 2. Thêm ID của comment mới vào mảng `comments` của bài đăng
-    const post = await Post.findById(req.params.id);
-    post.comments.push(newComment._id);
-    await post.save();
-    
-    // 3. Populate thông tin user và trả về comment hoàn chỉnh
-    const populatedComment = await newComment.populate('user', 'username profileImage');
-
-    res.status(201).json(populatedComment);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
 });
 
 router.put('/:id', authMiddleware, async (req, res) => {
@@ -353,7 +300,6 @@ router.post('/:postId/comments', protectRoute, async (req, res) => {
       return res.status(400).json({ message: "Comment text is required" });
     }
 
-    // 1️⃣ Tạo comment mới
     const newComment = new Comment({
       text: text.trim(),
       user: userId,
@@ -362,26 +308,20 @@ router.post('/:postId/comments', protectRoute, async (req, res) => {
     });
     await newComment.save();
 
-    // 2️⃣ Cập nhật bài viết hoặc comment cha
     if (parentId) {
-      // Nếu là reply -> thêm vào replies của comment cha
       await Comment.findByIdAndUpdate(parentId, {
         $push: { replies: newComment._id },
       });
     } else {
-      // Nếu là comment gốc -> thêm vào mảng comments của bài post
-      // 🆕 Đồng thời tăng số commentCount lên 1
       await Post.findByIdAndUpdate(postId, {
         $push: { comments: newComment._id },
         $inc: { commentCount: 1 },
       });
     }
 
-    // 3️⃣ Lấy lại comment đã populate user
     const populatedComment = await Comment.findById(newComment._id)
       .populate("user", "username profileImage");
 
-    // 4️⃣ Trả về response cho frontend
     res.status(201).json(populatedComment);
   } catch (error) {
     console.error("Error creating comment:", error);
