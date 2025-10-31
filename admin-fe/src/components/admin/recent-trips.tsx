@@ -1,91 +1,136 @@
+"use client"
+
+import { useState } from "react"
+import { useTripApprovals } from "../../hooks/use-admin-data"
 import { Badge } from "../../components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar"
+import { Button } from "../../components/ui/button"
+import { toast } from "../../components/ui/use-toast"
+import { format, isValid } from "date-fns"
+import { Key } from "react"
+import { apiClient } from "../../lib/api-client"
 
-const trips = [
-  {
-    id: 1,
-    user: "John Doe",
-    avatar: "/placeholder.svg?height=40&width=40",
-    destination: "Paris, France",
-    dates: "Dec 15 - Dec 22, 2024",
-    status: "ongoing",
-    budget: "$3,500",
-  },
-  {
-    id: 2,
-    user: "Sarah Smith",
-    avatar: "/placeholder.svg?height=40&width=40",
-    destination: "Tokyo, Japan",
-    dates: "Jan 5 - Jan 15, 2025",
-    status: "planning",
-    budget: "$4,200",
-  },
-  {
-    id: 3,
-    user: "Mike Johnson",
-    avatar: "/placeholder.svg?height=40&width=40",
-    destination: "New York, USA",
-    dates: "Dec 1 - Dec 5, 2024",
-    status: "completed",
-    budget: "$2,800",
-  },
-  {
-    id: 4,
-    user: "Emily Brown",
-    avatar: "/placeholder.svg?height=40&width=40",
-    destination: "London, UK",
-    dates: "Feb 10 - Feb 17, 2025",
-    status: "planning",
-    budget: "$3,100",
-  },
-  {
-    id: 5,
-    user: "David Lee",
-    avatar: "/placeholder.svg?height=40&width=40",
-    destination: "Dubai, UAE",
-    dates: "Mar 20 - Mar 28, 2025",
-    status: "planning",
-    budget: "$5,500",
-  },
-]
+interface TripApproval {
+  _id: Key
+  tripSchedule: {
+    title: string
+    startDate: string | number | Date
+    endDate: string | number | Date
+  }
+  status: "pending" | "approved" | "rejected"
+}
 
-const statusColors = {
-  ongoing: "bg-blue-500/10 text-blue-600 hover:bg-blue-500/20",
-  planning: "bg-yellow-500/10 text-yellow-600 hover:bg-yellow-500/20",
-  completed: "bg-green-500/10 text-green-600 hover:bg-green-500/20",
+const formatDateSafe = (dateInput: string | number | Date): string => {
+  if (!dateInput) return "N/A"
+  const date = new Date(dateInput)
+  return isValid(date) ? format(date, "dd/MM/yyyy") : String(dateInput)
 }
 
 export function RecentTrips() {
+  const { data, isLoading, mutate } = useTripApprovals() // mutate để refetch sau khi thay đổi
+  const [approvingId, setApprovingId] = useState<string | null>(null)
+  const [rejectingId, setRejectingId] = useState<string | null>(null)
+
+  const approvals: TripApproval[] = data || []
+  const pendingApprovals = approvals
+    .filter((a) => a.status === "pending")
+    .slice(0, 5)
+
+  const handleApprove = async (id: string) => {
+    setApprovingId(id)
+    try {
+      await apiClient.approveTripApproval(id)
+      toast({
+        title: "Thành công",
+        description: "Chuyến đi đã được duyệt.",
+      })
+      mutate() // Refetch danh sách
+    } catch (error: any) {
+      toast({
+        title: "Lỗi",
+        description: error.message || "Không thể duyệt chuyến đi.",
+        variant: "destructive",
+      })
+    } finally {
+      setApprovingId(null)
+    }
+  }
+
+  const handleReject = async (id: string) => {
+    setRejectingId(id)
+    try {
+      await apiClient.rejectTripApproval(id)
+      toast({
+        title: "Đã từ chối",
+        description: "Chuyến đi đã bị từ chối.",
+      })
+      mutate()
+    } catch (error: any) {
+      toast({
+        title: "Lỗi",
+        description: error.message || "Không thể từ chối chuyến đi.",
+        variant: "destructive",
+      })
+    } finally {
+      setRejectingId(null)
+    }
+  }
+
+  if (isLoading) {
+    return <div className="text-center py-4">Loading...</div>
+  }
+
   return (
     <div className="space-y-4">
-      {trips.map((trip) => (
-        <div key={trip.id} className="flex items-center justify-between rounded-lg border border-border p-4">
-          <div className="flex items-center gap-4">
-            <Avatar>
-              <AvatarImage src={trip.avatar || "/placeholder.svg"} alt={trip.user} />
-              <AvatarFallback>
-                {trip.user
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <p className="text-sm font-medium">{trip.user}</p>
-              <p className="text-xs text-muted-foreground">{trip.destination}</p>
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold">Chuyến đi chờ duyệt</h3>
+        {pendingApprovals.length > 0 && (
+          <Badge variant="secondary">{pendingApprovals.length}</Badge>
+        )}
+      </div>
+
+      {pendingApprovals.length === 0 ? (
+        <p className="text-muted-foreground text-center py-8">
+          Không có chuyến đi nào đang chờ duyệt
+        </p>
+      ) : (
+        <div className="space-y-3">
+          {pendingApprovals.map((approval) => (
+            <div
+              key={approval._id}
+              className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg gap-3"
+            >
+              <div className="flex-1">
+                <p className="font-medium text-sm">{approval.tripSchedule.title}</p>
+                <p className="text-xs text-muted-foreground">
+                  {formatDateSafe(approval.tripSchedule.startDate)} -{" "}
+                  {formatDateSafe(approval.tripSchedule.endDate)}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-green-600 border-green-600 hover:bg-green-50"
+                  onClick={() => handleApprove(approval._id as string)}
+                  disabled={approvingId === approval._id || rejectingId === approval._id}
+                >
+                  {approvingId === approval._id ? "Đang duyệt..." : "Duyệt"}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-red-600 border-red-600 hover:bg-red-50"
+                  onClick={() => handleReject(approval._id as string)}
+                  disabled={approvingId === approval._id || rejectingId === approval._id}
+                >
+                  {rejectingId === approval._id ? "Đang từ chối..." : "Từ chối"}
+                </Button>
+              </div>
             </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="text-right">
-              <p className="text-sm font-medium">{trip.dates}</p>
-              <p className="text-xs text-muted-foreground">{trip.budget}</p>
-            </div>
-            <Badge variant="secondary" className={statusColors[trip.status as keyof typeof statusColors]}>
-              {trip.status}
-            </Badge>
-          </div>
+          ))}
         </div>
-      ))}
+      )}
     </div>
   )
 }

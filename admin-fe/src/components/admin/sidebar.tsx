@@ -3,19 +3,17 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "../../lib/utils"
-import { LayoutDashboard, Users, MapPin, Hotel, Star, Calendar, BarChart3, Settings, CreditCard } from "lucide-react"
+import { LayoutDashboard, Users, MapPin, Star, Calendar, BarChart3, AlertCircle } from "lucide-react"
 import { useAuth } from "../../lib/auth-context"
 
 const navigation = [
-  { name: "Dashboard", href: "/admin", icon: LayoutDashboard, roles: ["admin", "support"] },
+  { name: "Dashboard", href: "/admin", icon: LayoutDashboard, roles: ["admin"] },
   { name: "Users", href: "/admin/users", icon: Users, roles: ["admin"] },
   { name: "Trips", href: "/admin/trips", icon: Calendar, roles: ["admin"] },
-  { name: "Locations", href: "/admin/locations", icon: MapPin, roles: ["admin"] },
-  { name: "Hotels", href: "/admin/hotels", icon: Hotel, roles: ["admin"] },
   { name: "Reviews", href: "/admin/reviews", icon: Star, roles: ["admin"] },
-  { name: "Bookings", href: "/admin/bookings", icon: CreditCard, roles: ["admin", "support"] },
+  { name: "Reports", href: "/admin/reports", icon: AlertCircle, roles: ["admin"] },
+  { name: "Locations", href: "/admin/locations", icon: MapPin, roles: ["admin"] },
   { name: "Analytics", href: "/admin/analytics", icon: BarChart3, roles: ["admin"] },
-  { name: "Settings", href: "/admin/settings", icon: Settings, roles: ["admin"] },
 ]
 
 export function Sidebar() {

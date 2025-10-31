@@ -1,37 +1,66 @@
-import { ReviewsTable } from "../../../components/admin/reviews-table"
+"use client"
+
+import { useState, useMemo } from "react"
 import { Input } from "../../../components/ui/input"
 import { Search } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select"
+import { ReviewsTable } from "../../../components/admin/reviews-table"
 
 export default function ReviewsPage() {
+  const [searchTerm, setSearchTerm] = useState("")
+  const [statusFilter, setStatusFilter] = useState("all")
+  const [ratingFilter, setRatingFilter] = useState("all")
+
+  const filters = useMemo(() => {
+    const f: Record<string, any> = {}
+
+    if (searchTerm.trim()) {
+      f.search = searchTerm.trim()
+    }
+    if (statusFilter !== "all") {
+      f.status = statusFilter
+    }
+    if (ratingFilter !== "all") {
+      f.rating = ratingFilter
+    }
+
+    return f
+  }, [searchTerm, statusFilter, ratingFilter])
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Reviews</h1>
-          <p className="text-muted-foreground">Moderate and manage user reviews</p>
+    <main className="flex-1 space-y-8 p-8">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Reviews</h1>
+        <p className="text-muted-foreground">Moderate and manage user reviews</p>
+      </div>
+
+      <div className="flex gap-4">
+        <div className="flex-1 relative">
+          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search reviews..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
         </div>
       </div>
 
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input type="search" placeholder="Search reviews..." className="pl-9" />
-        </div>
-        <Select defaultValue="all">
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Status" />
+      <div className="flex gap-4">
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem>
-            <SelectItem value="approved">Approved</SelectItem>
-            <SelectItem value="rejected">Rejected</SelectItem>
+            <SelectItem value="visible">Visible</SelectItem>
+            <SelectItem value="hidden">Hidden</SelectItem>
           </SelectContent>
         </Select>
-        <Select defaultValue="all">
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Rating" />
+
+        {/* <Select value={ratingFilter} onValueChange={setRatingFilter}>
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Filter by rating" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Ratings</SelectItem>
@@ -41,10 +70,10 @@ export default function ReviewsPage() {
             <SelectItem value="2">2 Stars</SelectItem>
             <SelectItem value="1">1 Star</SelectItem>
           </SelectContent>
-        </Select>
+        </Select> */}
       </div>
 
-      <ReviewsTable />
-    </div>
+      <ReviewsTable filters={filters} />
+    </main>
   )
 }

@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 import { useRouter } from "next/navigation"
+import { apiClient } from "./api-client"
 
 type UserRole = "admin" | "support"
 
@@ -10,35 +11,17 @@ interface User {
   name: string
   email: string
   role: UserRole
-  avatar?: string
 }
 
 interface AuthContextType {
   user: User | null
-  login: (email: string, password: string) => Promise<boolean>
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
   logout: () => void
   isLoading: boolean
+  isAuthenticated: boolean
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
-
-// Mock users for demonstration
-const MOCK_USERS = [
-  {
-    id: "1",
-    email: "admin@travelbuddy.com",
-    password: "admin123",
-    name: "Admin User",
-    role: "admin" as UserRole,
-  },
-  {
-    id: "2",
-    email: "support@travelbuddy.com",
-    password: "support123",
-    name: "Support Staff",
-    role: "support" as UserRole,
-  },
-]
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
@@ -46,44 +29,79 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter()
 
   useEffect(() => {
-    // Check if user is logged in from localStorage
-    const storedUser = localStorage.getItem("user")
-    if (storedUser && storedUser !== "undefined" && storedUser !== "null") {
+    const initializeAuth = async () => {
       try {
-        setUser(JSON.parse(storedUser))
+        const storedUser = localStorage.getItem("admin_user")
+        const token = localStorage.getItem("admin_token")
+
+        if (storedUser && token) {
+          const parsed = JSON.parse(storedUser)
+          setUser(parsed)
+          apiClient.setToken(token)
+        }
       } catch (error) {
-        console.error("Failed to parse stored user data:", error)
-        localStorage.removeItem("user")
+        console.error("Failed to initialize auth:", error)
+        localStorage.removeItem("admin_user")
+        localStorage.removeItem("admin_token")
+      } finally {
+        setIsLoading(false)
       }
     }
-    setIsLoading(false)
+
+    initializeAuth()
   }, [])
 
-  const login = async (email: string, password: string): Promise<boolean> => {
-    // Mock authentication
-    const foundUser = MOCK_USERS.find((u) => u.email === email && u.password === password)
+  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      setIsLoading(true)
+      const response = await apiClient.login(email, password)
 
-    if (foundUser) {
-      const user: User = {
-        id: foundUser.id,
-        name: foundUser.name,
-        email: foundUser.email,
-        role: foundUser.role,
+      const { token, user: backendUser } = response
+
+      const frontendUser: User = {
+        id: backendUser._id,
+        name: backendUser.username,
+        email: backendUser.email,
+        role: backendUser.role,
       }
-      setUser(user)
-      localStorage.setItem("user", JSON.stringify(user))
-      return true
+
+      setUser(frontendUser)
+      apiClient.setToken(token)
+      localStorage.setItem("admin_user", JSON.stringify(frontendUser))
+      localStorage.setItem("admin_token", token)
+
+      router.push("/admin")
+      return { success: true }
+    } catch (error: any) {
+      console.error("Login failed:", error)
+      const errorMessage = error.message || "Login failed. Please try again."
+      return { success: false, error: errorMessage }
+    } finally {
+      setIsLoading(false)
     }
-    return false
   }
 
   const logout = () => {
     setUser(null)
-    localStorage.removeItem("user")
+    apiClient.clearToken()
+    localStorage.removeItem("admin_user")
+    localStorage.removeItem("admin_token")
     router.push("/admin/login")
   }
 
-  return <AuthContext.Provider value={{ user, login, logout, isLoading }}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        login,
+        logout,
+        isLoading,
+        isAuthenticated: user !== null,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
 export function useAuth() {

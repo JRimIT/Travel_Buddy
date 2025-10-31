@@ -1,170 +1,120 @@
 "use client"
 
+import { Key, useState, useEffect } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table"
 import { Badge } from "../../components/ui/badge"
-import { Button } from "../../components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "../../components/ui/dropdown-menu"
-import { MoreHorizontal, Eye, Edit, Trash2, MapPin } from "lucide-react"
-import { Card } from "../../components/ui/card"
+import { useTrips } from "../../hooks/use-admin-data"
+import { format, isValid, parse } from "date-fns"
+import { Loader2 } from "lucide-react"
 
-const trips = [
-  {
-    id: 1,
-    title: "Paris Adventure",
-    user: "John Doe",
-    avatar: "/placeholder.svg?height=40&width=40",
-    destination: "Paris, France",
-    startDate: "2024-12-15",
-    endDate: "2024-12-22",
-    status: "ongoing",
-    budget: "$3,500",
-    participants: 2,
-  },
-  {
-    id: 2,
-    title: "Tokyo Experience",
-    user: "Sarah Smith",
-    avatar: "/placeholder.svg?height=40&width=40",
-    destination: "Tokyo, Japan",
-    startDate: "2025-01-05",
-    endDate: "2025-01-15",
-    status: "planning",
-    budget: "$4,200",
-    participants: 3,
-  },
-  {
-    id: 3,
-    title: "NYC Weekend",
-    user: "Mike Johnson",
-    avatar: "/placeholder.svg?height=40&width=40",
-    destination: "New York, USA",
-    startDate: "2024-12-01",
-    endDate: "2024-12-05",
-    status: "completed",
-    budget: "$2,800",
-    participants: 1,
-  },
-  {
-    id: 4,
-    title: "London Getaway",
-    user: "Emily Brown",
-    avatar: "/placeholder.svg?height=40&width=40",
-    destination: "London, UK",
-    startDate: "2025-02-10",
-    endDate: "2025-02-17",
-    status: "planning",
-    budget: "$3,100",
-    participants: 2,
-  },
-  {
-    id: 5,
-    title: "Dubai Luxury",
-    user: "David Lee",
-    avatar: "/placeholder.svg?height=40&width=40",
-    destination: "Dubai, UAE",
-    startDate: "2025-03-20",
-    endDate: "2025-03-28",
-    status: "planning",
-    budget: "$5,500",
-    participants: 4,
-  },
-]
-
-const statusColors = {
-  planning: "bg-yellow-500/10 text-yellow-600",
-  ongoing: "bg-blue-500/10 text-blue-600",
-  completed: "bg-green-500/10 text-green-600",
-  cancelled: "bg-red-500/10 text-red-600",
+interface Trip {
+  _id: Key | null | undefined
+  title: string
+  user: { username: string }
+  startDate: string | number | Date
+  endDate: string | number | Date
+  isPublic: boolean
 }
 
-export function TripsTable() {
+interface TripsTableProps {
+  filters?: Record<string, any>
+}
+
+const formatDateSafe = (dateInput: string | number | Date): string => {
+  if (!dateInput) return "N/A"
+  const dateString = String(dateInput)
+  let date = parse(dateString, 'dd/MM/yyyy', new Date())
+  if (!isValid(date)) date = new Date(dateInput)
+  return isValid(date) ? format(date, "dd/MM/yyyy") : dateString
+}
+
+export function TripsTable({ filters = {} }: TripsTableProps) {
+  const [page, setPage] = useState(1)
+  const { data, isLoading } = useTrips(page, 10, filters)
+  const [showLoadingIndicator, setShowLoadingIndicator] = useState(false)
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout | undefined
+    if (isLoading && data) {
+      timer = setTimeout(() => setShowLoadingIndicator(true), 150)
+    } else {
+      setShowLoadingIndicator(false)
+    }
+    return () => timer && clearTimeout(timer)
+  }, [isLoading, data])
+
+  if (isLoading) {
+    return <div className="flex justify-center py-8">Loading trips...</div>
+  }
+
+  const trips: Trip[] = data?.trips || []
+  const totalPages = data?.totalPages || 1
+
   return (
-    <Card>
-      <Table>
+    <div className="space-y-4">
+      {showLoadingIndicator && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/50 backdrop-blur-sm rounded-lg">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      )}
+      <Table className={showLoadingIndicator ? "opacity-60 pointer-events-none" : ""}>
         <TableHeader>
           <TableRow>
-            <TableHead>Trip</TableHead>
+            <TableHead>Title</TableHead>
             <TableHead>User</TableHead>
-            <TableHead>Destination</TableHead>
-            <TableHead>Dates</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Budget</TableHead>
-            <TableHead>Participants</TableHead>
-            <TableHead className="w-[70px]"></TableHead>
+            <TableHead>Start Date</TableHead>
+            <TableHead>End Date</TableHead>
+            <TableHead>Visibility</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {trips.map((trip) => (
-            <TableRow key={trip.id}>
-              <TableCell className="font-medium">{trip.title}</TableCell>
-              <TableCell>
-                <div className="flex items-center gap-2">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={trip.avatar || "/placeholder.svg"} alt={trip.user} />
-                    <AvatarFallback>
-                      {trip.user
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="text-sm">{trip.user}</span>
-                </div>
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">{trip.destination}</span>
-                </div>
-              </TableCell>
-              <TableCell className="text-sm text-muted-foreground">
-                {trip.startDate} - {trip.endDate}
-              </TableCell>
-              <TableCell>
-                <Badge variant="secondary" className={statusColors[trip.status as keyof typeof statusColors]}>
-                  {trip.status}
-                </Badge>
-              </TableCell>
-              <TableCell className="font-medium">{trip.budget}</TableCell>
-              <TableCell>{trip.participants}</TableCell>
-              <TableCell>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem>
-                      <Eye className="mr-2 h-4 w-4" />
-                      View Details
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <Edit className="mr-2 h-4 w-4" />
-                      Edit Trip
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem className="text-destructive">
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Delete Trip
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+          {trips.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={5} className="text-center text-muted-foreground">
+                No trips found.
               </TableCell>
             </TableRow>
-          ))}
+          ) : (
+            trips.map((trip) => (
+              <TableRow key={trip._id}>
+                <TableCell>{trip.title}</TableCell>
+                <TableCell>{trip.user.username}</TableCell>
+                <TableCell>{formatDateSafe(trip.startDate)}</TableCell>
+                <TableCell>{formatDateSafe(trip.endDate)}</TableCell>
+                <TableCell>
+                  <Badge variant={trip.isPublic ? "default" : "secondary"}>
+                    {trip.isPublic ? "Public" : "Private"}
+                  </Badge>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
         </TableBody>
       </Table>
-    </Card>
+
+      {totalPages > 1 && (
+        <div className="flex justify-between items-center">
+          <div className="text-sm text-muted-foreground">
+            Page {page} of {totalPages}
+          </div>
+          <div className="space-x-2">
+            <button
+              onClick={() => setPage(Math.max(1, page - 1))}
+              disabled={page === 1}
+              className="px-4 py-2 border rounded disabled:opacity-50"
+            >
+              Previous
+            </button>
+            <button
+              onClick={() => setPage(page + 1)}
+              disabled={page >= totalPages}
+              className="px-4 py-2 border rounded disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   )
 }

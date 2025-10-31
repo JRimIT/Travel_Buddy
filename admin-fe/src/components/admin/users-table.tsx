@@ -1,173 +1,162 @@
 "use client"
 
-import { useState } from "react"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table"
-import { Badge } from "../../components/ui/badge"
-import { Button } from "../../components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar"
+import { useState, useEffect } from "react"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "../../components/ui/dropdown-menu"
-import { MoreHorizontal, Eye, Edit, Trash2, Ban, CheckCircle } from "lucide-react"
-import { Card } from "../../components/ui/card"
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../../components/ui/table"
+import { Button } from "../../components/ui/button"
+import { Badge } from "../../components/ui/badge"
+import { useUsers } from "../../hooks/use-admin-data"
+import { apiClient } from "../../lib/api-client"
+import { Loader2, Lock, Unlock } from "lucide-react"
 
-const users = [
-  {
-    id: 1,
-    name: "John Doe",
-    email: "john.doe@example.com",
-    avatar: "/placeholder.svg?height=40&width=40",
-    role: "user",
-    status: "active",
-    trips: 12,
-    joinedAt: "2024-01-15",
-  },
-  {
-    id: 2,
-    name: "Sarah Smith",
-    email: "sarah.smith@example.com",
-    avatar: "/placeholder.svg?height=40&width=40",
-    role: "user",
-    status: "active",
-    trips: 8,
-    joinedAt: "2024-02-20",
-  },
-  {
-    id: 3,
-    name: "Mike Johnson",
-    email: "mike.johnson@example.com",
-    avatar: "/placeholder.svg?height=40&width=40",
-    role: "moderator",
-    status: "active",
-    trips: 5,
-    joinedAt: "2024-03-10",
-  },
-  {
-    id: 4,
-    name: "Emily Brown",
-    email: "emily.brown@example.com",
-    avatar: "/placeholder.svg?height=40&width=40",
-    role: "user",
-    status: "inactive",
-    trips: 3,
-    joinedAt: "2024-04-05",
-  },
-  {
-    id: 5,
-    name: "David Lee",
-    email: "david.lee@example.com",
-    avatar: "/placeholder.svg?height=40&width=40",
-    role: "user",
-    status: "active",
-    trips: 15,
-    joinedAt: "2024-01-08",
-  },
-]
+export function UsersTable({ filters = {} }: { filters?: Record<string, any> }) {
+  const [page, setPage] = useState(1)
+  const { data, isLoading, mutate } = useUsers(page, 10, filters)
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [showLoadingIndicator, setShowLoadingIndicator] = useState(false)
 
-const roleColors = {
-  user: "bg-blue-500/10 text-blue-600",
-  moderator: "bg-purple-500/10 text-purple-600",
-  admin: "bg-red-500/10 text-red-600",
-}
+  useEffect(() => {
+    let timer: NodeJS.Timeout | undefined
+    if (isLoading && data) {
+      timer = setTimeout(() => setShowLoadingIndicator(true), 150)
+    } else {
+      setShowLoadingIndicator(false)
+    }
+    return () => timer && clearTimeout(timer)
+  }, [isLoading, data])
 
-const statusColors = {
-  active: "bg-green-500/10 text-green-600",
-  inactive: "bg-gray-500/10 text-gray-600",
-}
+  const handleLockUser = async (userId: string) => {
+    try {
+      setActionLoading(userId)
+      await apiClient.lockUser(userId)
+      await mutate()
+    } catch (error) {
+      console.error("Error locking user:", error)
+    } finally {
+      setActionLoading(null)
+    }
+  }
 
-export function UsersTable() {
-  const [selectedUsers, setSelectedUsers] = useState<number[]>([])
+  const handleUnlockUser = async (userId: string) => {
+    try {
+      setActionLoading(userId)
+      await apiClient.unlockUser(userId)
+      await mutate()
+    } catch (error) {
+      console.error("Error unlocking user:", error)
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  if (isLoading && !data) {
+    return <div className="flex justify-center py-12">Loading users...</div>
+  }
+
+  const users = data?.users || []
+  const totalPages = data?.totalPages || 1
 
   return (
-    <Card>
-      <Table>
+    <div className="space-y-4 relative">
+      {showLoadingIndicator && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/50 backdrop-blur-sm rounded-lg">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      )}
+
+      <Table className={showLoadingIndicator ? "opacity-60 pointer-events-none" : ""}>
         <TableHeader>
           <TableRow>
-            <TableHead>User</TableHead>
+            <TableHead>Username</TableHead>
             <TableHead>Email</TableHead>
-            <TableHead>Role</TableHead>
+            <TableHead>Phone</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead>Trips</TableHead>
-            <TableHead>Joined</TableHead>
-            <TableHead className="w-[70px]"></TableHead>
+            <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {users.map((user) => (
-            <TableRow key={user.id}>
-              <TableCell>
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-9 w-9">
-                    <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
-                    <AvatarFallback>
-                      {user.name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="font-medium">{user.name}</span>
-                </div>
-              </TableCell>
-              <TableCell className="text-muted-foreground">{user.email}</TableCell>
-              <TableCell>
-                <Badge variant="secondary" className={roleColors[user.role as keyof typeof roleColors]}>
-                  {user.role}
-                </Badge>
-              </TableCell>
-              <TableCell>
-                <Badge variant="secondary" className={statusColors[user.status as keyof typeof statusColors]}>
-                  {user.status}
-                </Badge>
-              </TableCell>
-              <TableCell>{user.trips}</TableCell>
-              <TableCell className="text-muted-foreground">{user.joinedAt}</TableCell>
-              <TableCell>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem>
-                      <Eye className="mr-2 h-4 w-4" />
-                      View Details
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <Edit className="mr-2 h-4 w-4" />
-                      Edit User
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    {user.status === "active" ? (
-                      <DropdownMenuItem className="text-yellow-600">
-                        <Ban className="mr-2 h-4 w-4" />
-                        Suspend User
-                      </DropdownMenuItem>
-                    ) : (
-                      <DropdownMenuItem className="text-green-600">
-                        <CheckCircle className="mr-2 h-4 w-4" />
-                        Activate User
-                      </DropdownMenuItem>
-                    )}
-                    <DropdownMenuItem className="text-destructive">
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Delete User
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+          {users.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={5} className="text-center text-muted-foreground">
+                No users found.
               </TableCell>
             </TableRow>
-          ))}
+          ) : (
+            users.map((user: any) => (
+              <TableRow key={user._id}>
+                <TableCell>{user.username}</TableCell>
+                <TableCell>{user.email}</TableCell>
+                <TableCell>{user.phone || "N/A"}</TableCell>
+                <TableCell>
+                  <Badge variant={user.isLocked ? "destructive" : "default"}>
+                    {user.isLocked ? "Locked" : "Active"}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  {user.isLocked ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleUnlockUser(String(user._id))}
+                      disabled={actionLoading === user._id}
+                    >
+                      {actionLoading === user._id ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Unlock className="w-4 h-4" />
+                      )}
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => handleLockUser(String(user._id))}
+                      disabled={actionLoading === user._id}
+                    >
+                      {actionLoading === user._id ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Lock className="w-4 h-4" />
+                      )}
+                    </Button>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))
+          )}
         </TableBody>
       </Table>
-    </Card>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-between items-center">
+          <div className="text-sm text-muted-foreground">
+            Page {page} of {totalPages}
+          </div>
+          <div className="space-x-2">
+            <Button
+              variant="outline"
+              onClick={() => setPage(Math.max(1, page - 1))}
+              disabled={page === 1}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setPage(page + 1)}
+              disabled={page >= totalPages}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
   )
 }

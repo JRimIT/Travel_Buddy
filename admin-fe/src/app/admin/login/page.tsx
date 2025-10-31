@@ -53,7 +53,7 @@ export default function LoginPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="admin@travelbuddy.com"
+                placeholder="admin@gmail.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -84,13 +84,6 @@ export default function LoginPage() {
               )}
             </Button>
           </form>
-          {/* <div className="mt-6 space-y-2 rounded-lg bg-muted p-4 text-sm">
-            <p className="font-medium">Demo Accounts:</p>
-            <div className="space-y-1 text-muted-foreground">
-              <p>Admin: admin@travelbuddy.com / admin123</p>
-              <p>Support: support@travelbuddy.com / support123</p>
-            </div>
-          </div> */}
         </CardContent>
       </Card>
     </div>
