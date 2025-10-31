@@ -9,35 +9,33 @@ router.post("/create", verifyUser, async (req, res) => {
     try {
         const {
             title, description, isPublic, budget,
-            days, hotelDefault, flightTicket, image,
-            mainTransport, innerTransport, fromLocation, province
+            days, baseStay, hotelDefault, flightTicket, image,
+            mainTransport, innerTransport, fromLocation,
+            province, baseStayType, startDate, endDate
         } = req.body;
 
-        const userId = req.user.userId;
+        let scheduleData = {
+            user: req.user.userId,
+            title, description, isPublic, budget,
+            days, flightTicket, image,
+            mainTransport, innerTransport, fromLocation, province, startDate, endDate
+        };
 
-        if (!image) return res.status(400).json({ error: "Ảnh đại diện bắt buộc" });
+        if (baseStayType === "home" && baseStay) {
+            scheduleData.home = baseStay;
+        }
+        if (baseStayType === "hotel" && hotelDefault) {
+            scheduleData.hotelDefault = hotelDefault;
+        }
 
-        const trip = await TripSchedule.create({
-            user: userId,
-            title,
-            description,
-            isPublic,
-            budget,
-            days,
-            hotelDefault,
-            flightTicket,
-            image,
-            mainTransport,
-            innerTransport,
-            fromLocation,
-            province
-        });
+        const trip = await TripSchedule.create(scheduleData);
         res.json({ success: true, tripId: trip._id });
     } catch (err) {
         console.error("[TripSchedule.create]", err);
         res.status(500).json({ error: "Lưu lịch trình thất bại!" });
     }
 });
+
 
 // Lấy tất cả lịch trình của user (riêng tư + công khai)
 router.get("/my", verifyUser, async (req, res) => {
@@ -74,14 +72,24 @@ router.get("/:id", async (req, res) => {
 // Sửa history của user
 router.put("/:id", verifyUser, async (req, res) => {
     try {
-        const updated = await TripSchedule.findOneAndUpdate(
-            { _id: req.params.id, user: req.user.userId },
-            req.body,
+        const id = req.params.id;
+        // chỉ cho update một số trường cho phép (cần validate nếu muốn)
+        const updateFields = {};
+        const allowed = ["title", "description", "isPublic"]; // bổ sung field khác nếu muốn
+
+        allowed.forEach(field => {
+            if (req.body[field] !== undefined) updateFields[field] = req.body[field];
+        });
+
+        const trip = await TripSchedule.findOneAndUpdate(
+            { _id: id, user: req.user.userId }, // chỉ owner sửa được
+            { $set: updateFields },
             { new: true }
         );
-        res.json(updated);
-    } catch (e) {
-        res.status(500).json({ error: e.message });
+        if (!trip) return res.status(404).json({ error: "Không tìm thấy lịch trình" });
+        res.json({ success: true, trip });
+    } catch (err) {
+        res.status(500).json({ error: "Không thể cập nhật", detail: err.message });
     }
 });
 

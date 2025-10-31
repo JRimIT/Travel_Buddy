@@ -9,63 +9,70 @@ import {
 } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useSelector } from "react-redux";
-import { useDispatch } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { setUserFunBudget, setUserHotelBudget } from "../../redux/inforUserTravel/inforUserTravelSlice";
 
 const BudgetInputScreen = () => {
+  const dispatch = useDispatch();
+  const home = useSelector((state:any) => state.inforUserTravel.userHomeAddress);
+
   const [hotelBudget, setHotelBudget] = useState("");
   const [funBudget, setFunBudget] = useState("");
- 
 
-
-  const dispatch = useDispatch()
-  // Tính tổng quỹ nếu cả 2 đều đã nhập
+  // Nếu đã chọn nhà thì ẩn nhập khách sạn, nhập quỹ đi chơi luôn chuyển qua danh sách playgrounds
+  const showHotelBudget = !home || !home.address;
   const totalBudget =
-    hotelBudget && funBudget
+    showHotelBudget && hotelBudget && funBudget
       ? Number(hotelBudget.replace(/\D/g, "")) +
         Number(funBudget.replace(/\D/g, ""))
+      : funBudget
+      ? Number(funBudget.replace(/\D/g, ""))
       : null;
+
   const formatMoney = (val) => {
     const v = val.replace(/\D/g, "");
     if (!v) return "";
     return v.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   };
 
-  const goToTravelTransportScreen = () => {
-    dispatch(setUserHotelBudget(hotelBudget ? formatMoney(hotelBudget) : "0"));
+  const handleSubmit = () => {
+    if (showHotelBudget) {
+      dispatch(setUserHotelBudget(hotelBudget ? formatMoney(hotelBudget) : "0"));
+    }
     dispatch(setUserFunBudget(funBudget ? formatMoney(funBudget) : "0"));
-    router.push("ChooseHotelScreen");
+    router.push(showHotelBudget ? "ChooseHotelScreen" : "ChoosePlayGroundScreen");
+    // Nếu đã chọn home, chuyển sang list playground, nếu chưa thì đi chọn khách sạn!
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Nhập Quỹ Chi Tiêu Chuyến Đi</Text>
 
-      {/* Tiền khách sạn */}
-      <View style={styles.budgetBox}>
-        <MaterialCommunityIcons
-          name="bed"
-          size={26}
-          color="#2196f3"
-          style={{ marginRight: 10 }}
-        />
-        <View style={{ flex: 1 }}>
-          <Text style={styles.subLabel}>Tiền có thể chi cho khách sạn</Text>
-          <View style={styles.inputBox}>
-            <TextInput
-              style={styles.moneyInput}
-              placeholder="Ví dụ: 1.000.000"
-              placeholderTextColor="#b8b8b8"
-              keyboardType="number-pad"
-              value={formatMoney(hotelBudget)}
-              onChangeText={(t) => setHotelBudget(t.replace(/\D/g, ""))}
-              maxLength={12}
-            />
-            <Text style={styles.vndSuffix}>VNĐ</Text>
+      {showHotelBudget && (
+        <View style={styles.budgetBox}>
+          <MaterialCommunityIcons
+            name="bed"
+            size={26}
+            color="#2196f3"
+            style={{ marginRight: 10 }}
+          />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.subLabel}>Tiền có thể chi cho khách sạn</Text>
+            <View style={styles.inputBox}>
+              <TextInput
+                style={styles.moneyInput}
+                placeholder="Ví dụ: 1.000.000"
+                placeholderTextColor="#b8b8b8"
+                keyboardType="number-pad"
+                value={formatMoney(hotelBudget)}
+                onChangeText={(t) => setHotelBudget(t.replace(/\D/g, ""))}
+                maxLength={12}
+              />
+              <Text style={styles.vndSuffix}>VNĐ</Text>
+            </View>
           </View>
         </View>
-      </View>
+      )}
 
       {/* Tiền đi chơi */}
       <View style={styles.budgetBox}>
@@ -92,7 +99,6 @@ const BudgetInputScreen = () => {
         </View>
       </View>
 
-      {/* Tổng quỹ hiển thị nổi bật */}
       {totalBudget !== null && (
         <View style={styles.totalBox}>
           <MaterialCommunityIcons
@@ -109,16 +115,15 @@ const BudgetInputScreen = () => {
         </View>
       )}
 
-      {/* Nút lưu */}
       <TouchableOpacity
         style={[
           styles.submitBtn,
-          (!hotelBudget || !funBudget) && { opacity: 0.5 },
+          (showHotelBudget
+            ? (!hotelBudget || !funBudget)
+            : !funBudget) && { opacity: 0.5 },
         ]}
-        disabled={!hotelBudget || !funBudget}
-        onPress={() => {
-          goToTravelTransportScreen();
-        }}
+        disabled={showHotelBudget ? (!hotelBudget || !funBudget) : !funBudget}
+        onPress={handleSubmit}
       >
         <Text style={styles.submitText}>Lưu quỹ chi tiêu</Text>
       </TouchableOpacity>
@@ -135,7 +140,6 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     marginVertical: 32,
     letterSpacing: 0.5,
-   
   },
   budgetBox: {
     flexDirection: "row",

@@ -58,10 +58,13 @@ const HotelTab = () => {
     });
   }, [lat, lng, category]);
 
+
   const fetchHotelsWithPrice = async (lat, lng, category) => {
+    
     const url = `https://api.geoapify.com/v2/places?categories=${category}&filter=circle:${lng},${lat},2000&limit=12&apiKey=${GEOAPIFY_KEY}`;
     const res = await fetch(url);
     const data = await res.json();
+   
     return (data.features || []).map((item) => ({
       ...item,
       price: randomPrice(),
@@ -508,7 +511,7 @@ const HotelTab = () => {
                   </View>
                 ) : (
                   <View style={styles.detailsContainer}>
-                    {renderHotelDetails(hotelDetails)}
+                    {hotelDetails}
                   </View>
                 )}
               </ScrollView>

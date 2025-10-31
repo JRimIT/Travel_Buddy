@@ -32,6 +32,15 @@ const CostTab = () => {
   const fromLocation = useSelector((state:any) => state.inforUserTravel.userCurrentLocation);
   const province = useSelector((state:any) => state.inforUserTravel.userProvince);
 
+  const home = useSelector((state:any) => state.inforUserTravel.userHomeAddress);
+
+   const startDate = useSelector((state:any) => state.inforUserTravel.userStartDate); 
+  const endDate = useSelector((state:any) => state.inforUserTravel.userEndDate); 
+
+  const useHome = !!(home && home.lat && home.lon);
+  const baseStay = useHome ? home : hotelDefault;
+
+
   const [isPublic, setIsPublic] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [title, setTitle] = useState("");
@@ -44,8 +53,8 @@ const CostTab = () => {
 
   const handleSave = () => setModalVisible(true);
 
-console.log("fromLocation: ", fromLocation);
-console.log("province: ", province);
+
+console.log("days (Costabs): ", days);
 
 
 
@@ -66,10 +75,13 @@ console.log("province: ", province);
     const imageDataUrl = `data:${imageType};base64,${imageBase64}`;
 
     const res = await confirmSchedule(
-      title, description, isPublic, budgets, days,
-      hotelDefault, flightTicket, mainTransport, innerTransport, fromLocation, province,
-      token, imageDataUrl
+      title, description, isPublic, budgets, days,baseStay,
+      hotelDefault, flightTicket, mainTransport, innerTransport, fromLocation, province.name,
+      token, imageDataUrl,useHome ,startDate, 
+      endDate
     );
+   
+   
     if (res?.success) {
       Alert.alert("Thành công", "Đã lưu lịch trình!");
       router.replace("/");

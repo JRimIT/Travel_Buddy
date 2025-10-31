@@ -70,7 +70,7 @@ const FormScreen = () => {
   }
 };
   const goToTravelPlanFormScreen = () => {
-    dispatch(setUserCurrentLocation(currentLocation || {}));
+    // dispatch(setUserCurrentLocation(currentLocation || {}));
    
     
     router.push("/TravelPlanFormScreen");
@@ -81,12 +81,13 @@ const FormScreen = () => {
   useEffect(() => {
     const found = PROVINCES.find(p => p.code === selected);
     setBgImage(found?.image || PROVINCES[0].image);
-    dispatch(setUserProvince(found?.name || ""));
+    dispatch(setUserProvince(found || ""));
     dispatch(setUserCurrentLocation(userProvinceState === "Mountain View" ? "Da Nang" : userProvinceState || ""));
     
     console.log("setUserProvince: ", found?.name || "");
+    // console.log("setUserProvince: ", found || "");
     console.log("currentLocation: ", userProvinceState === "Mountain View" ? "Da Nang" : userProvinceState);
-  }, [selected]);
+  }, [selected, userProvinceState]);
 
   return (
     <ImageBackground source={bgImage} style={styles.bg}>

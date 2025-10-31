@@ -22,12 +22,13 @@ const getDistanceKm = (lat1, lon1, lat2, lon2) => {
 const HotelDetailsScreen = () => {
   // Data hotel đúng field log của bạn
   const hotel = useSelector((state:any) => state.inforUserTravel.userInforHotel);
+  const home = useSelector((state:any) => state.inforUserTravel.userHomeAddress);
+
   // Lấy bản playground đã mapping lại:
   const rawPlaygrounds = useSelector((state:any) => state.inforUserTravel.userPlaygrounds) || [];
   // mapping lại lat/lon cho marker:
   const playgrounds = rawPlaygrounds.map(p => ({
     ...p,
-    // Ưu tiên properties.lat/lon, fallback geometry.coordinates
     lat: (
       typeof p.properties?.lat === 'number'
       ? p.properties.lat
@@ -50,55 +51,69 @@ const HotelDetailsScreen = () => {
 
   const [mapModal, setMapModal] = useState(false);
 
+  // --- Chọn "base" info: nếu chọn Home thì lấy Home làm gốc, nếu chưa thì lấy hotel
+  const isHome = home && home.lat && home.lon;
+  const baseLat = isHome ? Number(home.lat) : (hotel?.lat ? Number(hotel.lat) : 0);
+  const baseLon = isHome ? Number(home.lon) : (hotel?.lon ? Number(hotel.lon) : 0);
+  const baseName = isHome ? (home.name || "Nhà của bạn") : (hotel.name || hotel.address_line1 || hotel.datasource?.raw?.name);
+  const baseAddress = isHome
+    ? (home.address || home.name)
+    : (hotel.address_line2 || hotel.address || hotel.datasource?.raw?.formatted);
+
+  const baseIcon = isHome
+    ? <Ionicons name="home" size={32} color="#00b4a9" />
+    : <Ionicons name="business" size={32} color="#EB5757" />;
+
   // Memo vị trí trung tâm map cho focus đẹp
   const region = useMemo(() =>
-    hotel?.lat && hotel?.lon ? ({
-      latitude: hotel.lat,
-      longitude: hotel.lon,
+    baseLat && baseLon ? ({
+      latitude: baseLat,
+      longitude: baseLon,
       latitudeDelta: 0.012,
-      longitudeDelta: 0.012 * 1.5,
+      longitudeDelta: 0.018,
     }) : ({
       latitude: 21.0285,
       longitude: 105.8542,
       latitudeDelta: 0.12,
       longitudeDelta: 0.15,
-    }), [hotel]);
-
-  if (!hotel) return (
-    <View style={styles.centered}>
-      <Text style={{ color: "#ab3b3b", fontSize: 17, fontWeight: "bold" }}>Chưa chọn khách sạn!</Text>
-    </View>
-  );
+    }), [baseLat, baseLon]);
 
   const validPlaygrounds = playgrounds.filter(
     p => typeof p.lat === 'number' && typeof p.lon === 'number'
   );
 
+  if (!isHome && !hotel) return (
+    <View style={styles.centered}>
+      <Text style={{ color: "#ab3b3b", fontSize: 17, fontWeight: "bold" }}>Chưa chọn chỗ ở!</Text>
+    </View>
+  );
+
   return (
     <ScrollView style={{ flex: 1, backgroundColor: "#f3f5fa" }} contentContainerStyle={{ paddingBottom:30 }}>
       <View style={styles.hotelCard}>
-        {hotel.image &&
+        {/* Ảnh hotel nếu không phải Home */}
+        {(!isHome && hotel?.image) &&
           <Image source={{ uri: hotel.image }} style={styles.hotelImage} />
         }
-        <Text style={styles.hotelName}>
-          {hotel.name || hotel.address_line1 || hotel.datasource?.raw?.name}
-        </Text>
+        {/* Tên/địa chỉ Home/Hotel */}
+        <Text style={styles.hotelName}>{baseName}</Text>
         <Text style={styles.hotelStar}>
           <Ionicons name="star" size={17} color="#F8D97B" />
-          <Text style={{ color: "#F8D97B" }}> {hotel.stars || ""}</Text>
+          <Text style={{ color: "#F8D97B" }}> {hotel?.stars || ""}</Text>
         </Text>
         <View style={styles.infoRow}>
           <Ionicons name="location-sharp" size={18} color="#4364FE" />
-          <Text style={styles.infoText}>{hotel.address_line2 || hotel.address || hotel.datasource?.raw?.formatted}</Text>
+          <Text style={styles.infoText}>{baseAddress}</Text>
         </View>
-        {(hotel.contact?.phone || hotel.datasource?.raw?.phone) &&
+        {/* Số phone (chỉ với khách sạn) */}
+        {!isHome && (hotel?.contact?.phone || hotel?.datasource?.raw?.phone) &&
           <View style={styles.infoRow}>
             <Ionicons name="call" size={18} color="#35ae56" />
             <Text style={styles.infoText}>{hotel.contact?.phone || hotel.datasource?.raw?.phone}</Text>
           </View>
         }
-        {/* Website */}
-        {hotel.datasource?.raw?.website && (
+        {/* Website (khách sạn) */}
+        {!isHome && hotel?.datasource?.raw?.website && (
           <View style={styles.infoRow}>
             <Ionicons name="earth" size={18} color="#2B81D6" />
             <Text style={styles.infoText}>{hotel.datasource.raw.website}</Text>
@@ -109,7 +124,9 @@ const HotelDetailsScreen = () => {
           onPress={() => setMapModal(true)}
         >
           <Ionicons name="map" size={18} color="#fff" />
-          <Text style={styles.btnMapText}>Xem khách sạn & vui chơi trên bản đồ</Text>
+          <Text style={styles.btnMapText}>
+            Xem {isHome ? "nhà/chỗ ở" : "khách sạn"} & vui chơi trên bản đồ
+          </Text>
         </TouchableOpacity>
       </View>
       <View style={styles.playgroundBlock}>
@@ -125,11 +142,11 @@ const HotelDetailsScreen = () => {
               {p.properties?.address_line2 &&
                 <Text style={styles.playAddr}>{p.properties.address_line2}</Text>
               }
-              {hotel.lat && hotel.lon && p.lat && p.lon &&
+              {baseLat && baseLon && p.lat && p.lon &&
                 <Text style={styles.kmText}>
                   <MaterialIcons name="straighten" size={15} color="#7B51E1" />
                   <Text>
-                    {" "}{getDistanceKm(hotel.lat, hotel.lon, p.lat, p.lon)} km từ khách sạn
+                    {" "}{getDistanceKm(baseLat, baseLon, p.lat, p.lon)} km từ {isHome ? "nhà ở" : "khách sạn"}
                   </Text>
                 </Text>
               }
@@ -145,27 +162,27 @@ const HotelDetailsScreen = () => {
             region={region}
             showsPointsOfInterest={false}
           >
-            {/* Marker khách sạn */}
-            {hotel?.lat && hotel?.lon &&
+            {/* Marker Home OR Hotel */}
+            {(baseLat && baseLon) && (
               <Marker
-                coordinate={{ latitude: hotel.lat, longitude: hotel.lon }}
-                title={hotel.name}
-                pinColor="#EB5757"
-                identifier="hotel"
+                coordinate={{ latitude: baseLat, longitude: baseLon }}
+                title={baseName}
+                pinColor={isHome ? "#00b4a9" : "#EB5757"}
+                identifier="base-point"
               >
-                <Ionicons name="home" size={32} color="#EB5757" />
+                {baseIcon}
                 <Callout>
                   <View style={{maxWidth: 200}}>
-                    <Text style={{fontWeight: "bold", color:"#EB5757"}}>
-                      {hotel.name || hotel.address_line1 || hotel.datasource?.raw?.name}
+                    <Text style={{fontWeight: "bold", color: isHome ? "#00b4a9" : "#EB5757"}}>
+                      {baseName}
                     </Text>
                     <Text style={{color:"#4F4F4F"}}>
-                      {hotel.address_line2 || hotel.address || hotel.datasource?.raw?.formatted}
+                      {baseAddress}
                     </Text>
                   </View>
                 </Callout>
               </Marker>
-            }
+            )}
             {/* Marker khu vui chơi */}
             {validPlaygrounds.map((p, i) => (
               <Marker
@@ -179,12 +196,12 @@ const HotelDetailsScreen = () => {
                 <Callout>
                   <View style={{maxWidth: 220}}>
                     <Text style={{fontWeight:"bold", color:"#00DB7C"}}>{p.properties?.name || p.name}</Text>
-                    {hotel?.lat && hotel?.lon && p.lat && p.lon &&
+                    {baseLat && baseLon && p.lat && p.lon &&
                       <Text style={{marginTop: 5, color:"#888"}}>
                         <Ionicons name="swap-horizontal-outline" size={14} color="#735DF8" />
                         <Text style={{fontWeight:"bold", color:"#333"}}>
-                          {getDistanceKm(hotel.lat, hotel.lon, p.lat, p.lon)} km
-                        </Text>{" "}tới khách sạn
+                          {getDistanceKm(baseLat, baseLon, p.lat, p.lon)} km
+                        </Text>{" "}tới {isHome ? "nhà" : "khách sạn"}
                       </Text>
                     }
                   </View>
@@ -266,5 +283,4 @@ const styles = StyleSheet.create({
     borderRadius:18,padding:2,zIndex:2
   },
 });
-
 export default HotelDetailsScreen;
