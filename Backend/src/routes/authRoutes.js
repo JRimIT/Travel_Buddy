@@ -6,8 +6,8 @@ import Book from "../models/Book.js";
 import protectRoute from "../middleware/auth.middleware.js";
 import { OAuth2Client } from "google-auth-library";
 
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 dotenv.config();
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const router = express.Router();
 

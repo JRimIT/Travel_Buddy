@@ -9,13 +9,12 @@ import {
   Platform,
   Alert,
 } from "react-native";
-import React, { useState } from "react";
-import styles from "../../assets/styles/login.styles";
-
-import { Link } from "expo-router";
-import { useAuthStore } from "../../store/authStore";
-
+import React, { useState, useEffect } from "react";
+import { Link, useRouter } from "expo-router";
+import Constants from "expo-constants";
 import { Ionicons } from "@expo/vector-icons";
+import * as AuthSession from "expo-auth-session";
+import { useAuthStore } from "../../store/authStore";
 import { useTheme } from "../../contexts/ThemeContext";
 import createLoginStyles from "../../assets/styles/login.styles";
 
@@ -25,38 +24,65 @@ import * as WebBrowser from "expo-web-browser";
 WebBrowser.maybeCompleteAuthSession();
 
 const Login = () => {
-  const { colors, theme, setTheme } = useTheme();
+  const router = useRouter();
+  const { colors } = useTheme();
   const styles = createLoginStyles(colors);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  // const [isLoading, setIsLoading] = useState(false);
-  // const { user, isLoading, login, isCheckingAuth } = useAuthStore();
+
   const { user, isLoading, login, isCheckingAuth, loginWithGoogle } =
     useAuthStore();
 
-  // Google sign-in
+  const extra =
+    Constants.expoConfig?.extra ||
+    Constants.manifest2?.extra ||
+    Constants.manifest?.extra;
+
+  const androidClientId = extra?.googleAndroidClientId;
+  const iosClientId = extra?.googleIosClientId;
+  const expoClientId = extra?.googleExpoClientId;
+  const redirectUri = AuthSession.makeRedirectUri({
+    scheme: "travelbuddy",
+  });
   const [request, response, promptAsync] = Google.useAuthRequest({
-    androidClientId:
-      "767810819511-rlgj58da677pbms1eqpbd36qlqf380hl.apps.googleusercontent.com",
-    iosClientId:
-      "767810819511-aus5dh8nl8utpefg6r1kk336vgidh7k0.apps.googleusercontent.com",
-    clientId:
-      "767810819511-9djkodonnna2l9jq9on6q8l929ji4d9r.apps.googleusercontent.com",
+    androidClientId,
+    iosClientId,
+    clientId: expoClientId,
+    redirectUri,
   });
 
+  // Login bằng email/password
   const handleLogin = async () => {
+    const redirectUri = AuthSession.makeRedirectUri();
+    console.log("✅ Redirect URI:", redirectUri);
+
     const result = await login(email, password);
     if (!result.success) {
       Alert.alert("Login Failed", result.error);
     } else {
-      // Navigate to the home screen or wherever you want after successful login
-      // router.push('/home');
+      // router.replace("/home");
     }
   };
-  if (isCheckingAuth) {
-    return null;
-  }
+
+  // Xử lý callback Google login
+  useEffect(() => {
+    if (response?.type === "success") {
+      const idToken = response.authentication?.idToken;
+      if (idToken) {
+        loginWithGoogle(idToken).then((res) => {
+          if (res.success) {
+            // router.replace("/home");
+          } else {
+            Alert.alert("Google Login Failed", res.error);
+          }
+        });
+      }
+    }
+  }, [response]);
+
+  if (isCheckingAuth) return null;
 
   return (
     <KeyboardAvoidingView
@@ -69,11 +95,12 @@ const Login = () => {
             source={require("../../assets/images/i.png")}
             style={styles.illustrationImage}
             resizeMode="contain"
-          ></Image>
+          />
         </View>
 
         <View style={styles.card}>
           <View style={styles.formContainer}>
+            {/* Email */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Email</Text>
               <View style={styles.inputContainer}>
@@ -93,6 +120,8 @@ const Login = () => {
                 />
               </View>
             </View>
+
+            {/* Password */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Password</Text>
               <View style={styles.inputContainer}>
@@ -119,6 +148,8 @@ const Login = () => {
                 />
               </View>
             </View>
+
+            {/* Login button */}
             <TouchableOpacity
               style={styles.button}
               onPress={handleLogin}
@@ -130,6 +161,7 @@ const Login = () => {
                 <Text style={styles.buttonText}>Login</Text>
               )}
             </TouchableOpacity>
+
             {/* Google Login Button */}
             <TouchableOpacity
               style={[
@@ -137,7 +169,7 @@ const Login = () => {
                 { backgroundColor: "#fff", flexDirection: "row", gap: 8 },
               ]}
               onPress={() => promptAsync()}
-              // disabled={!request}
+              disabled={!request}
             >
               <Image
                 source={require("../../assets/images/ggicon.jpg")}
@@ -147,9 +179,10 @@ const Login = () => {
                 Sign in with Google
               </Text>
             </TouchableOpacity>
-            {/*  */}
+
+            {/* Footer */}
             <View style={styles.footer}>
-              <Text style={styles.footerText}>Don t have an account? </Text>
+              <Text style={styles.footerText}>Don’t have an account? </Text>
               <Link href="/signup" asChild>
                 <TouchableOpacity>
                   <Text style={styles.link}>Sign Up</Text>
