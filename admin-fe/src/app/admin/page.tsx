@@ -11,12 +11,17 @@ import { RecentTrips } from "../../components/admin/recent-trips";
 import { PopularDestinations } from "../../components/admin/popular-destinations";
 import { useAuth } from "@/src/lib/auth-context";
 import { SupportDashboard } from "../support/support-dashboard";
+import Unauthorized from "../unauthorized/page";
 
 export default function AdminDashboard() {
   const { user } = useAuth();
 
   if (user?.role === "support") {
     return <SupportDashboard />;
+  }
+
+  if (user?.role === "user") {
+    return <Unauthorized />;
   }
 
   return (
