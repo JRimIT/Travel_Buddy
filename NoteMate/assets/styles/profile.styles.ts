@@ -7,7 +7,7 @@ const createProfileStyles = (colors: ThemeType) =>
     container: {
       flex: 1,
       backgroundColor: colors.background,
-      padding: 16,
+      // padding: 16,
       paddingBottom: 0,
     },
     loadingContainer: {
@@ -256,6 +256,26 @@ const createProfileStyles = (colors: ThemeType) =>
       backgroundColor: "#f0f0f0",
       borderRadius: 8,
     },
+    placesContainer: {
+    marginTop: 20,
+  },
+  placesHeader: {
+    fontSize: 18,
+    fontWeight: "700",
+    marginBottom: 8,
+    color: "#111827",
+  },
+  placeItem: {
+    backgroundColor: "#fff",
+    padding: 12,
+    marginBottom: 8,
+    borderRadius: 12,
+    fontSize: 15,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
+  },
   });
 
 export default createProfileStyles;

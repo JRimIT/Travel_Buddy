@@ -92,7 +92,29 @@ router.post('/voice-to-text', upload.single('file'), async (req, res) => {
     }
 });
 
-async function summarizeWithGemini(text) {
+// async function summarizeWithGemini(text) {
+//     try {
+//         const response = await axios.post(
+//             `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+//             {
+//                 contents: [
+//                     { parts: [{ text: `Hãy tổng hợp đoạn văn sau bằng tiếng Việt:\n\n${text}` }] }
+//                 ]
+//             },
+//             {
+//                 headers: { 'Content-Type': 'application/json' }
+//             }
+//         );
+
+//         const summary = response.data.candidates[0].content.parts[0].text;
+//         return summary;
+//     } catch (error) {
+//         console.error('Error calling Gemini API:', error.response?.data || error.message);
+//         return 'Tổng hợp thất bại';
+//     }
+// }
+
+async function summarizeWithGemini(text, retries = 3, delay = 3000) {
     try {
         const response = await axios.post(
             `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
@@ -106,39 +128,26 @@ async function summarizeWithGemini(text) {
             }
         );
 
-        const summary = response.data.candidates[0].content.parts[0].text;
-        return summary;
+        const summary = response.data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!summary) {
+            console.warn("⚠️ Gemini không trả về text");
+            return 'Không có kết quả tổng hợp từ Gemini';
+        }
+
+        return summary.trim();
     } catch (error) {
-        console.error('Error calling Gemini API:', error.response?.data || error.message);
-        return 'Tổng hợp thất bại';
+        console.error(` Lỗi khi gọi Gemini API (còn ${retries} lần thử):`, error.response?.data || error.message);
+
+        if (error.response?.status === 429 && retries > 0) {
+            console.log(`⏳ Đợi ${delay / 1000}s rồi thử lại...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+            return summarizeWithGemini(text, retries - 1, delay * 2); // tăng delay dần
+        }
+
+        return 'Tổng hợp thất bại (Gemini lỗi).';
     }
 }
 
-// async function summarizeText(inputText) {
-//     try {
-//         const response = await axios.post(
-//             'https://api.openai.com/v1/chat/completions',
-//             {
-//                 model: 'gpt-4o',
-//                 messages: [
-//                     { role: 'system', content: 'Bạn là AI tổng hợp nội dung từ ảnh OCR.' },
-//                     { role: 'user', content: `Hãy tổng hợp đoạn văn sau:\n\n${inputText}` },
-//                 ],
-//                 temperature: 0.7,
-//             },
-//             {
-//                 headers: {
-//                     'Content-Type': 'application/json',
-//                     Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-//                 },
-//             }
-//         );
 
-//         return response.data.choices[0].message.content;
-//     } catch (error) {
-//         console.error('Error calling GPT API:', error.response?.data || error.message);
-//         return 'Tổng hợp thất bại';
-//     }
-// }
 
 export default router;

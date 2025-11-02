@@ -1,19 +1,22 @@
 import session from "express-session";
 import MongoStore from "connect-mongo";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const sessionConfig = {
-  secret: "12345678",
-  resave: false,
-  saveUninitialized: false,
-  store: MongoStore.create({
-    mongoUrl: process.env.MONGODB_URI,
-    collectionName: "sessions",
-    ttl: 14 * 24 * 60 * 60, // 14 days
-  }),
-  // cookie: {
-  //     maxAge: 1000 * 60 * 60 * 24, // 14 days in milliseconds
-  //     secure: false, // Set to true if using HTTPS
-  //     httpOnly: true // Prevents client-side JavaScript from accessing the cookie
-  // }
+    secret: '12345678',
+    resave: false,
+    saveUninitialized: false,
+    store: MongoStore.create({
+        mongoUrl: process.env.MONGODB_URI,
+        collectionName: 'sessions',
+        ttl: 14 * 24 * 60 * 60 // 14 days
+    }),
+    // cookie: {
+    //     maxAge: 1000 * 60 * 60 * 24, // 14 days in milliseconds
+    //     secure: false, // Set to true if using HTTPS
+    //     httpOnly: true // Prevents client-side JavaScript from accessing the cookie
+    // }
 };
 export default sessionConfig;
