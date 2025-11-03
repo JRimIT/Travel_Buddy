@@ -4,6 +4,7 @@ import { useState, useMemo } from "react"
 import { Input } from "../../../components/ui/input"
 import { Search } from "lucide-react"
 import { UsersTable } from "../../../components/admin/users-table"
+import { PageHeader } from "../../../components/admin/page-header"
 
 export default function UsersPage() {
   const [searchTerm, setSearchTerm] = useState("")
@@ -18,10 +19,11 @@ export default function UsersPage() {
 
   return (
     <main className="flex-1 space-y-8 p-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Users</h1>
-        <p className="text-muted-foreground">Manage all users and their accounts</p>
-      </div>
+      <PageHeader
+        title="Users"
+        description="Manage all users and their accounts"
+        breadcrumbs={[{ label: "Home", href: "/admin" }, { label: "Users" }]}
+      />
 
       <div className="flex gap-4">
         <div className="flex-1 relative">

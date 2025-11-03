@@ -97,10 +97,10 @@ export function RecentTrips() {
           {pendingApprovals.map((approval) => (
             <div
               key={approval._id}
-              className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg gap-3"
+              className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg gap-3 hover:bg-accent/50 transition-colors"
             >
               <div className="flex-1">
-                <p className="font-medium text-sm">{approval.tripSchedule.title}</p>
+                <p className="font-medium text-sm leading-tight">{approval.tripSchedule.title}</p>
                 <p className="text-xs text-muted-foreground">
                   {formatDateSafe(approval.tripSchedule.startDate)} -{" "}
                   {formatDateSafe(approval.tripSchedule.endDate)}

@@ -14,6 +14,8 @@ import { Badge } from "../../components/ui/badge"
 import { useReviews } from "../../hooks/use-admin-data"
 import { apiClient } from "../../lib/api-client"
 import { Loader2, Eye, EyeOff } from "lucide-react"
+import { Checkbox } from "../../components/ui/checkbox"
+import { TableSkeleton } from "./table-skeleton"
 
 interface Review {
   _id: string
@@ -31,6 +33,7 @@ export function ReviewsTable({ filters = {} }: { filters?: Record<string, any> }
   const { data, isLoading, mutate } = useReviews(page, 10, filters)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [showLoadingIndicator, setShowLoadingIndicator] = useState(false)
+  const [selected, setSelected] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     let timer: NodeJS.Timeout | undefined
@@ -67,7 +70,7 @@ export function ReviewsTable({ filters = {} }: { filters?: Record<string, any> }
   }
 
   if (isLoading && !data) {
-    return <div className="flex justify-center py-12">Loading reviews...</div>
+    return <TableSkeleton rows={6} cols={6} />
   }
 
   const reviews: Review[] = Array.isArray(data) ? data : data?.reviews || []
@@ -81,6 +84,39 @@ export function ReviewsTable({ filters = {} }: { filters?: Record<string, any> }
     )
   }
 
+  const allSelected = reviews.length > 0 && selected.size === reviews.length
+  const toggleAll = (checked: boolean) => {
+    if (checked) setSelected(new Set(reviews.map(r => r._id)))
+    else setSelected(new Set())
+  }
+
+  const toggleOne = (id: string, checked: boolean) => {
+    setSelected((prev) => {
+      const next = new Set(prev)
+      if (checked) next.add(id)
+      else next.delete(id)
+      return next
+    })
+  }
+
+  const bulkHide = async () => {
+    const ids = Array.from(selected)
+    for (const id of ids) {
+      await apiClient.hideReview(id)
+    }
+    setSelected(new Set())
+    await mutate()
+  }
+
+  const bulkShow = async () => {
+    const ids = Array.from(selected)
+    for (const id of ids) {
+      await apiClient.showReview(id)
+    }
+    setSelected(new Set())
+    await mutate()
+  }
+
   return (
     <div className="space-y-4 relative">
       {showLoadingIndicator && (
@@ -89,85 +125,73 @@ export function ReviewsTable({ filters = {} }: { filters?: Record<string, any> }
         </div>
       )}
 
-      <Table className={showLoadingIndicator ? "opacity-60 pointer-events-none" : ""}>
-        <TableHeader>
-          <TableRow>
-            <TableHead>User</TableHead>
-            <TableHead>Target Type</TableHead>
-            {/* <TableHead>Target ID</TableHead> */}
-            <TableHead>Rating</TableHead>
-            <TableHead>Comment</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {reviews.map((review) => (
-            <TableRow key={review._id}>
-              <TableCell className="font-medium">
-                {review.user?.username || "Unknown"}
-              </TableCell>
+      {!!selected.size && (
+        <div className="flex items-center justify-between rounded-lg border border-border bg-card/70 p-3 text-sm">
+          <span className="text-muted-foreground">{selected.size} selected</span>
+          <div className="space-x-2">
+            <Button size="sm" variant="outline" onClick={bulkShow} disabled={showLoadingIndicator}>Show</Button>
+            <Button size="sm" variant="destructive" onClick={bulkHide} disabled={showLoadingIndicator}>Hide</Button>
+          </div>
+        </div>
+      )}
 
-              <TableCell>
-                <Badge variant={review.targetType === "TripSchedule" ? "default" : "secondary"}>
-                  {review.targetType === "TripSchedule" ? "TripSchedule" : "Place"}
-                </Badge>
-              </TableCell>
-
-              {/* <TableCell className="font-mono text-xs">
-                {review.targetId.slice(-8)}
-              </TableCell> */}
-
-              <TableCell>
-                <span className="text-yellow-500">{"★".repeat(review.rating)}</span>
-                <span className="text-muted-foreground ml-1">
-                  {"☆".repeat(5 - review.rating)}
-                </span>
-              </TableCell>
-
-              <TableCell className="max-w-xs truncate" title={review.comment}>
-                {review.comment}
-              </TableCell>
-
-              <TableCell>
-                <Badge variant={review.status === "visible" ? "default" : "secondary"}>
-                  {review.status}
-                </Badge>
-              </TableCell>
-
-              <TableCell>
-                {review.status === "visible" ? (
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => handleHideReview(review._id)}
-                    disabled={actionLoading === review._id}
-                  >
-                    {actionLoading === review._id ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
+      <div className={showLoadingIndicator ? "opacity-60 pointer-events-none" : ""}>
+        <div className="overflow-x-auto rounded-lg border border-border">
+          <Table>
+            <TableHeader className="sticky top-0 z-10 bg-card">
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="w-8">
+                  <Checkbox checked={allSelected} onCheckedChange={(v) => toggleAll(Boolean(v))} aria-label="Select all" />
+                </TableHead>
+                <TableHead className="min-w-[160px]">User</TableHead>
+                <TableHead className="min-w-[140px]">Target Type</TableHead>
+                <TableHead className="min-w-[140px]">Rating</TableHead>
+                <TableHead className="min-w-[260px]">Comment</TableHead>
+                <TableHead className="min-w-[120px]">Status</TableHead>
+                <TableHead className="min-w-[120px]">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {reviews.map((review) => (
+                <TableRow key={review._id} className="odd:bg-muted/30 hover:bg-accent/50">
+                  <TableCell>
+                    <Checkbox checked={selected.has(review._id)} onCheckedChange={(v) => toggleOne(review._id, Boolean(v))} aria-label="Select row" />
+                  </TableCell>
+                  <TableCell className="font-medium">
+                    {review.user?.username || "Unknown"}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={review.targetType === "TripSchedule" ? "default" : "secondary"}>
+                      {review.targetType === "TripSchedule" ? "TripSchedule" : "Place"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-yellow-500">{"★".repeat(review.rating)}</span>
+                    <span className="text-muted-foreground ml-1">{"☆".repeat(5 - review.rating)}</span>
+                  </TableCell>
+                  <TableCell className="max-w-xs truncate" title={review.comment}>
+                    {review.comment}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={review.status === "visible" ? "default" : "secondary"}>{review.status}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    {review.status === "visible" ? (
+                      <Button size="sm" variant="destructive" onClick={() => handleHideReview(review._id)} disabled={actionLoading === review._id}>
+                        {actionLoading === review._id ? <Loader2 className="w-4 h-4 animate-spin" /> : <EyeOff className="w-4 h-4" />}
+                      </Button>
                     ) : (
-                      <EyeOff className="w-4 h-4" />
+                      <Button size="sm" variant="outline" onClick={() => handleShowReview(review._id)} disabled={actionLoading === review._id}>
+                        {actionLoading === review._id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
+                      </Button>
                     )}
-                  </Button>
-                ) : (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleShowReview(review._id)}
-                    disabled={actionLoading === review._id}
-                  >
-                    {actionLoading === review._id ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Eye className="w-4 h-4" />
-                    )}
-                  </Button>
-                )}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
 
       {/* Pagination – chỉ hiện nếu có nhiều trang */}
       {totalPages > 1 && (

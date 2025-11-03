@@ -35,11 +35,12 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <Card className="w-full max-w-md">
+    <div className="relative flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/5 via-accent/10 to-background p-4">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(59,130,246,0.15),transparent_60%)]" />
+      <Card className="w-full max-w-md shadow-lg backdrop-blur">
         <CardHeader className="space-y-4 text-center">
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-            <img src="/travelbuddy.png" alt="Custom Icon" className="h-20 w-20" />
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-xl bg-primary/90 text-primary-foreground shadow-sm">
+            <img src="/travelbuddy.png" alt="Custom Icon" className="h-16 w-16" />
           </div>
           <div>
             <CardTitle className="text-2xl">Travel Buddy Admin</CardTitle>
@@ -73,7 +74,7 @@ export default function LoginPage() {
               />
             </div>
             {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button type="submit" className="w-full h-10 rounded-full" disabled={isLoading}>
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -84,6 +85,7 @@ export default function LoginPage() {
               )}
             </Button>
           </form>
+          <p className="mt-4 text-center text-xs text-muted-foreground">Use your admin credentials to continue</p>
         </CardContent>
       </Card>
     </div>

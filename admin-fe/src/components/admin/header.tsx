@@ -13,20 +13,24 @@ import {
 } from "../../components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar"
 import { useAuth } from "../../lib/auth-context"
+import { ThemeToggle } from "../../components/ui/theme-toggle"
+import { CommandMenu } from "./command-menu"
 
 export function Header() {
   const { user, logout } = useAuth()
 
   return (
-    <header className="flex h-16 items-center justify-between border-b border-border bg-card px-6">
+    <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-border bg-card/70 px-6 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+      <CommandMenu />
       <div className="flex flex-1 items-center gap-4">
-        <div className="relative w-96">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input type="search" placeholder="Search users, trips, locations..." className="pl-9" />
+        <div className="relative w-96 max-w-full">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input type="search" placeholder="Search users, trips, locations..." className="h-10 rounded-full pl-9 bg-muted/60" />
         </div>
       </div>
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" className="relative">
+      <div className="flex items-center gap-2">
+        <ThemeToggle />
+        <Button variant="ghost" size="icon" className="relative rounded-full">
           <Bell className="h-5 w-5" />
           <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-destructive" />
         </Button>

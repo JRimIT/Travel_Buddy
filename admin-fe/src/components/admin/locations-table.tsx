@@ -12,26 +12,26 @@ export function LocationsTable() {
 
   return (
     <div className="space-y-4">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Booking Count</TableHead>
-            <TableHead>Average Rating</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {data?.map((place: { _id: Key | null | undefined; name: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; bookingCount: string | number | bigint | boolean | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | ReactPortal | Promise<string | number | bigint | boolean | ReactPortal | ReactElement<unknown, string | JSXElementConstructor<any>> | Iterable<ReactNode> | null | undefined> | null | undefined; averageRating: number }) => (
-            <TableRow key={place._id}>
-              <TableCell>{place.name}</TableCell>
-              <TableCell>{place.bookingCount}</TableCell>
-              <TableCell>
-                {"⭐".repeat(Math.round(place.averageRating))} {place.averageRating.toFixed(1)}
-              </TableCell>
+      <div className="overflow-x-auto rounded-lg border border-border">
+        <Table>
+          <TableHeader className="sticky top-0 z-10 bg-card">
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="min-w-[200px]">Name</TableHead>
+              <TableHead className="min-w-[160px]">Booking Count</TableHead>
+              <TableHead className="min-w-[180px]">Average Rating</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {data?.map((place: { _id: Key | null | undefined; name: any; bookingCount: any; averageRating: number }) => (
+              <TableRow key={place._id} className="odd:bg-muted/30 hover:bg-accent/50">
+                <TableCell className="font-medium">{place.name}</TableCell>
+                <TableCell>{place.bookingCount}</TableCell>
+                <TableCell>{"⭐".repeat(Math.round(place.averageRating))} {place.averageRating.toFixed(1)}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   )
 }

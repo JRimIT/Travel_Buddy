@@ -5,6 +5,7 @@ import { Input } from "../../../components/ui/input"
 import { Search } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select"
 import { TripsTable } from "../../../components/admin/trips-table"
+import { PageHeader } from "../../../components/admin/page-header"
 
 export default function TripsPage() {
   const [searchTerm, setSearchTerm] = useState("")
@@ -28,10 +29,11 @@ export default function TripsPage() {
 
   return (
     <main className="flex-1 space-y-8 p-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Trips</h1>
-        <p className="text-muted-foreground">Manage all travel trips and itineraries</p>
-      </div>
+      <PageHeader
+        title="Trips"
+        description="Manage all travel trips and itineraries"
+        breadcrumbs={[{ label: "Home", href: "/admin" }, { label: "Trips" }]}
+      />
 
       <div className="flex gap-4">
         <div className="flex-1 relative">
