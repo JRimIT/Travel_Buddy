@@ -16,10 +16,12 @@ import adminRoutes from "./routes/adminRoutes.js";
 
 import dotenv from "dotenv";
 import { connectToMongoDB } from "./lib/db.js";
-import session from "express-session";
-import sessionConfig from "./config/sessionConfig.js";
-import { jwtPassport, verifyAdmin, verifyUser } from "./config/jwtConfig.js";
-import methodOverride from "method-override";
+
+import session from 'express-session';
+import sessionConfig from './config/sessionConfig.js';
+import { jwtPassport, verifyAdmin, verifyUser } from './config/jwtConfig.js';
+import methodOverride from 'method-override';
+import postRoutes from './routes/postRoutes.js';
 
 dotenv.config();
 
@@ -47,6 +49,7 @@ app.use("/api/places", placesRoutes);
 app.use("/api/routing", routingRoutes);
 app.use("/api/tripSchedule", tripScheduleRoutes);
 app.use("/api/admin", adminRoutes);
+app.use('/api/posts', postRoutes);
 
 const port = 3000;
 app.listen(port, () => {

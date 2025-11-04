@@ -1,4 +1,8 @@
+import { ColorValue } from "react-native";
+
 export type ThemeType = {
+  card: ColorValue;
+  text: ColorValue;
   primary: string;
   textPrimary: string;
   textSecondary: string;
@@ -15,6 +19,8 @@ export type ThemeType = {
 
 export const themes: Record<string, ThemeType> = {
   forest: {
+    card: "#f1f8f2",
+    text: "#2e5a2e",
     primary: "#4CAF50",
     textPrimary: "#2e5a2e",
     textSecondary: "#688f68",
@@ -29,6 +35,8 @@ export const themes: Record<string, ThemeType> = {
     back: "#388E3C",
   },
   retro: {
+    card: "#faf5eb",
+    text: "#784e2d",
     primary: "#e17055",
     textPrimary: "#784e2d",
     textSecondary: "#a58e7c",
@@ -43,6 +51,8 @@ export const themes: Record<string, ThemeType> = {
     back: "#FF7A20",
   },
   ocean: {
+    card: "#f5f9ff",
+    text: "#1a4971",
     primary: "#1976D2",
     textPrimary: "#1a4971",
     textSecondary: "#6d93b8",
@@ -57,6 +67,8 @@ export const themes: Record<string, ThemeType> = {
     back: "#1565C0",
   },
   blossom: {
+    card: "#fff5f8",
+    text: "#7d2150",
     primary: "#EC407A",
     textPrimary: "#7d2150",
     textSecondary: "#b06a8f",

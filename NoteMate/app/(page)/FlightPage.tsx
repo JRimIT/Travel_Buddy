@@ -59,9 +59,9 @@ const FlightPage = ({ route, navigation }) => {
     cabinClass
   }).then(res => {
     // xử lý và show dữ liệu
-    console.log("Flight search results:", res.data.flightQuotes.results);
+    console.log("Flight search results:", res.data?.flightQuotes.results);
     
-    setFlights(res.data.flightQuotes.results || []);
+    setFlights(res.data?.flightQuotes.results || []);
       setLoading(false);
   });
 }, [fromEntityId, toEntityId, year, month]);

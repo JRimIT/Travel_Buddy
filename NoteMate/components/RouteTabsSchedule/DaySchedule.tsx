@@ -6,20 +6,15 @@ import {
   ScrollView,
   Modal,
   TextInput,
+  Alert,
 } from "react-native";
 import React, { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { useDispatch } from "react-redux";
-import { set } from "lodash";
 import { setUserSchedule } from "../../redux/inforUserTravel/inforUserTravelSlice";
+import { API_URL } from "../../constants/api";
 
-const GEOAPIFY_KEY =
-  process.env.GEOAPIFY_KEY || "2ad8114410b44c76baf6c71f5ab23f3a";
-const category = "entertainment";
-
-// Đề xuất mẫu từ hệ thống
 const SUGGESTED_ACTS = [
   "Đi dạo công viên",
   "Thưởng thức cà phê view đẹp",
@@ -31,18 +26,18 @@ const SUGGESTED_ACTS = [
 ];
 
 const DaySchedule = () => {
-  const [places, setPlaces] = useState([]);
   const [schedule, setSchedule] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Modal State
+  // Modal thêm hoạt động thủ công
   const [modalShow, setModalShow] = useState(false);
   const [modalDayIdx, setModalDayIdx] = useState(0);
   const [actInput, setActInput] = useState("");
   const [actPriceInput, setActPriceInput] = useState("");
-  const [showTimePicker, setShowTimePicker] = useState(false);
   const [chosenDate, setChosenDate] = useState(new Date());
+  const [showTimePicker, setShowTimePicker] = useState(false);
 
+  // Modal update activity
   const [updateModalShow, setUpdateModalShow] = useState(false);
   const [updateDayIdx, setUpdateDayIdx] = useState(0);
   const [updateActIdx, setUpdateActIdx] = useState(0);
@@ -51,74 +46,87 @@ const DaySchedule = () => {
   const [editDate, setEditDate] = useState(new Date());
   const [showEditTimePicker, setShowEditTimePicker] = useState(false);
 
+  // Modal "Thêm hoạt động đã tích chọn"
+  const [suggestModal, setSuggestModal] = useState({
+    show: false,
+    dayIdx: 0,
+    showTime: false,
+    act: null,
+    time: new Date(),
+    money: "",
+  });
+
   const numDays = useSelector(
     (state: any) => state.inforUserTravel.userTravelDays
   );
   const funBudget = useSelector(
     (state: any) => state.inforUserTravel.userFunBudget
   );
-  const fundNumber = funBudget ? parseInt(funBudget.replace(/\./g, "")) : 0;
-  const lat = useSelector(
-    (state: any) => state.inforUserTravel.userProvince.latitude
-  );
-  const lng = useSelector(
-    (state: any) => state.inforUserTravel.userProvince.longitude
-  );
-
+  const startDate = useSelector(
+    (state: any) => state.inforUserTravel.userStartDate
+  )
+  const fundNumber =
+    funBudget && typeof funBudget === "string"
+      ? parseInt(funBudget.replace(/\./g, ""))
+      : Number(funBudget) || 0;
   const userSchedule = useSelector(
     (state: any) => state.inforUserTravel.userSchedule
   );
-
+  const userPlaygrounds =
+    useSelector((state: any) => state.inforUserTravel.userPlaygrounds) || [];
   const dispatch = useDispatch();
-  // Hàm random price KHÔNG còn dùng khi add mới nữa
-  const randomPrice = () => 50000 + Math.floor(Math.random() * 12) * 25000;
+
+  // Utility
   const formatMoney = (val) => {
     const v = val.replace(/\D/g, "");
     if (!v) return "";
     return v.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   };
-  function autoArrangeSchedule(places, numDays, fund) {
-    const dailyBudget = Math.floor(fund / numDays);
-    let idx = 0;
-    const grouped = [];
-    for (let day = 1; day <= numDays; day++) {
-      let thisDayBudget = dailyBudget;
-      const activities = [];
-      while (idx < places.length && thisDayBudget > 0) {
-        const price = places[idx].price || randomPrice();
-        if (price <= thisDayBudget) {
-          activities.push({
-            name:
-              places[idx].properties.name || places[idx].properties.formatted,
-            time: `${9 + activities.length}:00`,
-            place: places[idx],
-            cost: price,
-          });
-          thisDayBudget -= price;
-          idx += 1;
-        } else {
-          idx += 1;
-        }
-      }
-      grouped.push({ day, date: "", activities });
-    }
-    return grouped;
-  }
 
-  // Mở modal add, truyền index ngày
-  const openAddModal = (idx) => {
-    setModalDayIdx(idx);
-    setActInput("");
-    setActPriceInput("");
-    setChosenDate(new Date());
-    setModalShow(true);
+  // AI auto xếp lịch khi có danh sách địa điểm
+  const autoArrangeWithAI = async () => {
+    if (!userPlaygrounds?.length || !numDays || !fundNumber) return;
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/AI/schedule-optimize`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          places: userPlaygrounds,
+          numDays: numDays,
+          budget: fundNumber,
+          startDate 
+        }),
+      });
+      const data = await response.json();
+      // console.log("data schedule: ", data.schedule);
+      
+      if (data.schedule) {
+        setSchedule(data.schedule);
+        dispatch(setUserSchedule(data.schedule));
+      }
+    } catch { }
+    setLoading(false);
   };
 
+  // GỌI AI tự động khi userPlaygrounds/thông tin input thay đổi
+  useEffect(() => {
+    if (userPlaygrounds.length > 0 && numDays && fundNumber) {
+      autoArrangeWithAI();
+    } else if (userSchedule && userSchedule.length > 0) {
+      setSchedule(userSchedule);
+      setLoading(false);
+    } else {
+      setSchedule([]);
+      setLoading(false);
+    }
+  }, [userPlaygrounds, numDays, fundNumber]);
+
+  // Sửa/thêm activity thủ công như cũ
   const updateScheduleAndDispatch = (newSchedule) => {
     setSchedule(newSchedule);
     dispatch(setUserSchedule(newSchedule));
   };
-
   const removeActivity = (dayIdx, actIdx) => {
     const newSchedule = schedule.map((d, idx) =>
       idx === dayIdx
@@ -127,7 +135,6 @@ const DaySchedule = () => {
     );
     updateScheduleAndDispatch(newSchedule);
   };
-
   const handleAddActivity = () => {
     if (!actInput.trim() || !actPriceInput.trim()) return;
     const parseTime = (timeStr) => {
@@ -155,47 +162,53 @@ const DaySchedule = () => {
     setModalShow(false);
   };
 
-  // Thêm gợi ý vào input
-  const pickSuggest = (txt) => setActInput(txt);
-
-  const fetchPlacesWithPrice = async (lat, lng, category) => {
-    const url = `https://api.geoapify.com/v2/places?categories=${category}&filter=circle:${lng},${lat},2000&limit=18&apiKey=${GEOAPIFY_KEY}`;
-    const res = await fetch(url);
-    const data = await res.json();
-    return (data.features || []).map((item) => ({
-      ...item,
-      price: randomPrice(),
-    }));
+  // Thêm từ đã tích chọn: submit sau khi chọn giờ/giá
+  const handleAddSuggested = () => {
+    if (!suggestModal.act) return;
+    const name = suggestModal.act.properties?.name || suggestModal.act.name;
+    const time =
+      suggestModal.time.getHours().toString().padStart(2, "0") +
+      ":" +
+      suggestModal.time.getMinutes().toString().padStart(2, "0");
+    const cost = suggestModal.money
+      ? parseInt(suggestModal.money.replace(/\./g, ""))
+      : suggestModal.act.price || 0;
+    const newSchedule = schedule.map((d, idx) => {
+      if (idx !== suggestModal.dayIdx) return d;
+      const newActs = [
+        ...d.activities,
+        {
+          name,
+          time,
+          cost,
+          place: suggestModal.act,
+        },
+      ];
+      newActs.sort((a, b) => {
+        const [hA, mA] = a.time.split(":").map(Number);
+        const [hB, mB] = b.time.split(":").map(Number);
+        return hA * 60 + mA - (hB * 60 + mB);
+      });
+      return { ...d, activities: newActs };
+    });
+    updateScheduleAndDispatch(newSchedule);
+    setSuggestModal({
+      show: false,
+      dayIdx: 0,
+      showTime: false,
+      act: null,
+      time: new Date(),
+      money: "",
+    });
   };
 
-  useEffect(() => {
-    if (userSchedule && userSchedule.length > 0) {
-      setSchedule(userSchedule);
-      setLoading(false);
-    } else {
-      setLoading(true);
-      fetchPlacesWithPrice(lat, lng, category).then((data) => {
-        setPlaces(data);
-        setLoading(false);
-      });
-    }
-  }, [userSchedule, lat, lng, category]);
+  const pickSuggest = (txt) => setActInput(txt);
 
-  useEffect(() => {
-    if (
-      !loading &&
-      places.length > 0 &&
-      numDays &&
-      fundNumber > 0 &&
-      (!userSchedule || userSchedule.length === 0)
-    ) {
-      const sch = autoArrangeSchedule(places, numDays, fundNumber);
-      setSchedule(sch);
-      // console.log("SCH: ", sch);
-      
-      dispatch(setUserSchedule(sch));
-    }
-  }, [places, loading, numDays, fundNumber, userSchedule]);
+  // Xác định ngày nào đã có hoạt động
+  const findDaysWithActivity = (activityName) =>
+    schedule
+      .filter((d) => d.activities.some((a) => a.name === activityName))
+      .map((d) => d.day);
 
   // Tổng tiền các ngày
   const total = schedule.reduce(
@@ -208,7 +221,7 @@ const DaySchedule = () => {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <Text style={{ color: "#348ceb", fontSize: 17, fontWeight: "600" }}>
-          Đang tải địa điểm vui chơi...
+          Đang tải lịch trình...
         </Text>
       </View>
     );
@@ -222,21 +235,17 @@ const DaySchedule = () => {
       </View>
     );
   }
-
   return (
     <ScrollView style={{ flex: 1, backgroundColor: "#f8fafd" }}>
       <Text style={styles.sectionHeader}>
         Quỹ: {fundNumber.toLocaleString()} VNĐ
       </Text>
-      {/* Tổng tiền tất cả */}
       <View style={styles.totalBox}>
         <Ionicons name="wallet" size={20} color="#1db06e" />
         <Text style={styles.tongTienTxt}>Tổng tiền đã dùng: </Text>
         <Text style={styles.tongSoTienTxt}>{total.toLocaleString()} VNĐ</Text>
       </View>
-
       {schedule.map((d, dayIdx) => {
-        // Tổng tiền 1 ngày
         const totalDay = d.activities.reduce(
           (sum, act) => sum + (act.cost || 0),
           0
@@ -252,11 +261,10 @@ const DaySchedule = () => {
                 <Text style={styles.dayLabel}>Ngày {d.day}</Text>
                 <Text style={styles.dayDate}>{d.date}</Text>
               </View>
-              {/* Tổng tiền ngày */}
               <View style={styles.dayTotalBox}>
                 <Ionicons name="pricetags-outline" size={17} color="#45d984" />
                 <Text style={styles.dayTotalText}>
-                  Đã dùng:{" "}
+                  Đã dùng:
                   <Text style={{ color: "#25d975", fontWeight: "bold" }}>
                     {totalDay.toLocaleString()} VNĐ
                   </Text>
@@ -265,9 +273,11 @@ const DaySchedule = () => {
             </View>
             <View style={{ marginTop: 10 }}>
               {d.activities.length === 0 ? (
-                <Text style={{ color: "#bbb", marginBottom: 5 }}>
-                  Chưa có hoạt động
-                </Text>
+                <View>
+                  <Text style={{ color: "#bbb", marginBottom: 5 }}>
+                    Chưa có hoạt động
+                  </Text>
+                </View>
               ) : (
                 d.activities.map((act, actIdx) => (
                   <View style={styles.activityRow} key={actIdx}>
@@ -292,7 +302,6 @@ const DaySchedule = () => {
                         setUpdateActIdx(actIdx);
                         setEditName(act.name);
                         setEditMoney(act.cost?.toString() || "");
-                        // Parse time sang Date object cho DateTimePicker
                         const [h, m] = act.time.split(":").map(Number);
                         const d = new Date();
                         d.setHours(h);
@@ -311,19 +320,52 @@ const DaySchedule = () => {
                   </View>
                 ))
               )}
-              {/* Nút "Thêm hoạt động" */}
+
+              {/* Nút thêm hoạt động đã tích chọn */}
+              <TouchableOpacity
+                style={styles.addFromPickBtn}
+                onPress={() =>
+                  setSuggestModal({
+                    show: true,
+                    dayIdx,
+                    showTime: false,
+                    act: null,
+                    time: new Date(),
+                    money: "",
+                  })
+                }
+              >
+                <Ionicons
+                  name="duplicate-outline"
+                  color="#3f4c5e"
+                  size={18}
+                  style={{ marginRight: 7 }}
+                />
+                <Text style={styles.addFromPickText}>
+                  Thêm từ danh sách đã chọn
+                </Text>
+              </TouchableOpacity>
+              {/* Nút thêm hoạt động thủ công */}
               <TouchableOpacity
                 style={styles.addActivityBtn}
-                onPress={() => openAddModal(dayIdx)}
+                onPress={() => {
+                  setModalDayIdx(dayIdx);
+                  setActInput("");
+                  setActPriceInput("");
+                  setChosenDate(new Date());
+                  setModalShow(true);
+                }}
               >
                 <Ionicons name="add-circle" size={20} color="#247ff7" />
-                <Text style={styles.addActivityText}>Thêm hoạt động</Text>
+                <Text style={styles.addActivityText}>
+                  Thêm hoạt động thủ công
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
         );
       })}
-
+      {/* ...Modal thêm/sửa giữ nguyên như cũ, chỉ thêm styles/addFromPickBtn và addFromPickText ở trên ... */}
       {/* MODAL THÊM HOẠT ĐỘNG */}
       <Modal
         visible={modalShow}
@@ -331,7 +373,9 @@ const DaySchedule = () => {
         animationType="slide"
         onRequestClose={() => setModalShow(false)}
       >
+
         <View style={styles.modalBackdrop}>
+
           <View style={styles.modalContainer}>
             <Text style={styles.modalTitle}>Thêm hoạt động mới</Text>
             {/* DateTimePicker chuyên nghiệp */}
@@ -340,6 +384,7 @@ const DaySchedule = () => {
               onPress={() => setShowTimePicker(true)}
             >
               <Ionicons name="time" size={18} color="#3477de" />
+
               <Text
                 style={{
                   fontWeight: "bold",
@@ -350,6 +395,7 @@ const DaySchedule = () => {
               >
                 Chọn mốc giờ
               </Text>
+
               <Text
                 style={{
                   marginLeft: 13,
@@ -358,17 +404,22 @@ const DaySchedule = () => {
                   fontSize: 16,
                 }}
               >
+
                 {chosenDate.getHours().toString().padStart(2, "0") +
                   ":" +
                   chosenDate.getMinutes().toString().padStart(2, "0")}
+
               </Text>
+
               <Ionicons
                 name="chevron-forward"
                 size={20}
                 color="#bbb"
                 style={{ marginLeft: 4 }}
               />
+
             </TouchableOpacity>
+
             {showTimePicker && (
               <DateTimePicker
                 value={chosenDate}
@@ -380,7 +431,7 @@ const DaySchedule = () => {
                 }}
               />
             )}
-            {/* Nhập/chọn hoạt động */}
+
             <TextInput
               style={styles.inputAct}
               placeholder="Nhập hoạt động..."
@@ -388,7 +439,7 @@ const DaySchedule = () => {
               onChangeText={setActInput}
               maxLength={60}
             />
-            {/* Nhập số tiền hoạt động */}
+
             <TextInput
               style={styles.inputAct}
               placeholder="Số tiền hoạt động (VNĐ)"
@@ -397,7 +448,7 @@ const DaySchedule = () => {
               keyboardType="number-pad"
               maxLength={10}
             />
-            {/* ...Đề xuất hoạt động giữ nguyên */}
+
             <Text
               style={{
                 fontWeight: "bold",
@@ -408,16 +459,20 @@ const DaySchedule = () => {
             >
               Hoặc chọn nhanh hoạt động đề xuất:
             </Text>
+
             <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+
               {SUGGESTED_ACTS.map((sug, i) => (
                 <TouchableOpacity
                   key={i}
                   style={styles.suggestedBtn}
                   onPress={() => pickSuggest(sug)}
                 >
+
                   <Text style={styles.suggestedText}>{sug}</Text>
                 </TouchableOpacity>
               ))}
+
             </View>
             {/* Nút hành động */}
             <View
@@ -427,6 +482,7 @@ const DaySchedule = () => {
                 marginTop: 17,
               }}
             >
+
               <TouchableOpacity
                 onPress={() => setModalShow(false)}
                 style={{
@@ -435,12 +491,15 @@ const DaySchedule = () => {
                   paddingHorizontal: 18,
                 }}
               >
+
                 <Text
                   style={{ color: "#444", fontWeight: "bold", fontSize: 16 }}
                 >
                   Huỷ
                 </Text>
+
               </TouchableOpacity>
+
               <TouchableOpacity
                 onPress={handleAddActivity}
                 style={[
@@ -451,7 +510,9 @@ const DaySchedule = () => {
                 ]}
                 disabled={!actInput.trim() || !actPriceInput.trim()}
               >
+
                 <Ionicons name="checkmark-done" size={19} color="#fff" />
+
                 <Text
                   style={{
                     color: "#fff",
@@ -462,127 +523,111 @@ const DaySchedule = () => {
                 >
                   Thêm
                 </Text>
+
               </TouchableOpacity>
+
             </View>
+
           </View>
+
         </View>
+
       </Modal>
+
       <Modal
         visible={updateModalShow}
         transparent
-        animationType="slide"
+        animationType="fade"
         onRequestClose={() => setUpdateModalShow(false)}
       >
-        <View style={styles.modalBackdrop}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Cập nhật hoạt động</Text>
-            {/* Giờ bằng DateTimePicker */}
-            <TouchableOpacity
-              style={styles.timePickerToggle}
-              onPress={() => setShowEditTimePicker(true)}
-            >
-              <Ionicons name="time" size={18} color="#3477de" />
-              <Text
-                style={{
-                  fontWeight: "bold",
-                  color: "#2b6fc9",
-                  fontSize: 16,
-                  marginLeft: 7,
-                }}
-              >
-                Thay đổi mốc giờ
-              </Text>
-              <Text
-                style={{
-                  marginLeft: 13,
-                  fontWeight: "bold",
-                  color: "#fe941a",
-                  fontSize: 16,
-                }}
-              >
-                {editDate.getHours().toString().padStart(2, "0") +
-                  ":" +
-                  editDate.getMinutes().toString().padStart(2, "0")}
-              </Text>
-              <Ionicons
-                name="chevron-forward"
-                size={20}
-                color="#bbb"
-                style={{ marginLeft: 4 }}
-              />
-            </TouchableOpacity>
-            {showEditTimePicker && (
-              <DateTimePicker
-                value={editDate}
-                mode="time"
-                is24Hour={true}
-                onChange={(event, selectedDate) => {
-                  setShowEditTimePicker(false);
-                  if (selectedDate) setEditDate(selectedDate);
-                }}
-              />
-            )}
-            {/* Tên hoạt động */}
-            <TextInput
-              style={styles.inputAct}
-              placeholder="Tên hoạt động"
-              value={editName}
-              onChangeText={setEditName}
-              maxLength={60}
-            />
-            {/* Số tiền hoạt động */}
-            <TextInput
-              style={styles.inputAct}
-              placeholder="Số tiền hoạt động (VNĐ)"
-              value={formatMoney(editMoney)}
-              onChangeText={(txt) => setEditMoney(txt.replace(/\D/g, ""))}
-              keyboardType="number-pad"
-              maxLength={10}
-            />
-            {/* Nút cập nhật/xoá */}
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                marginTop: 18,
-              }}
-            >
-              {/* XÓA HOẠT ĐỘNG */}
+        <TouchableOpacity
+          style={styles.modalBackdrop}
+          activeOpacity={1}
+          onPressOut={() => setUpdateModalShow(false)}
+        >
+          <View
+            style={styles.centeredModalContent}
+            // bắt touch bên trong Modal không đóng
+            pointerEvents="box-none"
+          >
+            <View style={styles.modalContainer}>
+              <Text style={styles.modalTitle}>Cập nhật hoạt động</Text>
+
+              {/* Thay đổi mốc giờ */}
               <TouchableOpacity
-                style={[styles.confirmBtn, { backgroundColor: "#fa5252" }]}
-                onPress={() => removeActivity(updateDayIdx, updateActIdx)}
+                style={styles.timePickerToggle}
+                onPress={() => setShowEditTimePicker(true)}
+                activeOpacity={0.72}
               >
-                <Ionicons name="trash-outline" size={17} color="#fff" />
-                <Text
-                  style={{
-                    color: "#fff",
-                    fontWeight: "bold",
-                    fontSize: 16,
-                    marginLeft: 7,
-                  }}
-                >
-                  Xoá
+                <Ionicons name="time" size={18} color="#3477de" />
+                <Text style={styles.timeLabel}>Thay đổi mốc giờ</Text>
+                <Text style={styles.timeValue}>
+                  {editDate.getHours().toString().padStart(2, "0") +
+                    ":" +
+                    editDate.getMinutes().toString().padStart(2, "0")}
                 </Text>
+                <Ionicons
+                  name="chevron-forward"
+                  size={20}
+                  color="#bbb"
+                  style={{ marginLeft: 4 }}
+                />
               </TouchableOpacity>
-              {/* CẬP NHẬT */}
-              <TouchableOpacity
-                style={[
-                  styles.confirmBtn,
-                  (!editName.trim() || !editMoney.trim()) && { opacity: 0.5 },
-                ]}
-                disabled={!editName.trim() || !editMoney.trim()}
-                onPress={() => {
-                  const parseTime = (timeStr) => {
-                    const [h, m] = timeStr.split(":").map(Number);
-                    return h * 60 + m;
-                  };
-                  // Update activity
-                  const newSchedule = schedule.map((d, idx) => {
-                    if (idx !== updateDayIdx) return d;
-                    // Thay đổi activity trong mảng (giữ nguyên các mốc khác)
-                    const newActs = d.activities.map((act, i) =>
-                      i === updateActIdx
-                        ? {
+              {showEditTimePicker && (
+                <DateTimePicker
+                  value={editDate}
+                  mode="time"
+                  is24Hour={true}
+                  onChange={(event, selectedDate) => {
+                    setShowEditTimePicker(false);
+                    if (selectedDate) setEditDate(selectedDate);
+                  }}
+                />
+              )}
+
+              <TextInput
+                style={styles.inputAct}
+                placeholder="Tên hoạt động"
+                value={editName}
+                onChangeText={setEditName}
+                maxLength={60}
+              />
+
+              <TextInput
+                style={styles.inputAct}
+                placeholder="Số tiền hoạt động (VNĐ)"
+                value={formatMoney(editMoney)}
+                onChangeText={(txt) => setEditMoney(txt.replace(/\D/g, ""))}
+                keyboardType="number-pad"
+                maxLength={10}
+              />
+
+              <View style={styles.btnRowModal}>
+                <TouchableOpacity
+                  style={[styles.confirmBtn, { backgroundColor: "#fa5252" }]}
+                  onPress={() => removeActivity(updateDayIdx, updateActIdx)}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons name="trash-outline" size={17} color="#fff" />
+                  <Text style={styles.btnTextWhite}>Xoá</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.confirmBtn,
+                    (!editName.trim() || !editMoney.trim()) && { opacity: 0.5 },
+                  ]}
+                  disabled={!editName.trim() || !editMoney.trim()}
+                  onPress={() => {
+                    const parseTime = (timeStr) => {
+                      const [h, m] = timeStr.split(":").map(Number);
+                      return h * 60 + m;
+                    };
+                    const newSchedule = schedule.map((d, idx) => {
+                      if (idx !== updateDayIdx) return d;
+                      const newActs = d.activities.map((act, i) =>
+                        i === updateActIdx
+                          ? {
                             ...act,
                             name: editName.trim(),
                             cost: parseInt(editMoney.replace(/\./g, "")),
@@ -591,32 +636,238 @@ const DaySchedule = () => {
                               ":" +
                               editDate.getMinutes().toString().padStart(2, "0"),
                           }
-                        : act
-                    );
-                    // Sort lại theo time tăng dần
-                    newActs.sort(
-                      (a, b) => parseTime(a.time) - parseTime(b.time)
-                    );
-                    return { ...d, activities: newActs };
-                  });
-                  updateScheduleAndDispatch(newSchedule);
-                  setUpdateModalShow(false);
-                }}
-              >
-                <Ionicons name="create-outline" size={17} color="#fff" />
-                <Text
-                  style={{
-                    color: "#fff",
-                    fontWeight: "bold",
-                    fontSize: 16,
-                    marginLeft: 7,
+                          : act
+                      );
+                      newActs.sort((a, b) => parseTime(a.time) - parseTime(b.time));
+                      return { ...d, activities: newActs };
+                    });
+                    updateScheduleAndDispatch(newSchedule);
+                    setUpdateModalShow(false);
                   }}
+                  activeOpacity={0.8}
                 >
-                  Cập nhật
-                </Text>
-              </TouchableOpacity>
+                  <Ionicons name="create-outline" size={17} color="#fff" />
+                  <Text style={styles.btnTextWhite}>Cập nhật</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Modal - Chọn hoạt động đã tích chọn */}
+      <Modal
+        visible={suggestModal.show}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setSuggestModal({ ...suggestModal, show: false })}
+      >
+        <View style={styles.modalBackdrop}>
+          <View style={[styles.modalContainer, { maxHeight: "70%" }]}>
+            <Text style={styles.modalTitle}>Chọn hoạt động đã tích</Text>
+            <ScrollView
+              showsVerticalScrollIndicator={true}
+              style={{ maxHeight: "57%" }}
+            >
+              {userPlaygrounds
+                .filter(
+                  (p) =>
+                    !schedule[suggestModal.dayIdx]?.activities.find(
+                      (act) => act.name === (p.properties?.name || p.name)
+                    )
+                )
+                .map((p, i) => {
+                  const name = p.properties?.name || p.name;
+                  const days = findDaysWithActivity(name);
+                  return (
+                    <TouchableOpacity
+                      key={p._cardKey || i}
+                      style={styles.suggestActivityCard}
+                      activeOpacity={0.7}
+                      onPress={() =>
+                        setSuggestModal({
+                          ...suggestModal,
+                          act: p,
+                          showTime: true,
+                          time: new Date(),
+                          money: p.price?.toString() || "",
+                        })
+                      }
+                    >
+                      <Text style={styles.suggestActivityTitle}>{name}</Text>
+                      <Text style={styles.suggestActivityAddress}>
+                        {p.properties?.address_line2}
+                      </Text>
+                      {typeof p.price !== "undefined" && (
+                        <Text style={styles.suggestActivityCost}>
+                          Giá gốc: {p.price?.toLocaleString()} VNĐ
+                        </Text>
+                      )}
+                      {days.length > 0 && (
+                        <Text style={styles.suggestActivityExisted}>
+                          Đã có ở ngày: {days.join(", ")}
+                        </Text>
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
+            </ScrollView>
+            <TouchableOpacity
+              style={{
+                alignSelf: "center",
+                marginTop: 14,
+                padding: 8,
+              }}
+              onPress={() => setSuggestModal({ ...suggestModal, show: false })}
+            >
+              <Text
+                style={{
+                  color: "#61738d",
+                  fontWeight: "bold",
+                  fontSize: 15,
+                }}
+              >
+                Đóng
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Step nhập giờ/tiền nhỏ gọn */}
+          {suggestModal.showTime && suggestModal.act && (
+            <View
+              style={[
+                styles.modalContainer,
+                {
+                  position: "absolute",
+                  top: "16%",
+                  width: "86%",
+                  padding: 18,
+                  maxHeight: 240,
+                },
+              ]}
+            >
+              <Text
+                style={{
+                  color: "#814731",
+                  fontWeight: "bold",
+                  fontSize: 15,
+                  marginBottom: 8,
+                }}
+              >
+                Thêm "
+                {suggestModal.act.properties?.name || suggestModal.act.name}"
+              </Text>
+              <TouchableOpacity
+                style={styles.timePickerToggle}
+                onPress={() => setShowTimePicker(true)}
+              >
+                <Ionicons name="time" size={18} color="#497497" />
+                <Text
+                  style={{
+                    marginLeft: 7,
+                    fontWeight: "bold",
+                    color: "#375168",
+                    fontSize: 15,
+                  }}
+                >
+                  Chọn giờ
+                </Text>
+                <Text
+                  style={{
+                    marginLeft: 10,
+                    fontWeight: "bold",
+                    color: "#63896b",
+                    fontSize: 15,
+                  }}
+                >
+                  {suggestModal.time.getHours().toString().padStart(2, "0") +
+                    ":" +
+                    suggestModal.time.getMinutes().toString().padStart(2, "0")}
+                </Text>
+              </TouchableOpacity>
+              {showTimePicker && (
+                <DateTimePicker
+                  value={suggestModal.time}
+                  mode="time"
+                  is24Hour={true}
+                  onChange={(event, selectedDate) => {
+                    setShowTimePicker(false);
+                    if (selectedDate)
+                      setSuggestModal({ ...suggestModal, time: selectedDate });
+                  }}
+                />
+              )}
+              <TextInput
+                style={styles.inputAct}
+                placeholder="Số tiền (VNĐ)"
+                value={formatMoney(suggestModal.money)}
+                onChangeText={(txt) =>
+                  setSuggestModal({
+                    ...suggestModal,
+                    money: txt.replace(/\D/g, ""),
+                  })
+                }
+                keyboardType="number-pad"
+                maxLength={10}
+              />
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "flex-end",
+                  marginTop: 13,
+                }}
+              >
+                <TouchableOpacity
+                  onPress={() =>
+                    setSuggestModal({
+                      ...suggestModal,
+                      showTime: false,
+                      act: null,
+                      money: "",
+                      time: new Date(),
+                    })
+                  }
+                  style={{
+                    marginRight: 13,
+                    paddingVertical: 5,
+                    paddingHorizontal: 14,
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: "#495270",
+                      fontWeight: "bold",
+                      fontSize: 15,
+                    }}
+                  >
+                    Huỷ
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={handleAddSuggested}
+                  style={[
+                    styles.confirmBtn,
+                    (!suggestModal.time || !suggestModal.act) && {
+                      opacity: 0.7,
+                    },
+                  ]}
+                  disabled={!suggestModal.time || !suggestModal.act}
+                >
+                  <Ionicons name="checkmark-done" size={19} color="#fff" />
+                  <Text
+                    style={{
+                      color: "#fff",
+                      fontWeight: "bold",
+                      fontSize: 15,
+                      marginLeft: 7,
+                    }}
+                  >
+                    Thêm
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
         </View>
       </Modal>
     </ScrollView>
@@ -625,223 +876,320 @@ const DaySchedule = () => {
 
 const styles = StyleSheet.create({
   sectionHeader: {
-    color: "#2188ea",
-    fontSize: 18,
+    color: "#405380",
+    fontSize: 20,
     fontWeight: "bold",
     textAlign: "center",
     marginVertical: 14,
-    letterSpacing: 0.1,
+    letterSpacing: 0.2,
+    textShadowColor: "#eaeaea",
+    textShadowRadius: 4,
   },
   totalBox: {
     flexDirection: "row",
     alignItems: "center",
     alignSelf: "center",
-    backgroundColor: "#f9fff6",
-    borderRadius: 13,
-    paddingHorizontal: 27,
-    paddingVertical: 12,
-    marginBottom: 18,
+    backgroundColor: "#f5f7fa",
+    borderRadius: 15,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    marginBottom: 14,
+    elevation: 2,
+    shadowColor: "#9bb8d7",
+    shadowOpacity: 0.13,
+    shadowRadius: 7,
     borderWidth: 1,
-    borderColor: "#bbe9c2",
+    borderColor: "#e0e6ed",
   },
   tongTienTxt: {
-    color: "#1da765",
-    fontWeight: "700",
-    fontSize: 16,
-    marginLeft: 10,
+    color: "#495270",
+    fontWeight: "bold",
+    fontSize: 15.5,
+    marginLeft: 8,
   },
   tongSoTienTxt: {
-    color: "#2db57d",
+    color: "#63896b",
     fontWeight: "bold",
-    marginLeft: 10,
-    fontSize: 17,
+    fontSize: 15,
+    marginLeft: 9,
+    letterSpacing: 0.1,
   },
   dayCard: {
-    backgroundColor: "#f8fcff",
+    backgroundColor: "#eeece6",
     borderRadius: 22,
-    padding: 21,
-    marginBottom: 25,
-    elevation: 6,
-    shadowColor: "#1768e4",
-    shadowOpacity: 0.18,
-    shadowRadius: 13,
+    padding: 17,
+    marginBottom: 17,
+    elevation: 4,
+    shadowColor: "#ccc",
+    shadowOpacity: 0.13,
+    shadowRadius: 10,
     borderWidth: 1,
-    borderColor: "#c6e2ff",
+    borderColor: "#d2d2c7",
+    marginHorizontal: 7,
   },
   dayHeaderRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 7,
     position: "relative",
+    borderBottomColor: "#eee6e7",
+    borderBottomWidth: 1.2,
+    paddingBottom: 4,
   },
   dayBadge: {
-    backgroundColor: "#2188ea",
+    backgroundColor: "#814731",
     borderRadius: 100,
     paddingVertical: 6,
     paddingHorizontal: 13,
-    marginRight: 11,
+    marginRight: 9,
     alignItems: "center",
     justifyContent: "center",
     flexDirection: "row",
+    shadowColor: "#bfa991",
+    shadowRadius: 5,
+    elevation: 1.5,
   },
-  dayBadgeText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
-  dayLabel: { color: "#1694d1", fontWeight: "700", fontSize: 15 },
-  dayDate: { color: "#607a9b", fontSize: 14, marginTop: 1 },
+  dayBadgeText: {
+    color: "#fff",
+    fontSize: 15,
+    fontWeight: "bold",
+    letterSpacing: 0.3,
+  },
+  dayLabel: {
+    color: "#375168",
+    fontWeight: "700",
+    fontSize: 15.5,
+    marginBottom: 2,
+  },
+  dayDate: {
+    color: "#698088",
+    fontSize: 13,
+    marginTop: 0,
+    fontStyle: "italic",
+  },
   dayTotalBox: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 12,
+    paddingHorizontal: 11,
     paddingVertical: 4,
-    backgroundColor: "#eafcf1",
-    borderRadius: 9,
+    backgroundColor: "#f1f4ee",
+    borderRadius: 10,
     position: "absolute",
     right: 0,
-    top: 2,
+    top: 0,
+    borderWidth: 1,
+    borderColor: "#abdcbf",
   },
   dayTotalText: {
-    color: "#22a666",
-    fontSize: 15,
+    color: "#6b8b6d",
+    fontSize: 13.5,
     fontWeight: "500",
-    marginLeft: 7,
+    marginLeft: 6,
   },
   activityRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: 7,
-    backgroundColor: "#fff",
+    marginVertical: 6,
+    backgroundColor: "#f5f7fa",
     borderRadius: 11,
     paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginBottom: 2,
-    shadowColor: "#baddff",
-    elevation: 1,
-    minHeight: 52,
+    paddingVertical: 12,
+    marginBottom: 3,
+    shadowColor: "#ddd",
+    elevation: 1.5,
+    minHeight: 49,
     position: "relative",
+    borderLeftColor: "#898989",
+    borderLeftWidth: 3.5,
   },
   timeBox: {
     flexDirection: "row",
     alignItems: "center",
-    width: 66,
-    backgroundColor: "#e8f3fb",
-    borderRadius: 6,
-    paddingHorizontal: 6,
+    width: 64,
+    backgroundColor: "#e1e8ed",
+    borderRadius: 8,
+    paddingHorizontal: 8,
     paddingVertical: 2,
     marginRight: 9,
+    borderWidth: 1,
+    borderColor: "#ececec",
   },
   timeText: {
-    color: "#3697f7",
+    color: "#417c90",
     fontWeight: "bold",
     fontSize: 15,
-    marginLeft: 6,
+    marginLeft: 5,
+    letterSpacing: 0.2,
   },
   actText: {
-    color: "#384655",
+    color: "#455173",
     fontSize: 15,
-    fontWeight: "500",
+    fontWeight: "600",
     flex: 1,
-    flexWrap: "wrap",
     minWidth: 30,
-    marginRight: 7,
+    marginRight: 8,
   },
   priceText: {
-    color: "#27b851",
-    fontWeight: "bold",
-    marginLeft: 6,
-    fontSize: 14,
-  },
-  removeBtn: {
-    position: "absolute",
-    right: -18,
-
-    top: "85%",
-    marginTop: -12,
-    padding: 5,
-    backgroundColor: "#fff0f0",
-    borderRadius: 8,
-    elevation: 1.5,
-    zIndex: 2,
+    color: "#7c916a",
+    fontWeight: "700",
+    marginLeft: 3,
+    fontSize: 13.5,
+    backgroundColor: "#f1f7ee",
+    borderRadius: 7,
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    overflow: "hidden",
   },
   addActivityBtn: {
     flexDirection: "row",
     alignItems: "center",
     alignSelf: "flex-start",
-    backgroundColor: "#e4f0ff",
-    borderRadius: 8,
+    backgroundColor: "#e0e3e8",
+    borderRadius: 7,
     paddingVertical: 8,
     paddingHorizontal: 15,
-    marginTop: 12,
-    elevation: 2,
+    marginTop: 9,
+    marginBottom: 0,
+    elevation: 1.5,
   },
   addActivityText: {
-    color: "#247ff7",
+    color: "#455173",
     fontWeight: "700",
     fontSize: 15,
     marginLeft: 7,
+    letterSpacing: 0.1,
   },
-  // MODAL STYLES
+  addFromPickBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
+    borderWidth: 1,
+    borderColor: "#c9cacc",
+    backgroundColor: "#f1f7fa",
+    borderRadius: 9,
+    paddingVertical: 8,
+    paddingHorizontal: 13,
+    marginTop: 5,
+    marginBottom: 2,
+    elevation: 1,
+    shadowColor: "#9bb8d7",
+  },
+  addFromPickText: {
+    color: "#3f4c5e",
+    fontSize: 15,
+    fontWeight: "600",
+  },
   modalBackdrop: {
     flex: 1,
-    backgroundColor: "rgba(50,65,120,0.19)",
+    backgroundColor: "rgba(25,37,50,0.17)",
     justifyContent: "center",
     alignItems: "center",
   },
   modalContainer: {
-    width: "90%",
-    backgroundColor: "#fff",
-    borderRadius: 16,
+    width: "94%",
+    backgroundColor: "#f9faf5",
+    borderRadius: 18,
     padding: 25,
-    elevation: 9,
+    elevation: 8,
+    shadowColor: "#3d475a",
   },
   modalTitle: {
     fontSize: 19,
     fontWeight: "bold",
-    color: "#247ff7",
-    marginBottom: 16,
+    color: "#61738d",
+    marginBottom: 14,
     textAlign: "center",
   },
   inputAct: {
-    borderBottomWidth: 1.4,
-    borderBottomColor: "#ddd",
-    paddingVertical: 10,
-    fontSize: 16,
+    borderBottomWidth: 1.2,
+    borderBottomColor: "#bfcacb",
+    paddingVertical: 9,
+    fontSize: 15,
     marginBottom: 12,
     color: "#222",
     fontWeight: "bold",
+    backgroundColor: "#f6f8fa",
+    borderRadius: 4,
+    paddingHorizontal: 4,
   },
   suggestedBtn: {
-    backgroundColor: "#edf6ff",
+    backgroundColor: "#e0e3e8",
     paddingVertical: 7,
     paddingHorizontal: 13,
-    borderRadius: 9,
+    borderRadius: 8,
     marginRight: 8,
-    marginBottom: 8,
+    marginBottom: 7,
+    elevation: 1,
   },
-  suggestedText: { color: "#1b5bbd", fontWeight: "600", fontSize: 15 },
+  suggestedText: { color: "#61738d", fontWeight: "600", fontSize: 14.5 },
   confirmBtn: {
     flexDirection: "row",
-    backgroundColor: "#2196f3",
-    paddingHorizontal: 22,
+    backgroundColor: "#61738d",
+    paddingHorizontal: 19,
     paddingVertical: 11,
-    borderRadius: 10,
+    borderRadius: 9,
     alignItems: "center",
+    elevation: 1.5,
   },
   timePickerToggle: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#e9f2fd",
-    borderRadius: 9,
-    paddingHorizontal: 13,
-    paddingVertical: 9,
-    marginBottom: 8,
+    backgroundColor: "#ecf0f3",
+    borderRadius: 8,
+    paddingHorizontal: 11,
+    paddingVertical: 7,
+    marginBottom: 9,
     marginTop: -4,
   },
-  updateBtn: {  
-    marginLeft: 7,
+  updateBtn: {
+    marginLeft: 8,
     padding: 5,
-    backgroundColor: "#ffefd9",
+    backgroundColor: "#f3e8e8",
     borderRadius: 8,
-    elevation: 1,
+    elevation: 1.5,
   },
+  suggestActivityCard: {
+    marginBottom: 10,
+    padding: 15,
+    borderRadius: 11,
+    borderColor: "#e3e3dc",
+    borderWidth: 1,
+    backgroundColor: "#f5f7fa",
+    flexDirection: "column",
+  },
+  centeredModalContent: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  btnRowModal: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 18,
+  },
+  timeLabel: {
+    fontWeight: "bold",
+    color: "#2b6fc9",
+    fontSize: 16,
+    marginLeft: 7,
+  },
+  timeValue: {
+    marginLeft: 13,
+    fontWeight: "bold",
+    color: "#fe941a",
+    fontSize: 16,
+  },
+  btnTextWhite: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 16,
+    marginLeft: 7,
+  },
+
+  suggestActivityTitle: { color: "#795f4a", fontWeight: "bold", fontSize: 16 },
+  suggestActivityAddress: { color: "#7a8594", fontSize: 13.5 },
+  suggestActivityCost: { color: "#63896b", fontSize: 13, marginTop: 2 },
+  suggestActivityExisted: { color: "#e02c65", marginTop: 6, fontSize: 13.5 },
 });
 
 export default DaySchedule;

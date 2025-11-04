@@ -19,6 +19,7 @@ import HotelTab from "../../components/RouteTabsSchedule/HotelTab";
 import DaySchedule from "../../components/RouteTabsSchedule/DaySchedule";
 import MoveTab from "../../components/RouteTabsSchedule/MoveTab";
 import CostTab from "../../components/RouteTabsSchedule/CostTab";
+import HotelDetailsScreen from "../../components/RouteTabsSchedule/HotelDetailsTab";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -76,16 +77,15 @@ const TripScheduleScreen = () => {
 
 
   const DaysRoute = () => (
-    <ScrollView contentContainerStyle={{ padding: 20 }}>
-      <Text style={styles.sectionHeader}>Lịch trình từng ngày</Text>
+     
       <DaySchedule/>
-    </ScrollView>
+    
   );
 
   
   const HotelRoute = () => (
-   
-    <HotelTab />
+  //  <Text>Hotel</Text>
+    <HotelDetailsScreen/>
   );
 
   // Tab Di chuyển

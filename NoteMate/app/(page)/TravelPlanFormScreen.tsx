@@ -11,7 +11,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useDispatch } from "react-redux";
 import { set } from "lodash";
-import { setUserEndDate, setUserStartDate, setUserTravelDays } from "../../redux/inforUserTravel/inforUserTravelSlice";
+import { setUserEndDate, setUserSchedule, setUserStartDate, setUserTravelDays } from "../../redux/inforUserTravel/inforUserTravelSlice";
 
 const TravelPlanFormScreen = () => {
   const [startDate, setStartDate] = useState(null);
@@ -32,6 +32,13 @@ const TravelPlanFormScreen = () => {
     }
     handleClosePicker();
   };
+
+  const addDays = (date, n) => {
+  const d = new Date(date);
+  d.setDate(d.getDate() + n);
+  return d.toISOString().slice(0, 10); // yyyy-mm-dd
+};
+
 
   // const formatMoney = (moneyStr) => {
   //   // Loại bỏ ký tự không phải số
@@ -58,12 +65,25 @@ const TravelPlanFormScreen = () => {
     return `${day}/${month}/${year}`;
     };
 
-    const goToHomeTypeScreen = () => {
-      dispatch(setUserStartDate(formatDate(startDate)))
-      dispatch(setUserEndDate(formatDate(endDate)))
-      dispatch(setUserTravelDays(getTripDays(startDate, endDate)))
-      router.push('HomeTypeScreen');
-    }
+   const goToHomeTypeScreen = () => {
+  const numDays = getTripDays(startDate, endDate);
+  const daysArr = [];
+
+  for (let i = 0; i < numDays; i++) {
+    daysArr.push({
+      day: i + 1,
+      date: addDays(startDate, i),
+      activities: [],
+    });
+  }
+
+  dispatch(setUserStartDate(formatDate(startDate)))
+  dispatch(setUserEndDate(formatDate(endDate)))
+  dispatch(setUserTravelDays(numDays))
+  dispatch(setUserSchedule(daysArr));   
+  router.push('HomeTypeScreen');
+}
+
 
   return (
     <View style={styles.container}>
