@@ -6,24 +6,18 @@ import { Search } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select"
 import { TripsTable } from "../../../components/admin/trips-table"
 import { PageHeader } from "../../../components/admin/page-header"
+import { useRouter } from "next/navigation" // ← THÊM
 
 export default function TripsPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
+  const router = useRouter() // ← THÊM
 
   const filters = useMemo(() => {
     const f: Record<string, any> = {}
-  
-    if (searchTerm.trim()) {
-      f.search = searchTerm.trim()
-    }
-  
-    if (statusFilter === "public") {
-      f.isPublic = "true"
-    } else if (statusFilter === "private") {
-      f.isPublic = "false"
-    }
-  
+    if (searchTerm.trim()) f.search = searchTerm.trim()
+    if (statusFilter === "public") f.isPublic = "true"
+    else if (statusFilter === "private") f.isPublic = "false"
     return f
   }, [searchTerm, statusFilter])
 
@@ -39,7 +33,7 @@ export default function TripsPage() {
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search by title"  // ĐÃ SỬA
+            placeholder="Search by title or user"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"

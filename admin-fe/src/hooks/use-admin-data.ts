@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react"
 import { apiClient } from "../lib/api-client"
+import useSWR from "swr";
 
 interface UseDataReturn<T> {
   data: T | null
@@ -48,7 +49,16 @@ export function useTopPlaces(limit = 5) {
 }
 
 export function useTripApprovals() {
-  return useData(useCallback(() => apiClient.getTripApprovals(), []))
+  const { data, error, mutate } = useSWR("trip-approvals", () =>
+    apiClient.getTripApprovals()
+  )
+
+  return {
+    data,
+    isLoading: !error && !data,
+    isError: error,
+    mutate,
+  }
 }
 
 export function useTrips(page = 1, limit = 10, filters?: Record<string, any>) {

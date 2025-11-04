@@ -29,7 +29,7 @@ export function DashboardStats() {
       icon: <TrendingUp className="w-4 h-4" />,
     },
     {
-      title: "Total Trips",
+      title: "Total Bookings",
       value: totalData ? totalData.totalBookings : "Loading...",
       icon: <Calendar className="w-4 h-4" />,
     },

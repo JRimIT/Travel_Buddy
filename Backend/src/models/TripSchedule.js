@@ -35,14 +35,25 @@ const TripSchedule = new mongoose.Schema({
         type: Date,
         default: Date.now
     },
-    startDate: { 
-        type: Date, 
-        required: true 
+    startDate: {
+        type: Date,
+        required: true
     },
-    endDate: { 
-        type: Date, 
-        required: true 
+    endDate: {
+        type: Date,
+        required: true
     },
+    status: {
+        type: String,
+        enum: ['pending_review', 'approved', 'rejected'],
+        default: 'pending_review'
+    },
+    reviewedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
+    reviewedAt: Date,
+    rejectReason: String,
 })
 
 export default mongoose.models.TripSchedule || mongoose.model('TripSchedule', TripSchedule);

@@ -2,7 +2,6 @@
 import express from "express";
 import { verifyAdmin } from "../config/jwtConfig.js";
 import TripSchedule from "../models/TripSchedule.js";
-import TripApproval from "../models/TripApproval.js";
 import Place from "../models/Place.js";
 import Review from "../models/Review.js";
 import Booking from "../models/Booking.js";
@@ -28,133 +27,95 @@ router.use(verifyAdmin);
  *     UserSummary:
  *       type: object
  *       properties:
- *         _id:
- *           type: string
- *         username:
- *           type: string
- *         email:
- *           type: string
- *         phone:
- *           type: string
- *         isLocked:
- *           type: boolean
- *         createdAt:
- *           type: string
- *           format: date-time
+ *         _id: { type: string }
+ *         username: { type: string }
+ *         email: { type: string }
+ *         phone: { type: string }
+ *         isLocked: { type: boolean }
+ *         createdAt: { type: string, format: date-time }
  *
  *     TripSchedule:
  *       type: object
  *       properties:
- *         _id:
+ *         _id: { type: string }
+ *         title: { type: string }
+ *         description: { type: string }
+ *         budget:
+ *           type: object
+ *           properties:
+ *             flight: { type: number }
+ *             hotel: { type: number }
+ *             fun: { type: number }
+ *         days:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               day: { type: integer }
+ *               date: { type: string }
+ *               activities:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     time: { type: string }
+ *                     name: { type: string }
+ *                     cost: { type: number }
+ *                     place: { type: object }
+ *         image: { type: string }
+ *         hotelDefault: { type: object }
+ *         flightTicket: { type: object }
+ *         isPublic: { type: boolean, default: false }
+ *         status:
  *           type: string
- *         title:
- *           type: string
- *         description:
- *           type: string
- *         startDate:
- *           type: string
- *           format: date-time
- *         endDate:
- *           type: string
- *           format: date-time
- *         isPublic:
- *           type: boolean
- *         user:
- *           $ref: '#/components/schemas/UserSummary'
- *         createdAt:
- *           type: string
- *           format: date-time
+ *           enum: [draft, pending_review, approved, rejected]
+ *           default: draft
+ *         reviewedBy: { $ref: '#/components/schemas/UserSummary' }
+ *         reviewedAt: { type: string, format: date-time }
+ *         rejectReason: { type: string }
+ *         user: { $ref: '#/components/schemas/UserSummary' }
+ *         createdAt: { type: string, format: date-time }
+ *         startDate: { type: string, format: date-time }
+ *         endDate: { type: string, format: date-time }
  *
  *     Review:
  *       type: object
  *       properties:
- *         _id:
- *           type: string
- *         user:
- *           $ref: '#/components/schemas/UserSummary'
- *         targetId:
- *           type: string
- *         rating:
- *           type: number
- *         comment:
- *           type: string
- *         status:
- *           type: string
- *           enum: [visible, hidden]
- *         createdAt:
- *           type: string
- *           format: date-time
+ *         _id: { type: string }
+ *         user: { $ref: '#/components/schemas/UserSummary' }
+ *         targetId: { type: string }
+ *         rating: { type: number }
+ *         comment: { type: string }
+ *         status: { type: string, enum: [visible, hidden] }
+ *         createdAt: { type: string, format: date-time }
  *
  *     Report:
  *       type: object
  *       properties:
- *         _id:
- *           type: string
- *         reporter:
- *           $ref: '#/components/schemas/UserSummary'
- *         targetId:
- *           type: string
- *           description: ID of reported entity (user, review, trip, etc.)
- *         reason:
- *           type: string
- *         status:
- *           type: string
- *           enum: [pending, reviewed, resolved]
- *         reviewedBy:
- *           $ref: '#/components/schemas/UserSummary'
- *         reviewedAt:
- *           type: string
- *           format: date-time
- *         createdAt:
- *           type: string
- *           format: date-time
- *
- *     TripApproval:
- *       type: object
- *       properties:
- *         _id:
- *           type: string
- *         tripSchedule:
- *           type: string
- *         status:
- *           type: string
- *           enum: [pending, approved, rejected]
- *         admin:
- *           type: string
- *         reason:
- *           type: string
- *         createdAt:
- *           type: string
- *           format: date-time
- *         updatedAt:
- *           type: string
- *           format: date-time
+ *         _id: { type: string }
+ *         reporter: { $ref: '#/components/schemas/UserSummary' }
+ *         targetId: { type: string }
+ *         reason: { type: string }
+ *         status: { type: string, enum: [pending, reviewed, resolved] }
+ *         reviewedBy: { $ref: '#/components/schemas/UserSummary' }
+ *         reviewedAt: { type: string, format: date-time }
+ *         createdAt: { type: string, format: date-time }
  *
  *     PlaceSummary:
  *       type: object
  *       properties:
- *         _id:
- *           type: string
- *         name:
- *           type: string
- *         bookingCount:
- *           type: number
- *         averageRating:
- *           type: number
+ *         _id: { type: string }
+ *         name: { type: string }
+ *         bookingCount: { type: number }
+ *         averageRating: { type: number }
  *
  *     WeeklySales:
  *       type: object
  *       properties:
- *         total:
- *           type: number
- *         count:
- *           type: integer
- *         startDate:
- *           type: string
- *           format: date
- *         endDate:
- *           type: string
- *           format: date
+ *         total: { type: number }
+ *         count: { type: integer }
+ *         startDate: { type: string, format: date }
+ *         endDate: { type: string, format: date }
  */
 
 /**
@@ -192,12 +153,9 @@ router.use(verifyAdmin);
  *                   type: array
  *                   items:
  *                     $ref: '#/components/schemas/TripSchedule'
- *                 total:
- *                   type: integer
- *                 page:
- *                   type: integer
- *                 totalPages:
- *                   type: integer
+ *                 total: { type: integer }
+ *                 page: { type: integer }
+ *                 totalPages: { type: integer }
  */
 router.get("/trips", async (req, res) => {
   try {
@@ -212,7 +170,13 @@ router.get("/trips", async (req, res) => {
 
     if (search && search.trim()) {
       const regex = new RegExp(search.trim(), "i");
-      query.title = regex;
+      const users = await User.find({ $or: [{ username: regex }, { email: regex }] }).select("_id");
+      const userIds = users.map(u => u._id);
+
+      query.$or = [
+        { title: regex },
+        { user: { $in: userIds } }
+      ];
     }
 
     const [trips, total] = await Promise.all([
@@ -224,12 +188,7 @@ router.get("/trips", async (req, res) => {
       TripSchedule.countDocuments(query)
     ]);
 
-    res.json({
-      trips,
-      total,
-      page: parseInt(page),
-      totalPages: Math.ceil(total / limit),
-    });
+    res.json({ trips, total, page: +page, totalPages: Math.ceil(total / limit) });
   } catch (error) {
     console.error("Search trips error:", error);
     res.status(500).json({ message: "Search failed", error: error.message });
@@ -238,36 +197,144 @@ router.get("/trips", async (req, res) => {
 
 /**
  * @swagger
- * /api/admin/trip-approvals:
+ * /api/admin/trips/{id}:
  *   get:
- *     summary: Get all trip approval requests
+ *     summary: Get detailed trip by ID (for admin review)
  *     tags: [Admin]
  *     security:
  *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *         description: TripSchedule ID (24-character hex string)
+ *     responses:
+ *       200: { description: Trip details }
+ *       400: { description: Invalid ID format }
+ *       404: { description: Trip not found }
+ */
+router.get("/trips/:id", async (req, res) => {
+  try {
+    const { id } = req.params
+
+    if (!id || !/^[0-9a-fA-F]{24}$/.test(id)) {
+      return res.status(400).json({
+        message: "Invalid trip ID format",
+        received: id,
+        expected: "24-character hex string (ObjectId)"
+      })
+    }
+
+    const trip = await TripSchedule.findById(id)
+      .populate("user", "username email phone")
+      .populate("reviewedBy", "username")
+
+    if (!trip) {
+      return res.status(404).json({ message: "Trip not found" })
+    }
+
+    res.json(trip)
+  } catch (error) {
+    console.error("Get trip detail error:", error)
+    
+    if (error.name === "CastError") {
+      return res.status(400).json({
+        message: "Invalid ID format",
+        error: error.message
+      })
+    }
+
+    res.status(500).json({ message: "Server error", error: error.message })
+  }
+})
+
+/**
+ * @swagger
+ * /api/admin/trips-pending:
+ *   get:
+ *     summary: Get trips waiting for review
+ *     description: >
+ *       Lấy danh sách chuyến đi đang chờ duyệt.  
+ *       - Dữ liệu mới: `status: 'pending_review'`  
+ *       - Dữ liệu cũ: `isPublic: false` và chưa có `status`
+ *     tags: [Admin]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema: { type: integer, default: 1 }
+ *       - in: query
+ *         name: limit
+ *         schema: { type: integer, default: 10 }
+ *       - in: query
+ *         name: search
+ *         schema: { type: string }
+ *         description: Search by title or username
  *     responses:
  *       200:
- *         description: List of approval requests
+ *         description: List of pending trips
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/TripApproval'
+ *               type: object
+ *               properties:
+ *                 trips:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/TripSchedule'
+ *                 total: { type: integer }
+ *                 page: { type: integer }
+ *                 totalPages: { type: integer }
  */
-router.get("/trip-approvals", async (req, res) => {
+router.get("/trips-pending", async (req, res) => {
   try {
-    const approvals = await TripApproval.find()
-      .populate({
-        path: "tripSchedule",
-        populate: { path: "user", select: "username email" },
-      })
-      .populate("admin", "username")
-      .sort({ createdAt: -1 });
-    res.json(approvals);
+    const { page = 1, limit = 10, search } = req.query;
+    const skip = (page - 1) * limit;
+
+    let query = {
+      $or: [
+        { status: "pending_review" },
+        { status: { $exists: false }, isPublic: false }
+      ]
+    };
+
+    // Tìm kiếm
+    if (search && search.trim()) {
+      const regex = new RegExp(search.trim(), "i");
+      const users = await User.find({ username: regex }).select("_id");
+      const userIds = users.map(u => u._id);
+
+      query = {
+        $and: [
+          query,
+          {
+            $or: [
+              { title: regex },
+              { user: { $in: userIds } }
+            ]
+          }
+        ]
+      };
+    }
+
+    const [trips, total] = await Promise.all([
+      TripSchedule.find(query)
+        .populate("user", "username email phone")
+        .populate("reviewedBy", "username")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit)),
+      TripSchedule.countDocuments(query)
+    ]);
+
+    res.json({ trips, total, page: +page, totalPages: Math.ceil(total / limit) });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Get pending trips error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
-});//da test ok chay dc
+});
 
 /**
  * @swagger
@@ -297,13 +364,13 @@ router.get("/reviews", async (req, res) => {
     const filter = status ? { status } : {};
     const reviews = await Review.find(filter)
       .populate("user", "username")
-      .populate("targetId", "name title type") 
+      .populate("targetId", "name title type")
       .sort({ createdAt: -1 });
     res.json(reviews);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});//ok chay dc
+});
 
 /**
  * @swagger
@@ -345,19 +412,8 @@ router.get("/sales/weekly", async (req, res) => {
     }
 
     const result = await Booking.aggregate([
-      {
-        $match: {
-          bookingDate: { $gte: startDate, $lte: endDate },
-          status: "confirmed",
-        },
-      },
-      {
-        $group: {
-          _id: null,
-          total: { $sum: "$amount" },
-          count: { $sum: 1 },
-        },
-      },
+      { $match: { bookingDate: { $gte: startDate, $lte: endDate }, status: "confirmed" } },
+      { $group: { _id: null, total: { $sum: "$amount" }, count: { $sum: 1 } } }
     ]);
 
     res.json({
@@ -369,7 +425,7 @@ router.get("/sales/weekly", async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});//chay dc lay ra revenue trong 1 tuan gan nhat
+});
 
 /**
  * @swagger
@@ -382,15 +438,10 @@ router.get("/sales/weekly", async (req, res) => {
  *     parameters:
  *       - in: query
  *         name: sortBy
- *         schema:
- *           type: string
- *           enum: [bookingCount, averageRating]
- *           default: bookingCount
+ *         schema: { type: string, enum: [bookingCount, averageRating], default: bookingCount }
  *       - in: query
  *         name: limit
- *         schema:
- *           type: integer
- *           default: 10
+ *         schema: { type: integer, default: 10 }
  *     responses:
  *       200:
  *         description: Top places
@@ -404,9 +455,7 @@ router.get("/sales/weekly", async (req, res) => {
 router.get("/places/top", async (req, res) => {
   try {
     const { sortBy = "bookingCount", limit = 10 } = req.query;
-    const validSort = ["bookingCount", "averageRating"].includes(sortBy)
-      ? sortBy
-      : "bookingCount";
+    const validSort = ["bookingCount", "averageRating"].includes(sortBy) ? sortBy : "bookingCount";
 
     const places = await Place.find()
       .sort({ [validSort]: -1 })
@@ -417,7 +466,7 @@ router.get("/places/top", async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});//ok
+});
 
 /**
  * @swagger
@@ -453,7 +502,7 @@ router.get("/reports", async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});//ok
+});
 
 /**
  * @swagger
@@ -467,11 +516,9 @@ router.get("/reports", async (req, res) => {
  *       - in: query
  *         name: search
  *         schema: { type: string }
- *         description: Search term (username, email, phone)
  *       - in: query
  *         name: field
  *         schema: { type: string, enum: [username, email, phone] }
- *         description: Field to search in
  *       - in: query
  *         name: page
  *         schema: { type: integer, default: 1 }
@@ -490,12 +537,9 @@ router.get("/reports", async (req, res) => {
  *                   type: array
  *                   items:
  *                     $ref: '#/components/schemas/UserSummary'
- *                 total:
- *                   type: integer
- *                 page:
- *                   type: integer
- *                 totalPages:
- *                   type: integer
+ *                 total: { type: integer }
+ *                 page: { type: integer }
+ *                 totalPages: { type: integer }
  */
 router.get("/users", async (req, res) => {
   try {
@@ -503,20 +547,12 @@ router.get("/users", async (req, res) => {
     const skip = (page - 1) * limit;
 
     let query = {};
-
     if (search && search.trim()) {
-      const searchStr = search.trim();
-      const regex = new RegExp(searchStr, "i");
-
+      const regex = new RegExp(search.trim(), "i");
       if (field && ["username", "email", "phone"].includes(field)) {
         query[field] = regex;
       } else {
-        // Tìm trong nhiều field
-        query.$or = [
-          { username: regex },
-          { email: regex },
-          { phone: regex }
-        ];
+        query.$or = [{ username: regex }, { email: regex }, { phone: regex }];
       }
     }
 
@@ -530,12 +566,7 @@ router.get("/users", async (req, res) => {
       User.countDocuments(query)
     ]);
 
-    res.json({
-      users,
-      total,
-      page: parseInt(page),
-      totalPages: Math.ceil(total / limit),
-    });
+    res.json({ users, total, page: +page, totalPages: Math.ceil(total / limit) });
   } catch (error) {
     console.error("Search users error:", error);
     res.status(500).json({ message: "Search failed", error: error.message });
@@ -558,24 +589,14 @@ router.get("/users", async (req, res) => {
  *             schema:
  *               type: object
  *               properties:
- *                 totalRevenue:
- *                   type: number
- *                 totalBookings:
- *                   type: integer
+ *                 totalRevenue: { type: number }
+ *                 totalBookings: { type: integer }
  */
 router.get("/sales/total", async (req, res) => {
   try {
     const result = await Booking.aggregate([
-      {
-        $match: { status: "confirmed" },
-      },
-      {
-        $group: {
-          _id: null,
-          totalRevenue: { $sum: "$amount" },
-          totalBookings: { $sum: 1 },
-        },
-      },
+      { $match: { status: "confirmed" } },
+      { $group: { _id: null, totalRevenue: { $sum: "$amount" }, totalBookings: { $sum: 1 } } }
     ]);
 
     res.json({
@@ -585,13 +606,13 @@ router.get("/sales/total", async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});//ok
+});
 
 /**
  * @swagger
- * /api/admin/trip-approvals/{id}/approve:
+ * /api/admin/trips/{id}/approve:
  *   post:
- *     summary: Approve a trip schedule
+ *     summary: Approve and publish a trip
  *     tags: [Admin]
  *     security:
  *       - BearerAuth: []
@@ -599,38 +620,60 @@ router.get("/sales/total", async (req, res) => {
  *       - in: path
  *         name: id
  *         required: true
- *         schema:
- *           type: string
- *         description: TripApproval ID
+ *         schema: { type: string }
+ *         description: TripSchedule ID
  *     responses:
  *       200:
- *         description: Trip approved and published
- *       404:
- *         description: Approval request not found
+ *         description: Trip approved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message: { type: string }
+ *                 trip: { $ref: '#/components/schemas/TripSchedule' }
+ *       404: { description: Trip not found }
+ *       400: { description: Trip not eligible for approval }
  */
-router.post("/trip-approvals/:id/approve", async (req, res) => {
+router.post("/trips/:id/approve", async (req, res) => {
   try {
-    const approval = await TripApproval.findById(req.params.id);
+    const trip = await TripSchedule.findById(req.params.id);
+    if (!trip) return res.status(404).json({ message: "Trip not found" });
 
-    if (!approval) return res.status(404).json({ message: "Approval request not found" });
+    // KIỂM TRA ĐIỀU KIỆN HỢP LỆ
+    const isPending = 
+      trip.status === "pending_review" || 
+      (!trip.status && trip.isPublic === false);
 
-    approval.status = "approved";
-    approval.admin = req.user._id;
-    await approval.save();
+    if (!isPending) {
+      return res.status(400).json({
+        message: "Trip is not pending review",
+        currentStatus: trip.status,
+        isPublic: trip.isPublic
+      });
+    }
 
-    await TripSchedule.findByIdAndUpdate(approval.tripSchedule, { isPublic: true });
+    // CẬP NHẬT
+    trip.status = "approved";
+    trip.isPublic = true;
+    trip.reviewedBy = req.user._id;
+    trip.reviewedAt = new Date();
+    trip.rejectReason = null;
 
-    res.json({ message: "Trip approved and published" });
+    await trip.save();
+
+    res.json({ message: "Trip approved and published", trip });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Approve trip error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 });
 
 /**
  * @swagger
- * /api/admin/trip-approvals/{id}/reject:
+ * /api/admin/trips/{id}/reject:
  *   post:
- *     summary: Reject a trip schedule
+ *     summary: Reject a trip with reason
  *     tags: [Admin]
  *     security:
  *       - BearerAuth: []
@@ -638,9 +681,8 @@ router.post("/trip-approvals/:id/approve", async (req, res) => {
  *       - in: path
  *         name: id
  *         required: true
- *         schema:
- *           type: string
- *         description: TripApproval ID
+ *         schema: { type: string }
+ *         description: TripSchedule ID
  *     requestBody:
  *       required: true
  *       content:
@@ -648,11 +690,8 @@ router.post("/trip-approvals/:id/approve", async (req, res) => {
  *           schema:
  *             type: object
  *             properties:
- *               reason:
- *                 type: string
- *                 example: "Nội dung không phù hợp với quy định"
- *             required:
- *               - reason
+ *               reason: { type: string, example: "Nội dung không phù hợp" }
+ *             required: [reason]
  *     responses:
  *       200:
  *         description: Trip rejected
@@ -661,31 +700,45 @@ router.post("/trip-approvals/:id/approve", async (req, res) => {
  *             schema:
  *               type: object
  *               properties:
- *                 message:
- *                   type: string
- *                 reason:
- *                   type: string
- *       404:
- *         description: Approval request not found
+ *                 message: { type: string }
+ *                 trip: { $ref: '#/components/schemas/TripSchedule' }
+ *       404: { description: Trip not found }
+ *       400: { description: Missing reason or trip not pending }
  */
-router.post("/trip-approvals/:id/reject", async (req, res) => {
+router.post("/trips/:id/reject", async (req, res) => {
   try {
     const { reason } = req.body;
-    
-    const approval = await TripApproval.findById(req.params.id);
-    
-    if (!approval) return res.status(404).json({ message: "Approval request not found" });
+    if (!reason?.trim()) return res.status(400).json({ message: "Reason is required" });
 
-    approval.status = "rejected";
-    approval.admin = req.user._id;
-    approval.reason = reason;
-    await approval.save();
+    const trip = await TripSchedule.findById(req.params.id);
+    if (!trip) return res.status(404).json({ message: "Trip not found" });
 
-    await TripSchedule.findByIdAndUpdate(approval.tripSchedule, { isPublic: false });
+    // KIỂM TRA ĐIỀU KIỆN HỢP LỆ
+    const isPending = 
+      trip.status === "pending_review" || 
+      (!trip.status && trip.isPublic === false);
 
-    res.json({ message: "Trip rejected", reason });
+    if (!isPending) {
+      return res.status(400).json({
+        message: "Trip is not pending review",
+        currentStatus: trip.status,
+        isPublic: trip.isPublic
+      });
+    }
+
+    // CẬP NHẬT
+    trip.status = "rejected";
+    trip.isPublic = false;
+    trip.reviewedBy = req.user._id;
+    trip.reviewedAt = new Date();
+    trip.rejectReason = reason.trim();
+
+    await trip.save();
+
+    res.json({ message: "Trip rejected", trip });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Reject trip error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 });
 
@@ -703,8 +756,7 @@ router.post("/trip-approvals/:id/reject", async (req, res) => {
  *         required: true
  *         schema: { type: string }
  *     responses:
- *       200:
- *         description: Review hidden
+ *       200: { description: Review hidden }
  */
 router.put("/reviews/:id/hide", async (req, res) => {
   try {
@@ -713,7 +765,7 @@ router.put("/reviews/:id/hide", async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});//ok
+});
 
 /**
  * @swagger
@@ -729,8 +781,7 @@ router.put("/reviews/:id/hide", async (req, res) => {
  *         required: true
  *         schema: { type: string }
  *     responses:
- *       200:
- *         description: Review visible again
+ *       200: { description: Review visible again }
  */
 router.put("/reviews/:id/show", async (req, res) => {
   try {
@@ -740,8 +791,6 @@ router.put("/reviews/:id/show", async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
-//ok
-
 
 /**
  * @swagger
@@ -757,8 +806,7 @@ router.put("/reviews/:id/show", async (req, res) => {
  *         required: true
  *         schema: { type: string }
  *     responses:
- *       200:
- *         description: Report resolved
+ *       200: { description: Report resolved }
  */
 router.put("/reports/:id/resolve", async (req, res) => {
   try {
@@ -772,8 +820,6 @@ router.put("/reports/:id/resolve", async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
-//ok
-
 
 /**
  * @swagger
@@ -789,10 +835,8 @@ router.put("/reports/:id/resolve", async (req, res) => {
  *         required: true
  *         schema: { type: string }
  *     responses:
- *       200:
- *         description: User account locked
- *       404:
- *         description: User not found
+ *       200: { description: User account locked }
+ *       404: { description: User not found }
  */
 router.put("/users/:id/lock", async (req, res) => {
   try {
@@ -806,7 +850,7 @@ router.put("/users/:id/lock", async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});//ok nhung model User chua co isLocked
+});
 
 /**
  * @swagger
@@ -822,10 +866,8 @@ router.put("/users/:id/lock", async (req, res) => {
  *         required: true
  *         schema: { type: string }
  *     responses:
- *       200:
- *         description: User account unlocked
- *       404:
- *         description: User not found
+ *       200: { description: User account unlocked }
+ *       404: { description: User not found }
  */
 router.put("/users/:id/unlock", async (req, res) => {
   try {
@@ -840,7 +882,6 @@ router.put("/users/:id/unlock", async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
-//same lock
 
 // Test route
 router.get("/test", (req, res) => {

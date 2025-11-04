@@ -118,31 +118,66 @@ class ApiClient {
 
     // Trip approval endpoints
     async getTripApprovals() {
-        return this.request<
-            Array<{
+        return this.request<{
+            trips: Array<{
                 _id: string
-                tripSchedule: {
-                    _id: string
-                    title: string
-                    startDate: string
-                    endDate: string
-                    user: { _id: string; username: string; email: string }
-                }
-                status: "pending" | "approved" | "rejected"
+                title: string
+                startDate: string
+                endDate: string
+                isPublic: boolean
+                status?: "pending_review" | "approved" | "rejected"
+                user: { _id: string; username: string; email: string }
                 createdAt: string
             }>
-        >("/admin/trip-approvals")
+            total: number
+            page: number
+            totalPages: number
+        }>("/admin/trips-pending")
     }
 
-    async approveTripApproval(id: string, reason?: string) {
-        return this.request(`/admin/trip-approvals/${id}/approve`, {
+    async getTripDetail(id: string) {
+        if (!/^[0-9a-fA-F]{24}$/.test(id)) {
+            throw new Error("Invalid trip ID format")
+        }
+
+        return this.request<{
+            _id: string
+            title: string
+            description: string
+            budget: { flight: number; hotel: number; fun: number }
+            days: Array<{
+                day: number
+                date: string
+                activities: Array<{
+                    time: string
+                    name: string
+                    cost: number
+                    place: any
+                }>
+            }>
+            image: string
+            hotelDefault: any
+            flightTicket: any
+            isPublic: boolean
+            status: string
+            user: { _id: string; username: string; email: string; phone: string }
+            reviewedBy?: { username: string }
+            reviewedAt?: string
+            rejectReason?: string
+            createdAt: string
+            startDate: string
+            endDate: string
+        }>(`/admin/trips/${id}`)
+    }
+
+    async approveTripApproval(id: string) {
+        return this.request(`/admin/trips/${id}/approve`, {
             method: "POST",
-            body: JSON.stringify({ reason }),
         })
     }
 
-    async rejectTripApproval(id: string, reason?: string) {
-        return this.request(`/admin/trip-approvals/${id}/reject`, {
+    async rejectTripApproval(id: string, reason: string) {
+        return this.request(`/admin/trips/${id}/reject`, {
             method: "POST",
             body: JSON.stringify({ reason }),
         })

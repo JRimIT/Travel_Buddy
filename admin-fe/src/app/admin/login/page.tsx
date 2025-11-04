@@ -40,7 +40,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-md shadow-lg backdrop-blur">
         <CardHeader className="space-y-4 text-center">
           <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-xl bg-primary/90 text-primary-foreground shadow-sm">
-            <img src="/travelbuddy.png" alt="Custom Icon" className="h-16 w-16" />
+            <img src="/travelbuddy.png" alt="Custom Icon" className="h-20 w-20" />
           </div>
           <div>
             <CardTitle className="text-2xl">Travel Buddy Admin</CardTitle>
