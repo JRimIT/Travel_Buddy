@@ -1,12 +1,15 @@
 import session from "express-session";
 import MongoStore from "connect-mongo";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const sessionConfig = {
     secret: '12345678',
     resave: false,
     saveUninitialized: false,
     store: MongoStore.create({
-        mongoUrl: 'mongodb://localhost:27017/NoteMate',
+        mongoUrl: process.env.MONGODB_URI,
         collectionName: 'sessions',
         ttl: 14 * 24 * 60 * 60 // 14 days
     }),

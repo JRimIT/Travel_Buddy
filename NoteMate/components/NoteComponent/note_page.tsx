@@ -298,7 +298,7 @@ const NoteComponent = () => {
                 shadowRadius: 4,
                 elevation: 2,
               }}
-              placeholder="🔍 Tìm kiếm ghi chú/sách..."
+              placeholder="🔍 Tìm kiếm lịch trình mẫu"
               placeholderTextColor="#888"
               value={query}
               onChangeText={(text) => {
@@ -356,8 +356,8 @@ const NoteComponent = () => {
               ) : (
                 <View style={styles.emptyContainer}>
                   <Ionicons name="book-outline" size={64} color={colors.textSecondary} />
-                  <Text style={styles.emptyText}>No books found</Text>
-                  <Text style={styles.emptySubtext}>Start sharing your favorite books!</Text>
+                  <Text style={styles.emptyText}>No travels found</Text>
+                  <Text style={styles.emptySubtext}>Start planning your travel now!</Text>
                 </View>
               )
             }
