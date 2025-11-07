@@ -38,7 +38,7 @@ export function UsersTable({ filters = {} }: { filters?: Record<string, any> }) 
       await apiClient.lockUser(userId)
       await mutate()
     } catch (error) {
-      console.error("Error locking user:", error)
+      console.error("Lỗi khi khóa người dùng:", error)
     } finally {
       setActionLoading(null)
     }
@@ -50,7 +50,7 @@ export function UsersTable({ filters = {} }: { filters?: Record<string, any> }) 
       await apiClient.unlockUser(userId)
       await mutate()
     } catch (error) {
-      console.error("Error unlocking user:", error)
+      console.error("Lỗi khi mở khóa người dùng:", error)
     } finally {
       setActionLoading(null)
     }
@@ -76,18 +76,18 @@ export function UsersTable({ filters = {} }: { filters?: Record<string, any> }) 
           <Table>
             <TableHeader className="sticky top-0 z-10 bg-card">
               <TableRow className="hover:bg-transparent">
-                <TableHead className="min-w-[160px]">Username</TableHead>
+                <TableHead className="min-w-[160px]">Tên người dùng</TableHead>
                 <TableHead className="min-w-[220px]">Email</TableHead>
-                <TableHead className="min-w-[140px]">Phone</TableHead>
-                <TableHead className="min-w-[120px]">Status</TableHead>
-                <TableHead className="min-w-[120px]">Actions</TableHead>
+                {/* <TableHead className="min-w-[140px]">Số điện thoại</TableHead> */}
+                <TableHead className="min-w-[120px]">Trạng thái</TableHead>
+                <TableHead className="min-w-[120px]">Hành động</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {users.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center text-muted-foreground">
-                    No users found.
+                    Không tìm thấy người dùng nào.
                   </TableCell>
                 </TableRow>
               ) : (
@@ -95,10 +95,10 @@ export function UsersTable({ filters = {} }: { filters?: Record<string, any> }) 
                   <TableRow key={user._id} className="odd:bg-muted/30 hover:bg-accent/50">
                     <TableCell className="font-medium">{user.username}</TableCell>
                     <TableCell>{user.email}</TableCell>
-                    <TableCell>{user.phone || "N/A"}</TableCell>
+                    {/* <TableCell>{user.phone || "N/A"}</TableCell> */}
                     <TableCell>
                       <Badge variant={user.isLocked ? "destructive" : "default"}>
-                        {user.isLocked ? "Locked" : "Active"}
+                        {user.isLocked ? "Đã khóa" : "Hoạt động"}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -138,11 +138,11 @@ export function UsersTable({ filters = {} }: { filters?: Record<string, any> }) 
         </div>
       </div>
 
-      {/* Pagination */}
+      {/* Phân trang */}
       {totalPages > 1 && (
         <div className="flex justify-between items-center">
           <div className="text-sm text-muted-foreground">
-            Page {page} of {totalPages}
+            Trang {page} / {totalPages}
           </div>
           <div className="space-x-2">
             <Button
@@ -150,14 +150,14 @@ export function UsersTable({ filters = {} }: { filters?: Record<string, any> }) 
               onClick={() => setPage(Math.max(1, page - 1))}
               disabled={page === 1}
             >
-              Previous
+              Trước
             </Button>
             <Button
               variant="outline"
               onClick={() => setPage(page + 1)}
               disabled={page >= totalPages}
             >
-              Next
+              Tiếp
             </Button>
           </div>
         </div>

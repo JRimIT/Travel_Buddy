@@ -17,14 +17,14 @@ export function DashboardStats() {
 
   const stats = [
     {
-      title: "Total Revenue",
-      value: totalSales?.totalRevenue ? `${totalSales.totalRevenue.toLocaleString("en-US")}` : "-",
+      title: "Tổng Doanh Thu",
+      value: totalSales?.totalRevenue ? `${totalSales.totalRevenue.toLocaleString("vi-VN")}` : "-",
       icon: <DollarSign className="w-5 h-5 text-emerald-600" />,
       bg: "bg-emerald-50 hover:bg-emerald-100",
     },
     {
-      title: "Monthly Revenue",
-      value: currentMonth ? `${currentMonth.totalRevenue.toLocaleString("en-US")}` : "-",
+      title: "Doanh Thu Tháng",
+      value: currentMonth ? `${currentMonth.totalRevenue.toLocaleString("vi-VN")}` : "-",
       change: revenueGrowth !== null
         ? `${parseFloat(revenueGrowth) > 0 ? "+" : ""}${revenueGrowth}%`
         : null,
@@ -32,25 +32,25 @@ export function DashboardStats() {
       bg: "bg-blue-50 hover:bg-blue-100",
     },
     {
-      title: "Total Bookings",
+      title: "Tổng Đặt Chỗ",
       value: totalSales?.totalBookings ?? "-",
       icon: <Calendar className="w-5 h-5 text-orange-600" />,
       bg: "bg-orange-50 hover:bg-orange-100",
     },
     {
-      title: "Total Users",
+      title: "Tổng Người Dùng",
       value: userStats?.summary.totalUsers ?? "-",
       icon: <Users className="w-5 h-5 text-purple-600" />,
       bg: "bg-purple-50 hover:bg-purple-100",
     },
     {
-      title: "Active (30 days)",
+      title: "Hoạt Động (30 ngày)",
       value: userStats?.summary.activeUsers ?? "-",
       icon: <UserCheck className="w-5 h-5 text-green-600" />,
       bg: "bg-green-50 hover:bg-green-100",
     },
     {
-      title: "Locked",
+      title: "Bị Khóa",
       value: userStats?.summary.lockedUsers ?? "-",
       icon: <AlertCircle className="w-5 h-5 text-red-600" />,
       bg: "bg-red-50 hover:bg-red-100",
@@ -91,7 +91,7 @@ function StatCard({ stat }: { stat: any }) {
               stat.change.startsWith("+") ? "text-green-600" : "text-red-600"
             }`}
           >
-            {stat.change} vs last month
+            {stat.change} so với tháng trước
           </p>
         )}
       </CardContent>

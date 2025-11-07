@@ -20,16 +20,16 @@ export default function UsersPage() {
   return (
     <main className="flex-1 space-y-8 p-8">
       <PageHeader
-        title="Users"
-        description="Manage all users and their accounts"
-        breadcrumbs={[{ label: "Home", href: "/admin" }, { label: "Users" }]}
+        title="Người dùng"
+        description="Quản lý tất cả người dùng và tài khoản của họ"
+        breadcrumbs={[{ label: "Trang chủ", href: "/admin" }, { label: "Người dùng" }]}
       />
 
       <div className="flex gap-4">
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search users..."
+            placeholder="Tìm kiếm người dùng..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"

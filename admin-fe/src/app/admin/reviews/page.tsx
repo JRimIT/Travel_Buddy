@@ -31,16 +31,16 @@ export default function ReviewsPage() {
   return (
     <main className="flex-1 space-y-8 p-8">
       <PageHeader
-        title="Reviews"
-        description="Moderate and manage user reviews"
-        breadcrumbs={[{ label: "Home", href: "/admin" }, { label: "Reviews" }]}
+        title="Đánh giá"
+        description="Kiểm duyệt và quản lý đánh giá người dùng"
+        breadcrumbs={[{ label: "Trang chủ", href: "/admin" }, { label: "Đánh giá" }]}
       />
 
       <div className="flex gap-4">
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search reviews..."
+            placeholder="Tìm kiếm đánh giá..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
@@ -51,28 +51,14 @@ export default function ReviewsPage() {
       <div className="flex gap-4">
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Filter by status" />
+            <SelectValue placeholder="Lọc theo trạng thái" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="visible">Visible</SelectItem>
-            <SelectItem value="hidden">Hidden</SelectItem>
+            <SelectItem value="all">Tất cả Trạng thái</SelectItem>
+            <SelectItem value="visible">Hiển thị</SelectItem>
+            <SelectItem value="hidden">Ẩn</SelectItem>
           </SelectContent>
         </Select>
-
-        {/* <Select value={ratingFilter} onValueChange={setRatingFilter}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Filter by rating" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Ratings</SelectItem>
-            <SelectItem value="5">5 Stars</SelectItem>
-            <SelectItem value="4">4 Stars</SelectItem>
-            <SelectItem value="3">3 Stars</SelectItem>
-            <SelectItem value="2">2 Stars</SelectItem>
-            <SelectItem value="1">1 Star</SelectItem>
-          </SelectContent>
-        </Select> */}
       </div>
 
       <ReviewsTable filters={filters} />

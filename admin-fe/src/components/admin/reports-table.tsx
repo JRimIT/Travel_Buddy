@@ -48,7 +48,7 @@ export function ReportsTable({ filters = {} }: { filters?: Record<string, any> }
       await apiClient.resolveReport(reportId, "resolved")
       await mutate()
     } catch (error) {
-      console.error("Error resolving report:", error)
+      console.error("Lỗi khi giải quyết báo cáo:", error)
     } finally {
       setActionLoading(null)
     }
@@ -64,7 +64,7 @@ export function ReportsTable({ filters = {} }: { filters?: Record<string, any> }
   if (reports.length === 0) {
     return (
       <div className="py-12 text-center text-muted-foreground">
-        No reports found.
+        Không tìm thấy báo cáo nào.
       </div>
     )
   }
@@ -103,9 +103,9 @@ export function ReportsTable({ filters = {} }: { filters?: Record<string, any> }
 
       {!!selected.size && (
         <div className="flex items-center justify-between rounded-lg border border-border bg-card/70 p-3 text-sm">
-          <span className="text-muted-foreground">{selected.size} selected</span>
+          <span className="text-muted-foreground">{selected.size} đã chọn</span>
           <div className="space-x-2">
-            <Button size="sm" onClick={bulkResolve} disabled={showLoadingIndicator}>Resolve</Button>
+            <Button size="sm" onClick={bulkResolve} disabled={showLoadingIndicator}>Giải quyết</Button>
           </div>
         </div>
       )}
@@ -116,22 +116,22 @@ export function ReportsTable({ filters = {} }: { filters?: Record<string, any> }
             <TableHeader className="sticky top-0 z-10 bg-card">
               <TableRow className="hover:bg-transparent">
                 <TableHead className="w-8">
-                  <Checkbox checked={allSelected} onCheckedChange={(v) => toggleAll(Boolean(v))} aria-label="Select all" />
+                  <Checkbox checked={allSelected} onCheckedChange={(v) => toggleAll(Boolean(v))} aria-label="Chọn tất cả" />
                 </TableHead>
-                <TableHead className="min-w-[160px]">Reporter</TableHead>
-                <TableHead className="min-w-[160px]">Target Type</TableHead>
-                <TableHead className="min-w-[280px]">Reason</TableHead>
-                <TableHead className="min-w-[140px]">Status</TableHead>
-                <TableHead className="min-w-[120px]">Actions</TableHead>
+                <TableHead className="min-w-[160px]">Người báo cáo</TableHead>
+                <TableHead className="min-w-[160px]">Loại đối tượng</TableHead>
+                <TableHead className="min-w-[280px]">Lý do</TableHead>
+                <TableHead className="min-w-[140px]">Trạng thái</TableHead>
+                <TableHead className="min-w-[120px]">Hành động</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {reports.map((report) => (
                 <TableRow key={report._id} className="odd:bg-muted/30 hover:bg-accent/50">
                   <TableCell>
-                    <Checkbox checked={selected.has(report._id)} onCheckedChange={(v) => toggleOne(report._id, Boolean(v))} aria-label="Select row" />
+                    <Checkbox checked={selected.has(report._id)} onCheckedChange={(v) => toggleOne(report._id, Boolean(v))} aria-label="Chọn dòng" />
                   </TableCell>
-                  <TableCell className="font-medium">{report.reporter?.username || "Unknown"}</TableCell>
+                  <TableCell className="font-medium">{report.reporter?.username || "Không xác định"}</TableCell>
                   <TableCell>
                     <Badge variant="outline">{report.targetType}</Badge>
                   </TableCell>
@@ -142,7 +142,7 @@ export function ReportsTable({ filters = {} }: { filters?: Record<string, any> }
                         report.status === "pending" ? "destructive" : report.status === "reviewed" ? "secondary" : "default"
                       }
                     >
-                      {report.status}
+                      {report.status === "pending" ? "Đang chờ xử lý" : report.status === "reviewed" ? "Đã xem xét" : "Đã giải quyết"}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -161,13 +161,13 @@ export function ReportsTable({ filters = {} }: { filters?: Record<string, any> }
 
       {totalPages > 1 && (
         <div className="flex justify-between items-center mt-6">
-          <div className="text-sm text-muted-foreground">Page {page} of {totalPages}</div>
+          <div className="text-sm text-muted-foreground">Trang {page} / {totalPages}</div>
           <div className="space-x-2">
             <Button variant="outline" onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1 || showLoadingIndicator}>
-              Previous
+              Trước
             </Button>
             <Button variant="outline" onClick={() => setPage(page + 1)} disabled={page >= totalPages || showLoadingIndicator}>
-              Next
+              Tiếp
             </Button>
           </div>
         </div>

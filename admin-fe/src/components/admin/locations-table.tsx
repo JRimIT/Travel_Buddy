@@ -7,7 +7,7 @@ export function LocationsTable() {
   const { data, isLoading } = useTopPlaces(10)
 
   if (isLoading) {
-    return <div className="flex justify-center py-8">Loading locations...</div>
+    return <div className="flex justify-center py-8">Đang tải địa điểm...</div>
   }
 
   return (
@@ -16,9 +16,9 @@ export function LocationsTable() {
         <Table>
           <TableHeader className="sticky top-0 z-10 bg-card">
             <TableRow className="hover:bg-transparent">
-              <TableHead className="min-w-[200px]">Name</TableHead>
-              <TableHead className="min-w-[160px]">Booking Count</TableHead>
-              <TableHead className="min-w-[180px]">Average Rating</TableHead>
+              <TableHead className="min-w-[200px]">Tên địa điểm</TableHead>
+              <TableHead className="min-w-[160px]">Số lượt đặt</TableHead>
+              <TableHead className="min-w-[180px]">Đánh giá trung bình</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
