@@ -10,6 +10,7 @@ import { store } from "../redux/store";
 import { ThemeProvider } from "../contexts/ThemeContext";
 import SafeScreen from "../components/SafeScreen";
 import Loader from '../components/Loader'; // Thêm Loader
+import { MenuProvider } from 'react-native-popup-menu';
 
 // Giữ màn hình chờ hiển thị
 SplashScreen.preventAutoHideAsync();
@@ -59,6 +60,7 @@ export default function RootLayout() {
 
   // Khi mọi thứ đã sẵn sàng, render layout của ứng dụng
   return (
+    <MenuProvider>
     <Provider store={store}>
       <ThemeProvider>
         <SafeAreaProvider>
@@ -73,5 +75,6 @@ export default function RootLayout() {
         </SafeAreaProvider>
       </ThemeProvider>
     </Provider>
+    </MenuProvider>
   );
 }
