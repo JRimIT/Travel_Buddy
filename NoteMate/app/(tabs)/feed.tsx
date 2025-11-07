@@ -143,12 +143,33 @@ const CommentModal = ({ visible, onClose, postId, onCommentPosted }: {
 
             // *** Chuyển hàm đệ quy ra ngoài, không cần nó ở đây nữa ***
             const addReplyRecursivelyLocal = (list, parentId, newReply) => {
-                return list.map(c => {
-                    if (c._id === parentId) return { ...c, replies: [...(c.replies || []), newReply] };
-                    if (c.replies) return { ...c, replies: addReplyRecursivelyLocal(c.replies, parentId, newReply) };
-                    return c;
-                });
-            };
+              return list.map(comment => {
+                  // Nếu tìm thấy parent, thêm reply vào
+                  if (comment._id === parentId) {
+                      return {
+                          ...comment,
+                          replies: [...(comment.replies || []), newReply]
+                      };
+                  }
+                  
+                  // Nếu có replies, đệ quy tìm kiếm sâu hơn
+                  if (comment.replies && comment.replies.length > 0) {
+                      const updatedReplies = addReplyRecursivelyLocal(comment.replies, parentId, newReply);
+                      
+                      // *** QUAN TRỌNG: Chỉ clone object nếu replies thực sự thay đổi ***
+                      if (updatedReplies !== comment.replies) {
+                          return {
+                              ...comment,
+                              replies: updatedReplies
+                          };
+                      }
+                  }
+                  
+                  // Không có thay đổi, trả về comment gốc
+                  return comment;
+              });
+          };
+
             
             if (replyingTo) {
                 setComments(current => addReplyRecursivelyLocal(current, replyingTo._id, postedComment));
@@ -191,12 +212,18 @@ const CommentModal = ({ visible, onClose, postId, onCommentPosted }: {
                     )}
                     {loading ? <ActivityIndicator style={{ marginTop: 20 }} /> : (
                         <FlatList
-                            data={comments}
-                            renderItem={({ item }) => <CommentItem comment={item} onReplyPress={handleReplyPress} />}
-                            keyExtractor={(item) => item._id.toString()}
-                            contentContainerStyle={styles.listContent}
-                            ListEmptyComponent={<Text style={styles.emptyText}>Chưa có bình luận nào</Text>}
-                        />
+                          data={comments}
+                          renderItem={({ item }) => (
+                              <CommentItem 
+                                  comment={item} 
+                                  onReplyPress={handleReplyPress} 
+                              />
+                          )}
+                          keyExtractor={(item, index) => `${item._id}-${item.replies?.length || 0}-${index}`}
+                          contentContainerStyle={styles.listContent}
+                          ListEmptyComponent={<Text style={styles.emptyText}>Chưa có bình luận nào</Text>}
+                          extraData={comments} // *** QUAN TRỌNG: Thêm dòng này ***
+                      />
                     )}
                     <View style={styles.inputContainer}>
                         <Image source={{ uri: user?.profileImage || 'https://via.placeholder.com/40' }} style={styles.inputAvatar} />
