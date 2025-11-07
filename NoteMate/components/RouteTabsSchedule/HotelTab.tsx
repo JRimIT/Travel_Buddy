@@ -87,6 +87,8 @@ const HotelTab = () => {
 
       const data = await response.json();
       if (data.details) {
+        console.log("Hotel: ", data.details);
+        
         setHotelDetails(data.details);
       } else {
         setHotelDetails("Không thể lấy thông tin chi tiết từ AI.");
@@ -511,7 +513,7 @@ const HotelTab = () => {
                   </View>
                 ) : (
                   <View style={styles.detailsContainer}>
-                    {hotelDetails}
+                    {renderHotelDetails(hotelDetails)}
                   </View>
                 )}
               </ScrollView>

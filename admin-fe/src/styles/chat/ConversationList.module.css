@@ -1,0 +1,148 @@
+.sidebar {
+    width: 360px;
+    background: white;
+    border-right: 1px solid #e5e7eb;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebarHeader {
+    padding: 20px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.sidebarHeader h2 {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+    color: #1f2937;
+}
+
+.count {
+    background: #f3f4f6;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #6b7280;
+}
+
+.conversationList {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.convItem {
+    display: flex;
+    padding: 16px 20px;
+    cursor: pointer;
+    border-bottom: 1px solid #f3f4f6;
+    transition: background 0.2s;
+}
+
+.convItem:hover {
+    background: #f9fafb;
+}
+
+.convItem.active {
+    background: #eff6ff;
+    border-left: 3px solid #3b82f6;
+}
+
+.convAvatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    margin-right: 12px;
+    overflow: hidden;
+}
+
+.convAvatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatarPlaceholder {
+    width: 100%;
+    height: 100%;
+    background: #3b82f6;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 20px;
+}
+
+.convContent {
+    flex: 1;
+    min-width: 0;
+}
+
+.convHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.convUsername {
+    font-weight: 600;
+    color: #1f2937;
+    font-size: 15px;
+}
+
+.unreadBadge {
+    background: #ef4444;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.convLastMessage {
+    color: #6b7280;
+    font-size: 14px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-bottom: 6px;
+}
+
+.convMeta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.convTime {
+    font-size: 12px;
+    color: #9ca3af;
+}
+
+.statusBadge {
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-weight: 500;
+}
+
+.statusBadge.pending {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.statusBadge.active {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.statusBadge.resolved {
+    background: #d1fae5;
+    color: #059669;
+}
