@@ -48,7 +48,8 @@ export const confirmSchedule = async (
     });
 
     const result = await response.json();
-   
+      console.log("result.error result: ", result);
+    
     
     if (!response.ok) {
       console.log("result.error: ", response);
@@ -58,6 +59,7 @@ export const confirmSchedule = async (
     }
     return result;
   } catch (error) {
+    console.log("result.error: ", error);
     Alert.alert("Lỗi", "Không thể lưu lịch trình!");
     return error;
   }

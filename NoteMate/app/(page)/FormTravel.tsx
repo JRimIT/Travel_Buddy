@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Button, ImageBackground, StyleSheet } from "react-native";
+import { View, Text, Button, ImageBackground, StyleSheet, Alert } from "react-native";
 import * as Location from "expo-location";
 import { Picker } from '@react-native-picker/picker';
 import { router } from "expo-router";
@@ -49,26 +49,58 @@ const FormScreen = () => {
 
   const getLocation = async () => {
   try {
+    // Bước 1: Xin quyền
     let { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== 'granted') return;
-    let location = await Location.getCurrentPositionAsync({});
-    setCurrentLocation(location.coords);
+    if (status !== 'granted') {
+      Alert.alert('Quyền bị từ chối', 'Vui lòng cấp quyền vị trí trong Settings.');
+      return;
+    }
+
+    // Bước 2: Kiểm tra Location Services có bật không
+    const isEnabled = await Location.hasServicesEnabledAsync();
+    if (!isEnabled) {
+      Alert.alert(
+        'GPS chưa bật', 
+        'Vui lòng bật Location Services trong cài đặt thiết bị.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    // Bước 3: Lấy vị trí với timeout
+    type CustomLocationOptions = Location.LocationOptions & {
+      timeout?: number;
+    };
+
+// Usage:
+    let location = await Location.getCurrentPositionAsync({
+      accuracy: Location.Accuracy.High,
+      timeout: 15000, // 15 seconds
+      maximumAge: 10000, // Accept cache up to 10 seconds
+    } as CustomLocationOptions);
     
-    // Reverse geocode chuyển lat/lon thành địa chỉ
+    setCurrentLocation(location.coords);
+
+    // Bước 4: Reverse geocode
     let addresses = await Location.reverseGeocodeAsync({
       latitude: location.coords.latitude,
       longitude: location.coords.longitude,
     });
 
     if (addresses.length > 0) {
-      // Thấy trong addresses[0] các trường thường trả ra: city, region, country, subregion...
-      setuserProvinceState(addresses[0].city || addresses[0].region || "");
-      
+      const cityName = addresses[0].city || addresses[0].region || "";
+      setuserProvinceState(cityName === "Mountain View" ? "Da Nang" : cityName);
     }
   } catch (err) {
     console.log("Location Error:", err);
+    Alert.alert(
+      'Lỗi lấy vị trí', 
+      'Không thể lấy vị trí hiện tại. Vui lòng:\n1. Bật GPS\n2. Cấp quyền cho app\n3. Thử lại sau',
+      [{ text: 'OK' }]
+    );
   }
 };
+
   const goToTravelPlanFormScreen = () => {
     // dispatch(setUserCurrentLocation(currentLocation || {}));
    
@@ -82,7 +114,7 @@ const FormScreen = () => {
     const found = PROVINCES.find(p => p.code === selected);
     setBgImage(found?.image || PROVINCES[0].image);
     dispatch(setUserProvince(found || ""));
-    dispatch(setUserCurrentLocation(userProvinceState === "Mountain View" ? "Da Nang" : userProvinceState || ""));
+    dispatch(setUserCurrentLocation(userProvinceState === "Mountain View" || "" ? "Da Nang" : userProvinceState || ""));
     
     console.log("setUserProvince: ", found?.name || "");
     // console.log("setUserProvince: ", found || "");
