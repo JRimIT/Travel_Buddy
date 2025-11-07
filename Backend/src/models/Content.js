@@ -8,7 +8,7 @@ const contentSchema = new mongoose.Schema({
     },
     value: {
         type: String, // text hoặc URL ảnh
-        required: true
+        required: true  
     },
     extraInfo: {
         type: String

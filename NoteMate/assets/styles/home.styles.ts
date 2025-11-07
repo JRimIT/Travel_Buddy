@@ -38,7 +38,6 @@ const createHomeStyles = (colors: ThemeType) =>
       backgroundColor: colors.cardBackground,
       borderRadius: 16,
       marginBottom: 20,
-      padding: 16,
       shadowColor: colors.black,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.1,
@@ -46,42 +45,59 @@ const createHomeStyles = (colors: ThemeType) =>
       elevation: 3,
       borderWidth: 1,
       borderColor: colors.border,
+      // Bỏ padding ở đây
     },
     bookHeader: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      alignItems: "center",
-      marginBottom: 12,
+        position: 'absolute',    // Nổi lên trên
+        zIndex: 10,              // Đảm bảo nó nằm trên ảnh
+        top: 12,
+        left: 16,
+        right: 16,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
     },
     userInfo: {
       flexDirection: "row",
       alignItems: "center",
+      // Thêm background mờ để dễ đọc hơn
+      backgroundColor: 'rgba(0,0,0,0.4)',
+      paddingVertical: 4,
+      paddingHorizontal: 10,
+      borderRadius: 20,
     },
+
     avatar: {
-      width: 36,
-      height: 36,
-      borderRadius: 18,
-      marginRight: 10,
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      marginRight: 8,
+      borderWidth: 1.5,
+      borderColor: 'rgba(255, 255, 255, 0.9)',
     },
+
     username: {
       fontSize: 15,
       fontWeight: "600",
-      color: colors.textPrimary,
+      color: '#fff', // Chữ màu trắng
+      textShadowColor: 'rgba(0, 0, 0, 0.5)',
+      textShadowOffset: { width: 0, height: 1 },
+      textShadowRadius: 2,
     },
-    bookImageContainer: {
+     bookImageContainer: {
+      position: 'relative', // Quan trọng để các phần tử con có thể định vị tuyệt đối
       width: "100%",
-      height: 200,
-      borderRadius: 12,
-      overflow: "hidden",
-      marginBottom: 12,
-      backgroundColor: colors.border,
+      aspectRatio: 16 / 9, // Giữ tỉ lệ ảnh
+      justifyContent: 'flex-start', // Đẩy header lên trên
     },
     bookImage: {
       width: "100%",
       height: "100%",
+      borderTopLeftRadius: 16,
+      borderTopRightRadius: 16,
     },
     bookDetails: {
-      padding: 4,
+      padding: 16,
     },
     bookTitle: {
       fontSize: 18,
@@ -150,6 +166,27 @@ const createHomeStyles = (colors: ThemeType) =>
     fontSize: 15,
     borderBottomWidth: 1,
     borderBottomColor: "#eee",
+  },
+  menuOptionsContainer: {
+    backgroundColor: colors.card,
+    borderRadius: 8,
+    padding: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  menuOption: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 10,
+      paddingHorizontal: 15,
+  },
+  menuOptionText: {
+      marginLeft: 12,
+      fontSize: 16,
+      color: colors.text,
   },
   });
 
