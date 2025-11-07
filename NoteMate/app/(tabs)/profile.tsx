@@ -176,6 +176,11 @@ const Profile = () => {
     setRefreshing(false);
   };
 
+  // ✅ Hàm mở chat support
+  const handleOpenSupportChat = () => {
+    router.push("/SupportChatScreen");
+  };
+
   // Search bar animation
   const openSearch = () => {
     setSearchOpen(true);
@@ -208,10 +213,7 @@ const Profile = () => {
       onPress={() => router.push({ pathname: "/ScheduleDetailScreen", params: { id: item._id } })}
       activeOpacity={0.94}
     >
-      <Image
-        source={{ uri: item.image }}
-        style={styles.tripImage}
-      />
+      <Image source={{ uri: item.image }} style={styles.tripImage} />
       <View style={{ flex: 1, marginLeft: 10 }}>
         <Text style={styles.tripTitle}>{item.title}</Text>
         <View style={{ flexDirection: "row", alignItems: "center", marginVertical: 3 }}>
@@ -226,7 +228,6 @@ const Profile = () => {
         {item.description && <Text numberOfLines={2} style={{ color: "#4a5d85", fontSize: 14 }}>{item.description}</Text>}
       </View>
       <View style={{ marginLeft: 12, alignItems: "center", justifyContent: "center" }}>
-        {/* Nút edit mở modal */}
         <TouchableOpacity onPress={() => {
           setEditTrip(item);
           setEditTitle(item.title);
@@ -236,10 +237,7 @@ const Profile = () => {
         }}>
           <Ionicons name="pencil-outline" size={21} color={colors.primary} />
         </TouchableOpacity>
-        <TouchableOpacity
-          style={{ marginTop: 10 }}
-          onPress={() => confirmDelete(item._id)}
-        >
+        <TouchableOpacity style={{ marginTop: 10 }} onPress={() => confirmDelete(item._id)}>
           {deleteId === item._id ? (
             <ActivityIndicator size="small" color={colors.primary} />
           ) : (
@@ -249,13 +247,13 @@ const Profile = () => {
       </View>
     </TouchableOpacity>
   );
+
   if (loading && !refreshing) return (
-    <View style={{
-      flex:1, justifyContent:"center", alignItems:"center", backgroundColor:colors.background
-    }}>
+    <View style={{ flex:1, justifyContent:"center", alignItems:"center", backgroundColor:colors.background }}>
       <ActivityIndicator size={"large"} color={colors.primary}/>
     </View>
   );
+
   return (
     <View style={styles.container}>
       {/* --- Header avatar + info --- */}
@@ -264,11 +262,7 @@ const Profile = () => {
           {newAvatar ? (
             <Image source={{ uri: newAvatar }} style={styles.avatar} />
           ) : (
-            <Ionicons
-              name="person-circle-outline"
-              size={76}
-              color={colors.primary}
-            />
+            <Ionicons name="person-circle-outline" size={76} color={colors.primary} />
           )}
           <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 8, gap: 10 }}>
             <TouchableOpacity onPress={handlePickAvatar}>
@@ -291,13 +285,41 @@ const Profile = () => {
           </View>
         </View>
       </View>
+
+      {/* ✅ Nút Chat với Support */}
+      <TouchableOpacity
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: colors.primary,
+          paddingVertical: 12,
+          paddingHorizontal: 20,
+          borderRadius: 12,
+          marginHorizontal: 20,
+          marginTop: 12,
+          marginBottom: 8,
+          shadowColor: colors.primary,
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.25,
+          shadowRadius: 3.84,
+          elevation: 5,
+        }}
+        onPress={handleOpenSupportChat}
+        activeOpacity={0.85}
+      >
+        <Ionicons name="chatbubbles" size={22} color="#fff" style={{ marginRight: 10 }} />
+        <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>
+          Chat với Support
+        </Text>
+      </TouchableOpacity>
+
       <LogoutButton />
 
       {/* --- Header danh sách + Search --- */}
       <View style={styles.tripsHeader}>
         <Text style={styles.tripsTitle}>Chuyến đi của bạn</Text>
         <View style={{ flexDirection: 'row', alignItems: "center" }}>
-          {/* Search input animation */}
           <Animated.View style={{
             width: searchWidth,
             overflow: "hidden",
@@ -329,7 +351,6 @@ const Profile = () => {
               <Ionicons name="close-circle" size={20} color="#339bf9" />
             </TouchableOpacity>
           </Animated.View>
-          {/* Nút search nhỏ */}
           {!searchOpen && (
             <TouchableOpacity onPress={openSearch} style={{ marginLeft: 7 }}>
               <Ionicons name="search" size={23} color={colors.primary} />
@@ -355,11 +376,7 @@ const Profile = () => {
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Ionicons
-              name="earth-outline"
-              size={50}
-              color={colors.textSecondary}
-            />
+            <Ionicons name="earth-outline" size={50} color={colors.textSecondary} />
             <Text style={styles.emptyText}>Bạn chưa có chuyến đi nào</Text>
             <TouchableOpacity
               style={styles.addButton}
@@ -415,9 +432,7 @@ const Profile = () => {
               placeholder="Mô tả nhanh chuyến đi"
               multiline
             />
-            <View style={{
-              flexDirection: "row", alignItems: "center", marginBottom: 13
-            }}>
+            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 13 }}>
               <TouchableOpacity
                 style={{
                   flexDirection: "row", alignItems: "center",

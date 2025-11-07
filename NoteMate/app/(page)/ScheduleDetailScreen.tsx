@@ -6,6 +6,8 @@ import {
   ScrollView,
   StyleSheet,
   ActivityIndicator,
+  TouchableOpacity,
+  Alert,
 } from "react-native";
 import {
   Ionicons,
@@ -14,9 +16,11 @@ import {
 } from "@expo/vector-icons";
 import { API_URL } from "../../constants/api";
 import { useTheme } from "../../contexts/ThemeContext";
-import createDetailStyles from "../../assets/styles/detail.styles";
 import { formatPublishDate } from "../../lib/utils";
 import { useRoute } from "@react-navigation/native";
+import { useAuthStore } from "../../store/authStore";
+import { router } from "expo-router";
+import COLORS from "../../constants/colors";
 
 // Helper định dạng ngày tiếng Việt
 function beautifyDate(dateStr) {
@@ -33,16 +37,13 @@ function beautifyDate(dateStr) {
     "Thứ Bảy",
   ];
   let thu = days[d.getDay()];
-  return `${thu}, ${d
-    .getDate()
-    .toString()
-    .padStart(2, "0")}/${(d.getMonth() + 1)
-    .toString()
-    .padStart(2, "0")}/${d.getFullYear()}`;
+  return `${thu}, ${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1).toString().padStart(2, "0")}/${d.getFullYear()}`;
 }
 
 const transportIcons = {
-  "Máy bay": <MaterialCommunityIcons name="airplane" size={22} color="#41b1ff" />,
+  "Máy bay": (
+    <MaterialCommunityIcons name="airplane" size={22} color="#41b1ff" />
+  ),
   "Tàu hỏa": <FontAwesome5 name="train" size={20} color="#7c5efa" />,
   "Xe khách": <Ionicons name="bus" size={22} color="#ed881a" />,
   "Xe máy": <Ionicons name="bicycle-outline" size={22} color="#33bc7f" />,
@@ -55,9 +56,8 @@ const transportIcons = {
 
 const ScheduleDetailScreen = () => {
   const { colors } = useTheme();
-  const styles = createDetailStyles(colors);
-
   const route = useRoute<any>();
+  const { user} = useAuthStore();
   const id = route.params?.id;
 
   const [data, setData] = useState(null);
@@ -65,6 +65,7 @@ const ScheduleDetailScreen = () => {
 
   useEffect(() => {
     fetchScheduleDetail();
+    // eslint-disable-next-line
   }, [id]);
 
   const fetchScheduleDetail = async () => {
@@ -72,8 +73,6 @@ const ScheduleDetailScreen = () => {
     try {
       const res = await fetch(`${API_URL}/tripSchedule/${id}`);
       const json = await res.json();
-      // console.log("Json: ", json.days);
-      
       setData(json);
     } catch (err) {
       setData(null);
@@ -82,59 +81,54 @@ const ScheduleDetailScreen = () => {
     }
   };
 
+  const handleGoToBookingPage = (user, scheduleId, fromLocation, province) => {
+    router.push({
+      pathname: "/BookFlightScreen",
+      params: { user, scheduleId, fromLocation, province },
+    });
+  };
+
   if (loading)
     return (
-      <View
-        style={{
-          flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
-          backgroundColor: colors.background,
-        }}
-      >
+      <View style={styles.loaderContainer}>
         <ActivityIndicator size={"large"} color={colors.primary} />
       </View>
     );
   if (!data)
     return (
-      <View
-        style={{
-          flex: 1,
-          justifyContent: "center",
-          alignItems: "center",
-          backgroundColor: colors.background,
-        }}
-      >
-        <Text
-          style={{
-            color: colors.textPrimary,
-            fontSize: 20,
-            marginTop: 40,
-          }}
-        >
+      <View style={styles.loaderContainer}>
+        <Text style={[styles.notFoundText, { color: colors.textPrimary }]}>
           Không tìm thấy lịch trình!
         </Text>
       </View>
     );
 
   const s = data;
-  
-    
-  // ==== XỬ LÝ NƠI Ở (HOME hoặc HOTEL) ====
   const isHome = !!(s.home && s.home.lat && s.home.lon);
-  const baseStay = isHome ? s.home : (s.hotelDefault || {});
+  const baseStay = isHome ? s.home : s.hotelDefault || {};
   const baseLabel = isHome ? "Nhà riêng / Chỗ ở" : "Khách sạn mặc định";
-  const baseIcon = isHome
-    ? <Ionicons name="home" size={18} color="#00b49d" />
-    : <Ionicons name="business" size={18} color={colors.primary} />;
+  const baseIcon = isHome ? (
+    <Ionicons name="home" size={18} color="#00b49d" />
+  ) : (
+    <Ionicons name="business" size={18} color={colors.primary} />
+  );
 
-  // ==== HIỂN THỊ startDate/endDate ====
-  const tripStartDate = s.startDate || (Array.isArray(s.days) && s.days[0]?.date) || null;
-  const tripEndDate = s.endDate || (Array.isArray(s.days) && s.days[s.days.length-1]?.date) || null;
-
+  const tripStartDate =
+    s.startDate || (Array.isArray(s.days) && s.days[0]?.date) || null;
+  const tripEndDate =
+    s.endDate ||
+    (Array.isArray(s.days) && s.days[s.days.length - 1]?.date) ||
+    null;
+  const fromLocationStr = s.fromLocation || "";
+  const provinceStr = s.province  || "";
+console.log("fromLocation: ", fromLocationStr);
+  console.log("province: ", provinceStr);
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* === Ảnh đại diện & Tiêu đề === */}
+    <ScrollView
+      style={[styles.container, { backgroundColor: colors.background }]}
+      showsVerticalScrollIndicator={false}
+    >
+      {/* Ảnh đại diện */}
       {s.image && (
         <Image
           source={{
@@ -142,25 +136,22 @@ const ScheduleDetailScreen = () => {
               ? s.image
               : `data:image/jpeg;base64,${s.image}`,
           }}
-          style={{
-            width: "100%",
-            height: 180,
-            borderRadius: 20,
-            marginBottom: 15,
-            backgroundColor: colors.border,
-          }}
+          style={styles.avatar}
           resizeMode="cover"
         />
       )}
 
-      {/* === Thông tin chung === */}
+      {/* Thông tin chung + nơi xuất phát + tỉnh thành */}
       <View
-        style={[
-          styles.bookCard,
-          { padding: 16, alignItems: "flex-start", marginBottom: 20 },
-        ]}
+        style={[styles.infoCard, { backgroundColor: colors.cardBackground }]}
       >
-        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 7 }}>
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            marginBottom: 7,
+          }}
+        >
           {s.user && (
             <Image
               source={{
@@ -170,23 +161,11 @@ const ScheduleDetailScreen = () => {
                     s.user.username?.charAt(0) ?? "U"
                   }`,
               }}
-              style={{
-                width: 37,
-                height: 37,
-                borderRadius: 20,
-                marginRight: 10,
-                borderWidth: 1,
-                borderColor: colors.border,
-              }}
+              style={[styles.profileImage, { borderColor: colors.border }]}
             />
           )}
           <View>
-            <Text
-              style={[
-                styles.headerTitle,
-                { marginBottom: 4, fontSize: 22 },
-              ]}
-            >
+            <Text style={[styles.headerTitle, { color: colors.primary }]}>
               {s.title || "Chuyến đi"}
             </Text>
             <View style={{ flexDirection: "row", alignItems: "center" }}>
@@ -195,13 +174,7 @@ const ScheduleDetailScreen = () => {
                 size={16}
                 color={colors.textSecondary}
               />
-              <Text
-                style={{
-                  color: colors.textSecondary,
-                  fontWeight: "600",
-                  marginLeft: 5,
-                }}
-              >
+              <Text style={[styles.headerSub, { color: colors.textSecondary }]}>
                 {s.user?.username || "User"}{" "}
                 <Text
                   style={{
@@ -230,28 +203,11 @@ const ScheduleDetailScreen = () => {
             </Text>
           </>
         ) : null}
-        <Text
-          style={[
-            styles.date,
-            {
-              marginTop: 7,
-              color: colors.textSecondary,
-              fontSize: 13,
-            },
-          ]}
-        >
+        <Text style={[styles.date, { color: colors.textSecondary }]}>
           {s.createdAt ? formatPublishDate(s.createdAt) : ""}
         </Text>
-        {/* === Ngày bắt đầu / kết thúc */}
         {(tripStartDate || tripEndDate) && (
-          <Text
-            style={{
-              color: colors.textPrimary,
-              fontSize: 15,
-              fontWeight: "bold",
-              marginTop: 4,
-            }}
-          >
+          <Text style={styles.dateRange}>
             Thời gian:{" "}
             <Text style={{ color: colors.primary }}>
               {tripStartDate ? beautifyDate(tripStartDate) : "..."}
@@ -262,32 +218,37 @@ const ScheduleDetailScreen = () => {
             </Text>
           </Text>
         )}
+        <View style={styles.locationInfo}>
+          {!!fromLocationStr && (
+            <Text
+              style={[
+                styles.currentLocationText,
+                { color: colors.textPrimary },
+              ]}
+            >
+              <Ionicons name="navigate" size={17} color={colors.primary} /> Xuất
+              phát: {fromLocationStr}
+            </Text>
+          )}
+          {!!provinceStr && (
+            <Text
+              style={[styles.provinceText, { color: colors.textSecondary }]}
+            >
+              <Ionicons name="location" size={15} color={colors.primary} />{" "}
+              Tỉnh/Thành: {provinceStr}
+            </Text>
+          )}
+        </View>
       </View>
 
-      {/* === Quỹ tiền và phương tiện tổng quát === */}
+      {/* Quỹ tiền và phương tiện tổng quát */}
       <View
-        style={[
-          styles.bookCard,
-          { padding: 16, marginBottom: 15, width: "100%" },
-        ]}
+        style={[styles.infoCard, { backgroundColor: colors.cardBackground }]}
       >
-        <Text
-          style={{
-            color: colors.textDark,
-            fontWeight: "bold",
-            fontSize: 16,
-            marginBottom: 5,
-          }}
-        >
+        <Text style={[styles.infoTitle, { color: colors.textDark }]}>
           Thông tin hành trình
         </Text>
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            marginBottom: 8,
-          }}
-        >
+        <View style={styles.transportRow}>
           <Text style={{ color: colors.primary }}>
             {transportIcons[s.mainTransport] || (
               <Ionicons name="car-sport" size={18} />
@@ -309,35 +270,7 @@ const ScheduleDetailScreen = () => {
             </Text>
           </Text>
         </View>
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            marginBottom: 8,
-          }}
-        >
-          {s.fromLocation && typeof s.fromLocation === "object" && (
-            <Text style={{ color: colors.textSecondary, fontSize: 13 }}>
-              <Ionicons name="navigate-circle" size={14} color={colors.textSecondary} />{" "}
-              Điểm xuất phát:
-              <Text style={{ fontWeight: "bold", color: colors.textDark }}>
-                {" "}
-                {s.fromLocation.name ||
-                  `${s.fromLocation.latitude}, ${s.fromLocation.longitude}`}
-              </Text>
-            </Text>
-          )}
-          {s.province && typeof s.province === "object" && (
-            <Text style={{ fontSize: 13, color: "#4e7cc0", marginLeft: 8 }}>
-              <Ionicons name="location" size={13} color="#1975ff" /> Tỉnh / TP:
-              <Text style={{ fontWeight: "bold", color: "#226ea4" }}>
-                {" "}
-                {s.province.name || s.province.code || ""}
-              </Text>
-            </Text>
-          )}
-        </View>
-        <View style={{ flexDirection: "row", justifyContent: "space-around" }}>
+        <View style={styles.budgetRow}>
           <View style={{ alignItems: "center" }}>
             {baseIcon}
             <Text style={{ color: colors.textPrimary }}>{baseLabel}</Text>
@@ -345,7 +278,9 @@ const ScheduleDetailScreen = () => {
               {(s.budget?.hotel || 0).toLocaleString()} VNĐ
             </Text>
           </View>
-          <View style={{ alignItems: "center", marginLeft: 20, marginRight: 20 }}>
+          <View
+            style={{ alignItems: "center", marginLeft: 20, marginRight: 20 }}
+          >
             <Ionicons name="airplane" size={18} color={colors.primary} />
             <Text style={{ color: colors.textPrimary }}>Đi tới</Text>
             <Text style={{ fontWeight: "bold", color: colors.primary }}>
@@ -362,21 +297,17 @@ const ScheduleDetailScreen = () => {
         </View>
       </View>
 
-      {/* === Home hoặc Hotel Default === */}
+      {/* Home hoặc Hotel Default */}
       {baseStay && (
-        <View style={[styles.footer, { marginTop: 6 }]}>
-          <Text
-            style={{
-              fontWeight: "bold",
-              color: colors.primary,
-              fontSize: 16,
-              marginBottom: 6,
-            }}
-          >
+        <View
+          style={[styles.footer, { backgroundColor: colors.cardBackground }]}
+        >
+          <Text style={[styles.footerTitle, { color: colors.primary }]}>
             {baseLabel}
           </Text>
           <Text style={{ marginBottom: 3, color: colors.textPrimary }}>
-            {baseIcon} {baseStay.name || baseStay.address || baseStay.address_line1}
+            {baseIcon}{" "}
+            {baseStay.name || baseStay.address || baseStay.address_line1}
           </Text>
           {baseStay.address_line2 && (
             <Text style={{ marginBottom: 3, color: colors.textSecondary }}>
@@ -397,22 +328,18 @@ const ScheduleDetailScreen = () => {
         </View>
       )}
 
-      {/* === Vé máy bay nếu có === */}
+      {/* Vé máy bay nếu có */}
       {s.flightTicket && s.flightTicket.content && (
-        <View style={[styles.footer]}>
-          <Text
-            style={{
-              fontWeight: "bold",
-              color: colors.primary,
-              fontSize: 16,
-              marginBottom: 6,
-            }}
-          >
+        <View
+          style={[styles.footer, { backgroundColor: colors.cardBackground }]}
+        >
+          <Text style={[styles.footerTitle, { color: colors.primary }]}>
             Vé máy bay
           </Text>
           <Text style={{ color: colors.textPrimary, marginBottom: 3 }}>
             <Ionicons name="airplane" size={16} color={colors.textSecondary} />{" "}
-            {s.flightTicket.content.outboundLeg?.originAirport?.skyCode || "-"} →{" "}
+            {s.flightTicket.content.outboundLeg?.originAirport?.skyCode || "-"}{" "}
+            →{" "}
             {s.flightTicket.content.outboundLeg?.destinationAirport?.skyCode ||
               "-"}
           </Text>
@@ -440,54 +367,56 @@ const ScheduleDetailScreen = () => {
         </View>
       )}
 
-      {/* === Lịch từng ngày === */}
+      {/* Nút đặt vé máy bay */}
+      {user.username === s.user.username && (
+        <View style={styles.bookingButtonWrap}>
+          <TouchableOpacity
+            style={[
+              styles.bookingButton,
+              { backgroundColor: colors.primary, shadowColor: colors.primary },
+            ]}
+            onPress={() => handleGoToBookingPage(user, s._id, fromLocationStr, provinceStr)}
+          >
+            <Ionicons
+              name="airplane"
+              size={20}
+              color="#fff"
+              style={{ marginRight: 8 }}
+            />
+            <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>
+              Bạn có muốn đặt giúp vé máy bay?
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Lịch từng ngày */}
       <View
-        style={[
-          styles.bookCard,
-          { alignItems: "flex-start", padding: 18, marginTop: 2 },
-        ]}
+        style={[styles.dayCard, { backgroundColor: colors.cardBackground }]}
       >
-        <Text
-          style={{
-            fontWeight: "bold",
-            color: colors.primary,
-            fontSize: 17,
-            marginBottom: 10,
-          }}
-        >
+        <Text style={[styles.dayTitle, { color: colors.primary }]}>
           Lịch trình từng ngày
         </Text>
         {Array.isArray(s.days) && s.days.length === 0 && (
-          <Text style={{ color: "#aaa", fontStyle: "italic" }}>Chưa có dữ liệu lịch trình.</Text>
+          <Text style={styles.noData}>Chưa có dữ liệu lịch trình.</Text>
         )}
         {Array.isArray(s.days) &&
           s.days.map((day, idx) => {
             let dayTitle = `Ngày ${day.day}`;
             if (day.label && day.label !== "") dayTitle += ` - ${day.label}`;
-            if (day.date && day.date !== "") dayTitle += ` | ${beautifyDate(day.date)}`;
+            if (day.date && day.date !== "")
+              dayTitle += ` | ${beautifyDate(day.date)}`;
             return (
               <View key={idx} style={{ marginBottom: 15, width: "100%" }}>
-                <Text style={{
-                  fontWeight: "bold",
-                  color: colors.textDark,
-                  fontSize: 15,
-                  marginBottom: 3,
-                }}>
-                  {dayTitle}
-                </Text>
+                <Text style={styles.dayItemTitle}>{dayTitle}</Text>
                 {Array.isArray(day.activities) && day.activities.length > 0 ? (
                   day.activities.map((act, i) => (
                     <View
                       key={i}
-                      style={{
-                        flexDirection: "row",
-                        alignItems: "flex-start",
-                        marginTop: 5,
-                        backgroundColor: colors.inputBackground,
-                        borderRadius: 8,
-                        padding: 8,
-                        marginBottom: 4,
-                      }}
+                      style={[
+                        styles.activityRow,
+                        { backgroundColor: colors.inputBackground },
+                      ]}
                     >
                       <MaterialCommunityIcons
                         name="clock-outline"
@@ -495,59 +424,26 @@ const ScheduleDetailScreen = () => {
                         color={colors.primary}
                         style={{ marginTop: 1, marginRight: 3 }}
                       />
-                      <Text style={{
-                        color: colors.textPrimary,
-                        fontSize: 15,
-                        fontWeight: "bold",
-                      }}>
-                        {act.time}{" "}
-                      </Text>
-                      <Text style={{
-                        marginLeft: 6,
-                        color: colors.textDark,
-                        flex: 1,
-                      }}>
-                        {act.name}
-                      </Text>
+                      <Text style={styles.activityTime}>{act.time} </Text>
+                      <Text style={styles.activityName}>{act.name}</Text>
                       {act.cost && (
-                        <Text style={{
-                          marginLeft: 7,
-                          color: colors.primary,
-                          fontWeight: "bold",
-                        }}>
+                        <Text style={styles.activityCost}>
                           +{act.cost.toLocaleString()}đ
                         </Text>
                       )}
                     </View>
                   ))
                 ) : (
-                  <Text
-                    style={{
-                      color: "#b7a2c4",
-                      fontStyle: "italic",
-                      marginLeft: 2,
-                    }}
-                  >
-                    Không có hoạt động
-                  </Text>
+                  <Text style={styles.noActivity}>Không có hoạt động</Text>
                 )}
                 {day.hotel && (
-                  <Text style={{
-                    color: "#be0272",
-                    marginLeft: 18,
-                    fontSize: 14,
-                    marginTop: 3,
-                  }}>
-                    <Ionicons name="business" size={13} color="#be0272" /> Ở khách sạn: {day.hotel?.name || day.hotel?.address_line1}
+                  <Text style={styles.hotelInfo}>
+                    <Ionicons name="business" size={13} color="#be0272" /> Ở
+                    khách sạn: {day.hotel?.name || day.hotel?.address_line1}
                   </Text>
                 )}
                 {day.move && (
-                  <Text style={{
-                    marginLeft: 18,
-                    color: "#3f486f",
-                    fontSize: 13,
-                    marginTop: 1,
-                  }}>
+                  <Text style={styles.moveInfo}>
                     <Ionicons name="car-outline" size={13} color="#5374e7" />
                     Đã di chuyển: {day.move.label || ""}
                   </Text>
@@ -559,5 +455,89 @@ const ScheduleDetailScreen = () => {
     </ScrollView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: { flex: 1,
+      backgroundColor: COLORS.background,
+      padding: 16, },
+  loaderContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
+  notFoundText: { fontSize: 20, marginTop: 40, fontWeight: "bold" },
+  avatar: { width: "100%", height: 180, borderRadius: 20, marginBottom: 15 },
+  infoCard: {
+    padding: 16,
+    alignItems: "flex-start",
+    marginBottom: 20,
+    borderRadius: 16,
+  },
+  profileImage: {
+    width: 37,
+    height: 37,
+    borderRadius: 20,
+    marginRight: 10,
+    borderWidth: 1,
+  },
+  headerTitle: { marginBottom: 4, fontSize: 22, fontWeight: "bold" },
+  headerSub: { fontWeight: "600", marginLeft: 5 },
+  caption: { fontSize: 15, marginBottom: 5 },
+  date: { marginTop: 7, fontSize: 13 },
+  dateRange: { color: "#333", fontSize: 15, fontWeight: "bold", marginTop: 4 },
+  locationInfo: { marginTop: 10, marginBottom: 15 },
+  currentLocationText: { fontWeight: "bold", fontSize: 16, marginBottom: 4 },
+  provinceText: { fontSize: 15 },
+  infoTitle: { fontWeight: "bold", fontSize: 16, marginBottom: 5 },
+  transportRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 8,
+    width: "100%",
+  },
+  budgetRow: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    width: "100%",
+  },
+  footer: { marginTop: 6, borderRadius: 16, padding: 12 },
+  footerTitle: { fontWeight: "bold", fontSize: 16, marginBottom: 6 },
+  bookingButtonWrap: { marginVertical: 18, alignItems: "center" },
+  bookingButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    borderRadius: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    shadowOpacity: 0.15,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
+  },
+  dayCard: {
+    alignItems: "flex-start",
+    padding: 18,
+    marginTop: 2,
+    borderRadius: 16,
+  },
+  dayTitle: { fontWeight: "bold", fontSize: 17, marginBottom: 10 },
+  dayItemTitle: {
+    fontWeight: "bold",
+    color: "#222",
+    fontSize: 15,
+    marginBottom: 3,
+  },
+  noData: { color: "#aaa", fontStyle: "italic" },
+  activityRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginTop: 5,
+    borderRadius: 8,
+    padding: 8,
+    marginBottom: 4,
+  },
+  activityTime: { color: "#333", fontSize: 15, fontWeight: "bold" },
+  activityName: { marginLeft: 6, color: "#444", flex: 1 },
+  activityCost: { marginLeft: 7, color: "#3b6bb3", fontWeight: "bold" },
+  noActivity: { color: "#b7a2c4", fontStyle: "italic", marginLeft: 2 },
+  hotelInfo: { color: "#be0272", marginLeft: 18, fontSize: 14, marginTop: 3 },
+  moveInfo: { marginLeft: 18, color: "#3f486f", fontSize: 13, marginTop: 1 },
+});
 
 export default ScheduleDetailScreen;
