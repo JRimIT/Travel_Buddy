@@ -374,53 +374,333 @@ router.get("/reviews", async (req, res) => {
 
 /**
  * @swagger
- * /api/admin/sales/weekly:
+ * /api/admin/sales/trends:
  *   get:
- *     summary: Get weekly sales report
+ *     summary: Get sales trends over time (daily/weekly/monthly/yearly)
  *     tags: [Admin]
  *     security:
  *       - BearerAuth: []
  *     parameters:
  *       - in: query
- *         name: year
- *         schema: { type: integer }
+ *         name: groupBy
+ *         schema: { type: string, enum: [day, week, month, year], default: month }
+ *         description: Group data by time unit
  *       - in: query
- *         name: week
- *         schema: { type: integer }
+ *         name: fromDate
+ *         schema: { type: string, format: date, example: "2025-01-01" }
+ *         description: Start date (inclusive)
+ *       - in: query
+ *         name: toDate
+ *         schema: { type: string, format: date, example: "2025-12-31" }
+ *         description: End date (inclusive)
  *     responses:
  *       200:
- *         description: Weekly sales
+ *         description: Sales trends data
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/WeeklySales'
+ *               type: object
+ *               properties:
+ *                 trends:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       period: { type: string, example: "2025-01" }
+ *                       totalRevenue: { type: number }
+ *                       bookingCount: { type: integer }
+ *                 summary:
+ *                   type: object
+ *                   properties:
+ *                     totalRevenue: { type: number }
+ *                     totalBookings: { type: integer }
+ *                     growthPercentage: { type: number }  # So với kỳ trước
  */
-router.get("/sales/weekly", async (req, res) => {
+router.get("/sales/trends", async (req, res) => {
   try {
-    let startDate, endDate;
-    if (req.query.year && req.query.week) {
-      const year = parseInt(req.query.year);
-      const week = parseInt(req.query.week);
-      startDate = new Date(year, 0, (week - 1) * 7 + 1);
-      endDate = new Date(startDate);
-      endDate.setDate(startDate.getDate() + 6);
-    } else {
-      const now = new Date();
-      startDate = new Date(now.setDate(now.getDate() - now.getDay()));
-      endDate = new Date(startDate);
-      endDate.setDate(startDate.getDate() + 6);
+    const { groupBy = "month", fromDate, toDate } = req.query;
+    let match = { status: "confirmed" };
+    if (fromDate) match.bookingDate = { ...match.bookingDate, $gte: new Date(fromDate) };
+    if (toDate) match.bookingDate = { ...match.bookingDate, $lte: new Date(toDate) };
+
+    let groupId;
+    switch (groupBy) {
+      case "day": groupId = { $dateToString: { format: "%Y-%m-%d", date: "$bookingDate" } }; break;
+      case "week": groupId = { $dateToString: { format: "%Y-W%V", date: "$bookingDate" } }; break;
+      case "year": groupId = { $dateToString: { format: "%Y", date: "$bookingDate" } }; break;
+      default: groupId = { $dateToString: { format: "%Y-%m", date: "$bookingDate" } }; // month
     }
 
-    const result = await Booking.aggregate([
-      { $match: { bookingDate: { $gte: startDate, $lte: endDate }, status: "confirmed" } },
-      { $group: { _id: null, total: { $sum: "$amount" }, count: { $sum: 1 } } }
+    const trends = await Booking.aggregate([
+      { $match: match },
+      { $group: {
+        _id: groupId,
+        totalRevenue: { $sum: "$amount" },
+        bookingCount: { $sum: 1 }
+      }},
+      { $sort: { _id: 1 } },
+      { $project: { period: "$_id", totalRevenue: 1, bookingCount: 1, _id: 0 } }
+    ]);
+
+    const totalRevenue = trends.reduce((sum, t) => sum + t.totalRevenue, 0);
+    const totalBookings = trends.reduce((sum, t) => sum + t.bookingCount, 0);
+    const growth = trends.length > 1 ? ((trends[trends.length - 1].totalRevenue - trends[trends.length - 2].totalRevenue) / trends[trends.length - 2].totalRevenue * 100) : 0;
+
+    res.json({ trends, summary: { totalRevenue, totalBookings, growthPercentage: growth } });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});//ok
+
+/**
+ * @swagger
+ * /api/admin/users/stats:
+ *   get:
+ *     summary: Get user statistics and trends
+ *     tags: [Admin]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: groupBy
+ *         schema: { type: string, enum: [month, year], default: month }
+ *       - in: query
+ *         name: fromDate
+ *         schema: { type: string, format: date }
+ *       - in: query
+ *         name: toDate
+ *         schema: { type: string, format: date }
+ *     responses:
+ *       200:
+ *         description: User stats
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 growthTrends:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       period: { type: string }
+ *                       newUsers: { type: integer }
+ *                 summary:
+ *                   type: object
+ *                   properties:
+ *                     totalUsers: { type: integer }
+ *                     activeUsers: { type: integer }  # Có activity gần đây
+ *                     lockedUsers: { type: integer }
+ *                 topUsers:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       username: { type: string }
+ *                       tripCount: { type: integer }
+ *                       bookingCount: { type: integer }
+ */
+router.get("/users/stats", async (req, res) => {
+  try {
+    const { groupBy = "month", fromDate, toDate } = req.query;
+    let match = {};
+    if (fromDate) match.createdAt = { ...match.createdAt, $gte: new Date(fromDate) };
+    if (toDate) match.createdAt = { ...match.createdAt, $lte: new Date(toDate) };
+
+    const groupId = groupBy === "year" ? { $dateToString: { format: "%Y", date: "$createdAt" } } : { $dateToString: { format: "%Y-%m", date: "$createdAt" } };
+
+    const growthTrends = await User.aggregate([
+      { $match: match },
+      { $group: { _id: groupId, newUsers: { $sum: 1 } } },
+      { $sort: { _id: 1 } },
+      { $project: { period: "$_id", newUsers: 1, _id: 0 } }
+    ]);
+
+    const [totalUsers, lockedUsers] = await Promise.all([
+      User.countDocuments(),
+      User.countDocuments({ isLocked: true })
+    ]);
+
+    // Active users: giả sử có field lastLogin hoặc dùng trips/bookings gần đây
+    const activeUsers = await User.countDocuments({ lastLogin: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } }); // 30 ngày
+
+    // Top users: aggregate từ TripSchedule và Booking
+    const topUsers = await User.aggregate([
+      { $lookup: { from: "tripschedules", localField: "_id", foreignField: "user", as: "trips" } },
+      { $lookup: { from: "bookings", localField: "_id", foreignField: "user", as: "bookings" } },
+      { $project: {
+        username: 1,
+        tripCount: { $size: "$trips" },
+        bookingCount: { $size: "$bookings" }
+      }},
+      { $sort: { bookingCount: -1 } },
+      { $limit: 10 }
     ]);
 
     res.json({
-      total: result[0]?.total || 0,
-      count: result[0]?.count || 0,
-      startDate: startDate.toISOString().split("T")[0],
-      endDate: endDate.toISOString().split("T")[0],
+      growthTrends,
+      summary: { totalUsers, activeUsers, lockedUsers },
+      topUsers
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});//ok
+
+/**
+ * @swagger
+ * /api/admin/trips-statistics:
+ *   get:
+ *     summary: Get trip statistics
+ *     tags: [Admin]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: fromDate
+ *         schema: { type: string, format: date }
+ *       - in: query
+ *         name: toDate
+ *         schema: { type: string, format: date }
+ *     responses:
+ *       200:
+ *         description: Trip stats
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 statusDistribution:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       status: { type: string }
+ *                       count: { type: integer }
+ *                 rejectionReasons:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       reason: { type: string }
+ *                       count: { type: integer }
+ *                 creationTrends:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       period: { type: string }
+ *                       count: { type: integer }
+ */
+router.get("/trips-statistics", async (req, res) => {
+  try {
+    const { fromDate, toDate } = req.query;
+    let match = {};
+    if (fromDate) match.createdAt = { ...match.createdAt, $gte: new Date(fromDate) };
+    if (toDate) match.createdAt = { ...match.createdAt, $lte: new Date(toDate) };
+
+    const [statusDistribution, rejectionReasons, creationTrends] = await Promise.all([
+      TripSchedule.aggregate([
+        { $match: match },
+        { $group: { _id: "$status", count: { $sum: 1 } } },
+        { $project: { status: "$_id", count: 1, _id: 0 } }
+      ]),
+      TripSchedule.aggregate([
+        { $match: { ...match, status: "rejected" } },
+        { $group: { _id: "$rejectReason", count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+        { $limit: 5 },
+        { $project: { reason: "$_id", count: 1, _id: 0 } }
+      ]),
+      TripSchedule.aggregate([
+        { $match: match },
+        { $group: { _id: { $dateToString: { format: "%Y-%m", date: "$createdAt" } }, count: { $sum: 1 } } },
+        { $sort: { _id: 1 } },
+        { $project: { period: "$_id", count: 1, _id: 0 } }
+      ])
+    ]);
+
+    res.json({ statusDistribution, rejectionReasons, creationTrends });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+/**
+ * @swagger
+ * /api/admin/reviews/stats:
+ *   get:
+ *     summary: Get review statistics
+ *     tags: [Admin]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: targetId
+ *         schema: { type: string }
+ *         description: Filter by place/trip ID
+ *       - in: query
+ *         name: fromDate
+ *         schema: { type: string, format: date }
+ *       - in: query
+ *         name: toDate
+ *         schema: { type: string, format: date }
+ *     responses:
+ *       200:
+ *         description: Review stats
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 ratingDistribution:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       rating: { type: integer }
+ *                       count: { type: integer }
+ *                 averageRating: { type: number }
+ *                 reviewTrends:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       period: { type: string }
+ *                       count: { type: integer }
+ *                       avgRating: { type: number }
+ */
+router.get("/reviews/stats", async (req, res) => {
+  try {
+    const { targetId, fromDate, toDate } = req.query;
+    let match = { status: "visible" };
+    if (targetId) match.targetId = targetId;
+    if (fromDate) match.createdAt = { ...match.createdAt, $gte: new Date(fromDate) };
+    if (toDate) match.createdAt = { ...match.createdAt, $lte: new Date(toDate) };
+
+    const [ratingDistribution, reviewTrends, overallAvg] = await Promise.all([
+      Review.aggregate([
+        { $match: match },
+        { $group: { _id: "$rating", count: { $sum: 1 } } },
+        { $project: { rating: "$_id", count: 1, _id: 0 } }
+      ]),
+      Review.aggregate([
+        { $match: match },
+        { $group: {
+          _id: { $dateToString: { format: "%Y-%m", date: "$createdAt" } },
+          count: { $sum: 1 },
+          avgRating: { $avg: "$rating" }
+        }},
+        { $sort: { _id: 1 } },
+        { $project: { period: "$_id", count: 1, avgRating: 1, _id: 0 } }
+      ]),
+      Review.aggregate([{ $match: match }, { $group: { _id: null, avg: { $avg: "$rating" } } }])
+    ]);
+
+    res.json({
+      ratingDistribution,
+      reviewTrends,
+      averageRating: overallAvg[0]?.avg || 0
     });
   } catch (error) {
     res.status(500).json({ message: error.message });

@@ -291,6 +291,63 @@ class ApiClient {
     async unlockUser(id: string) {
         return this.request(`/admin/users/${id}/unlock`, { method: "PUT" })
     }
+
+    // === SALES TRENDS ===
+    async getSalesTrends(params?: { groupBy?: string; fromDate?: string; toDate?: string }) {
+        const query = this.buildQuery({
+            groupBy: params?.groupBy,
+            fromDate: params?.fromDate,
+            toDate: params?.toDate,
+        })
+        return this.request<{
+            trends: Array<{
+                period: string
+                totalRevenue: number
+                bookingCount: number
+            }>
+            summary: {
+                totalRevenue: number
+                totalBookings: number
+                growthPercentage: number
+            }
+        }>(`/admin/sales/trends?${query}`)
+    }
+
+    // === USERS STATS ===
+    async getUsersStats() {
+        return this.request<{
+            growthTrends: Array<{ period: string; newUsers: number }>
+            summary: { totalUsers: number; activeUsers: number; lockedUsers: number }
+            topUsers: Array<{ _id: string; username: string; tripCount: number; bookingCount: number }>
+        }>("/admin/users/stats")
+    }
+
+    // === TRIPS STATISTICS ===
+    async getTripStatistics(params?: { fromDate?: string; toDate?: string }) {
+        const query = this.buildQuery({
+            fromDate: params?.fromDate,
+            toDate: params?.toDate,
+        })
+        return this.request<{
+            statusDistribution: Array<{ status: string; count: number }>
+            rejectionReasons: Array<{ reason: string; count: number }>
+            creationTrends: Array<{ period: string; count: number }>
+        }>(`/admin/trips-statistics?${query}`)
+    }
+
+    // === REVIEWS STATS ===
+    async getReviewStats(params?: { targetId?: string; fromDate?: string; toDate?: string }) {
+        const query = this.buildQuery({
+            targetId: params?.targetId,
+            fromDate: params?.fromDate,
+            toDate: params?.toDate,
+        })
+        return this.request<{
+            ratingDistribution: Array<{ rating: number; count: number }>
+            reviewTrends: Array<{ period: string; count: number; avgRating: number }>
+            averageRating: number
+        }>(`/admin/reviews/stats?${query}`)
+    }
 }
 
 export const apiClient = new ApiClient()

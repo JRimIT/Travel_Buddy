@@ -3,8 +3,6 @@
 import { useState } from "react"
 import { useTripApprovals } from "../../hooks/use-admin-data"
 import { Badge } from "../../components/ui/badge"
-import { Button } from "../../components/ui/button"
-import { toast } from "../../components/ui/use-toast"
 import { format, isValid } from "date-fns"
 import { Key } from "react"
 import { apiClient } from "../../lib/api-client"
@@ -15,9 +13,9 @@ import {
   DialogTitle,
   DialogFooter,
 } from "../../components/ui/dialog"
-import { Label } from "../../components/ui/label"
-import { Textarea } from "../../components/ui/textarea"
 import { ScrollArea } from "../../components/ui/scroll-area"
+import { Button } from "../../components/ui/button"
+import { toast } from "../../components/ui/use-toast"
 
 const formatVND = (amount: number): string => {
   return new Intl.NumberFormat("vi-VN", {
@@ -57,17 +55,11 @@ interface TripDetail extends TripPending {
 const ITEMS_PER_PAGE = 5
 
 export function RecentTrips() {
-  const { data, isLoading, mutate } = useTripApprovals()
+  const { data, isLoading } = useTripApprovals()
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedTrip, setSelectedTrip] = useState<TripDetail | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isLoadingDetail, setIsLoadingDetail] = useState(false)
-  const [approvingId, setApprovingId] = useState<string | null>(null)
-
-  // Reject modal
-  const [showRejectDialog, setShowRejectDialog] = useState(false)
-  const [rejectReason, setRejectReason] = useState("")
-  const [rejectingId, setRejectingId] = useState<string | null>(null)
 
   const rawTrips: any[] = data?.trips || []
   const pendingTrips: TripPending[] = rawTrips
@@ -94,44 +86,6 @@ export function RecentTrips() {
       })
     } finally {
       setIsLoadingDetail(false)
-    }
-  }
-
-  const handleApprove = async (id: string) => {
-    setApprovingId(id)
-    try {
-      await apiClient.approveTripApproval(id)
-      toast({ title: "Success", description: "Trip approved and published." })
-      mutate()
-      setIsModalOpen(false)
-    } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" })
-    } finally {
-      setApprovingId(null)
-    }
-  }
-
-  const openRejectDialog = (id: string) => {
-    setRejectingId(id)
-    setRejectReason("")
-    setShowRejectDialog(true)
-  }
-
-  const handleReject = async () => {
-    if (!rejectReason.trim()) {
-      toast({ title: "Required", description: "Please provide a reason.", variant: "destructive" })
-      return
-    }
-    try {
-      await apiClient.rejectTripApproval(rejectingId!, rejectReason.trim())
-      toast({ title: "Rejected", description: "Trip has been rejected." })
-      mutate()
-      setShowRejectDialog(false)
-      setIsModalOpen(false)
-    } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" })
-    } finally {
-      setRejectingId(null)
     }
   }
 
@@ -197,7 +151,7 @@ export function RecentTrips() {
         </>
       )}
 
-      {/* DETAIL MODAL */}
+      {/* DETAIL MODAL (No approval/reject buttons here, moved to TripsTable) */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
@@ -265,61 +219,11 @@ export function RecentTrips() {
                 </ScrollArea>
               </div>
 
-              <DialogFooter className="flex justify-end gap-3 pt-4 border-t">
-                <Button
-                  variant="outline"
-                  className="text-red-600 border-red-600 hover:bg-red-50"
-                  onClick={() => {
-                    setIsModalOpen(false)
-                    openRejectDialog(selectedTrip._id as string)
-                  }}
-                  disabled={rejectingId === selectedTrip._id}
-                >
-                  Reject
-                </Button>
-                <Button
-                  className="bg-green-600 hover:bg-green-700 text-white"
-                  onClick={() => handleApprove(selectedTrip._id as string)}
-                  disabled={approvingId === selectedTrip._id}
-                >
-                  {approvingId === selectedTrip._id ? "Approving..." : "Approve & Publish"}
-                </Button>
+              <DialogFooter>
+                <Button onClick={() => setIsModalOpen(false)}>Close</Button>
               </DialogFooter>
             </div>
           ) : null}
-        </DialogContent>
-      </Dialog>
-
-      {/* REJECT REASON DIALOG */}
-      <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Reject Trip</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="reason">Reason for rejection <span className="text-red-500">*</span></Label>
-              <Textarea
-                id="reason"
-                placeholder="Enter detailed reason..."
-                value={rejectReason}
-                onChange={(e) => setRejectReason(e.target.value)}
-                className="mt-1 min-h-32"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowRejectDialog(false)}>
-              Cancel
-            </Button>
-            <Button
-              className="bg-red-600 hover:bg-red-700 text-white"
-              onClick={handleReject}
-              disabled={!rejectReason.trim() || rejectingId === null}
-            >
-              {rejectingId ? "Rejecting..." : "Confirm Reject"}
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

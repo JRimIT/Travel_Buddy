@@ -36,12 +36,50 @@ function useData<T>(fetcher: () => Promise<T>): UseDataReturn<T> {
   return { data, error, isLoading, mutate }
 }
 
+// === SALES ===
 export function useSalesTotal() {
-  return useData(useCallback(() => apiClient.getSalesTotal(), []))
+  return useSWR("sales-total", () => apiClient.getSalesTotal(), {
+    revalidateOnFocus: false,
+    dedupingInterval: 60000,
+  })
 }
 
 export function useSalesWeekly() {
-  return useData(useCallback(() => apiClient.getSalesWeekly(), []))
+  return useSWR("sales-weekly", () => apiClient.getSalesWeekly(), {
+    revalidateOnFocus: false,
+  })
+}
+
+export function useSalesTrends(params?: { groupBy?: string; fromDate?: string; toDate?: string }) {
+  const key = params ? ["sales-trends", params] : "sales-trends"
+  return useSWR(key, () => apiClient.getSalesTrends(params), {
+    revalidateOnFocus: false,
+    dedupingInterval: 5 * 60 * 1000, // 5 phút
+  })
+}
+
+// === USERS ===
+export function useUsersStats() {
+  return useSWR("users-stats", () => apiClient.getUsersStats(), {
+    revalidateOnFocus: false,
+    dedupingInterval: 10 * 60 * 1000,
+  })
+}
+
+// === TRIPS ===
+export function useTripStatistics(params?: { fromDate?: string; toDate?: string }) {
+  const key = params ? ["trips-stats", params] : "trips-stats"
+  return useSWR(key, () => apiClient.getTripStatistics(params), {
+    revalidateOnFocus: false,
+  })
+}
+
+// === REVIEWS ===
+export function useReviewStats(params?: { targetId?: string; fromDate?: string; toDate?: string }) {
+  const key = params ? ["reviews-stats", params] : "reviews-stats"
+  return useSWR(key, () => apiClient.getReviewStats(params), {
+    revalidateOnFocus: false,
+  })
 }
 
 export function useTopPlaces(limit = 5) {

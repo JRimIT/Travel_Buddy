@@ -17,6 +17,9 @@ import {
 } from "../../components/ui/dialog"
 import { ScrollArea } from "../../components/ui/scroll-area"
 import { Button } from "../../components/ui/button"
+import { toast } from "../../components/ui/use-toast"
+import { Label } from "../../components/ui/label"
+import { Textarea } from "../../components/ui/textarea"
 
 // Format VND
 const formatVND = (amount: number): string => {
@@ -42,6 +45,7 @@ interface Trip {
   startDate: string | number | Date
   endDate: string | number | Date
   isPublic: boolean
+  status?: "pending_review" | "approved" | "rejected"
 }
 
 interface TripDetail extends Trip {
@@ -50,6 +54,7 @@ interface TripDetail extends Trip {
   days: Array<any>
   image: string
   user: { username: string; email: string }
+  rejectReason?: string
 }
 
 interface TripsTableProps {
@@ -58,13 +63,19 @@ interface TripsTableProps {
 
 export function TripsTable({ filters = {} }: TripsTableProps) {
   const [page, setPage] = useState(1)
-  const { data, isLoading } = useTrips(page, 10, filters)
+  const { data, isLoading, mutate } = useTrips(page, 10, filters)
   const [showLoadingIndicator, setShowLoadingIndicator] = useState(false)
 
   // Modal state
   const [selectedTrip, setSelectedTrip] = useState<TripDetail | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isLoadingDetail, setIsLoadingDetail] = useState(false)
+  const [approvingId, setApprovingId] = useState<string | null>(null)
+
+  // Reject modal
+  const [showRejectDialog, setShowRejectDialog] = useState(false)
+  const [rejectReason, setRejectReason] = useState("")
+  const [rejectingId, setRejectingId] = useState<string | null>(null)
 
   useEffect(() => {
     let timer: NodeJS.Timeout | undefined
@@ -85,13 +96,56 @@ export function TripsTable({ filters = {} }: TripsTableProps) {
       setIsModalOpen(true)
     } catch (error) {
       console.error("Failed to load trip detail:", error)
+      toast({
+        title: "Error",
+        description: "Failed to load trip details.",
+        variant: "destructive",
+      })
     } finally {
       setIsLoadingDetail(false)
     }
   }
 
+  const handleApprove = async (id: string) => {
+    setApprovingId(id)
+    try {
+      await apiClient.approveTripApproval(id)
+      toast({ title: "Success", description: "Trip approved and published." })
+      mutate()
+      setIsModalOpen(false)
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" })
+    } finally {
+      setApprovingId(null)
+    }
+  }
+
+  const openRejectDialog = (id: string) => {
+    setRejectingId(id)
+    setRejectReason("")
+    setShowRejectDialog(true)
+  }
+
+  const handleReject = async () => {
+    if (!rejectReason.trim()) {
+      toast({ title: "Required", description: "Please provide a reason.", variant: "destructive" })
+      return
+    }
+    try {
+      await apiClient.rejectTripApproval(rejectingId!, rejectReason.trim())
+      toast({ title: "Rejected", description: "Trip has been rejected." })
+      mutate()
+      setShowRejectDialog(false)
+      setIsModalOpen(false)
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" })
+    } finally {
+      setRejectingId(null)
+    }
+  }
+
   if (isLoading && !data) {
-    return <TableSkeleton rows={6} cols={5} />
+    return <TableSkeleton rows={6} cols={6} />
   }
 
   const trips: Trip[] = data?.trips || []
@@ -115,12 +169,13 @@ export function TripsTable({ filters = {} }: TripsTableProps) {
                 <TableHead className="min-w-[140px]">Start Date</TableHead>
                 <TableHead className="min-w-[140px]">End Date</TableHead>
                 <TableHead className="min-w-[120px]">Visibility</TableHead>
+                <TableHead className="min-w-[120px]">Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {trips.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground">
+                  <TableCell colSpan={6} className="text-center text-muted-foreground">
                     No trips found.
                   </TableCell>
                 </TableRow>
@@ -138,6 +193,15 @@ export function TripsTable({ filters = {} }: TripsTableProps) {
                     <TableCell>
                       <Badge variant={trip.isPublic ? "default" : "secondary"}>
                         {trip.isPublic ? "Public" : "Private"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={
+                        trip.status === "approved" ? "success" :
+                        trip.status === "rejected" ? "destructive" :
+                        "outline"
+                      }>
+                        {trip.status ? trip.status.replace("_", " ") : "N/A"}
                       </Badge>
                     </TableCell>
                   </TableRow>
@@ -241,11 +305,73 @@ export function TripsTable({ filters = {} }: TripsTableProps) {
                 </ScrollArea>
               </div>
 
-              <DialogFooter>
+              {selectedTrip.rejectReason && (
+                <div className="p-4 bg-red-50 rounded-lg">
+                  <strong>Reject Reason:</strong>
+                  <p className="mt-1 text-sm text-red-600">{selectedTrip.rejectReason}</p>
+                </div>
+              )}
+
+              <DialogFooter className="flex justify-end gap-3 pt-4 border-t">
+                {selectedTrip.status === "pending_review" && (
+                  <>
+                    <Button
+                      variant="outline"
+                      className="text-red-600 border-red-600 hover:bg-red-50"
+                      onClick={() => {
+                        setIsModalOpen(false)
+                        openRejectDialog(selectedTrip._id as string)
+                      }}
+                      disabled={rejectingId === selectedTrip._id}
+                    >
+                      Reject
+                    </Button>
+                    <Button
+                      className="bg-green-600 hover:bg-green-700 text-white"
+                      onClick={() => handleApprove(selectedTrip._id as string)}
+                      disabled={approvingId === selectedTrip._id}
+                    >
+                      {approvingId === selectedTrip._id ? "Approving..." : "Approve & Publish"}
+                    </Button>
+                  </>
+                )}
                 <Button onClick={() => setIsModalOpen(false)}>Close</Button>
               </DialogFooter>
             </div>
           ) : null}
+        </DialogContent>
+      </Dialog>
+
+      {/* REJECT REASON DIALOG */}
+      <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Reject Trip</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="reason">Reason for rejection <span className="text-red-500">*</span></Label>
+              <Textarea
+                id="reason"
+                placeholder="Enter detailed reason..."
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+                className="mt-1 min-h-32"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowRejectDialog(false)}>
+              Cancel
+            </Button>
+            <Button
+              className="bg-red-600 hover:bg-red-700 text-white"
+              onClick={handleReject}
+              disabled={!rejectReason.trim() || rejectingId === null}
+            >
+              {rejectingId ? "Rejecting..." : "Confirm Reject"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

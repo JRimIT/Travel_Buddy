@@ -13,7 +13,7 @@ const navigation = [
   { name: "Reviews", href: "/admin/reviews", icon: Star, roles: ["admin"] },
   { name: "Reports", href: "/admin/reports", icon: AlertCircle, roles: ["admin"] },
   { name: "Locations", href: "/admin/locations", icon: MapPin, roles: ["admin"] },
-  { name: "Analytics", href: "/admin/analytics", icon: BarChart3, roles: ["admin"] },
+  // { name: "Analytics", href: "/admin/analytics", icon: BarChart3, roles: ["admin"] },
 ]
 
 export function Sidebar() {
