@@ -1,9 +1,10 @@
 "use client";
 
+import { Sidebar } from "../../components/admin/sidebar";
+import { Header } from "../../components/admin/header";
+import { AuthProvider, useAuth } from "../../lib/auth-context";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation";
-import { SupportSidebar } from "@/src/components/support/sidebar";
-import { AuthProvider, useAuth } from "@/src/lib/auth-context";
 
 function SupportLayoutContent({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
@@ -14,15 +15,11 @@ function SupportLayoutContent({ children }: { children: React.ReactNode }) {
     if (
       !isLoading &&
       (!user || user.role !== "support") &&
-      pathname !== "/support/login"
+      pathname !== "/admin/login"
     ) {
-      router.push("/support/login");
+      router.push("/admin/login");
     }
   }, [user, isLoading, router, pathname]);
-
-  if (pathname === "/support/login") {
-    return <>{children}</>;
-  }
 
   if (isLoading) {
     return (
@@ -35,12 +32,15 @@ function SupportLayoutContent({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!user) return null;
+  if (!user || user.role !== "support") {
+    return null;
+  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-muted/30">
-      <SupportSidebar />
+      <Sidebar />
       <div className="flex flex-1 flex-col overflow-hidden">
+        <Header />
         <main className="flex-1 overflow-y-auto p-6">{children}</main>
       </div>
     </div>

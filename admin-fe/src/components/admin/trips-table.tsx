@@ -6,6 +6,7 @@ import { Badge } from "../../components/ui/badge"
 import { useTrips } from "../../hooks/use-admin-data"
 import { format, isValid, parse } from "date-fns"
 import { Loader2 } from "lucide-react"
+import { TableSkeleton } from "./table-skeleton"
 
 interface Trip {
   _id: Key | null | undefined
@@ -43,54 +44,58 @@ export function TripsTable({ filters = {} }: TripsTableProps) {
     return () => timer && clearTimeout(timer)
   }, [isLoading, data])
 
-  if (isLoading) {
-    return <div className="flex justify-center py-8">Loading trips...</div>
+  if (isLoading && !data) {
+    return <TableSkeleton rows={6} cols={5} />
   }
 
   const trips: Trip[] = data?.trips || []
   const totalPages = data?.totalPages || 1
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 relative">
       {showLoadingIndicator && (
         <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/50 backdrop-blur-sm rounded-lg">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       )}
-      <Table className={showLoadingIndicator ? "opacity-60 pointer-events-none" : ""}>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Title</TableHead>
-            <TableHead>User</TableHead>
-            <TableHead>Start Date</TableHead>
-            <TableHead>End Date</TableHead>
-            <TableHead>Visibility</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {trips.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={5} className="text-center text-muted-foreground">
-                No trips found.
-              </TableCell>
-            </TableRow>
-          ) : (
-            trips.map((trip) => (
-              <TableRow key={trip._id}>
-                <TableCell>{trip.title}</TableCell>
-                <TableCell>{trip.user.username}</TableCell>
-                <TableCell>{formatDateSafe(trip.startDate)}</TableCell>
-                <TableCell>{formatDateSafe(trip.endDate)}</TableCell>
-                <TableCell>
-                  <Badge variant={trip.isPublic ? "default" : "secondary"}>
-                    {trip.isPublic ? "Public" : "Private"}
-                  </Badge>
-                </TableCell>
+      <div className={showLoadingIndicator ? "opacity-60 pointer-events-none" : ""}>
+        <div className="overflow-x-auto rounded-lg border border-border">
+          <Table>
+            <TableHeader className="sticky top-0 z-10 bg-card">
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="min-w-[200px]">Title</TableHead>
+                <TableHead className="min-w-[160px]">User</TableHead>
+                <TableHead className="min-w-[140px]">Start Date</TableHead>
+                <TableHead className="min-w-[140px]">End Date</TableHead>
+                <TableHead className="min-w-[120px]">Visibility</TableHead>
               </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
+            </TableHeader>
+            <TableBody>
+              {trips.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center text-muted-foreground">
+                    No trips found.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                trips.map((trip) => (
+                  <TableRow key={trip._id} className="odd:bg-muted/30 hover:bg-accent/50">
+                    <TableCell className="font-medium">{trip.title}</TableCell>
+                    <TableCell>{trip.user.username}</TableCell>
+                    <TableCell>{formatDateSafe(trip.startDate)}</TableCell>
+                    <TableCell>{formatDateSafe(trip.endDate)}</TableCell>
+                    <TableCell>
+                      <Badge variant={trip.isPublic ? "default" : "secondary"}>
+                        {trip.isPublic ? "Public" : "Private"}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
 
       {totalPages > 1 && (
         <div className="flex justify-between items-center">

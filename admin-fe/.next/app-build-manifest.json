@@ -26,15 +26,76 @@
       "static/chunks/main-app.js",
       "static/chunks/app/admin/page.js"
     ],
-    "/admin/users/loading": [
+    "/support/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/admin/users/loading.js"
+      "static/chunks/app/support/layout.js"
     ],
-    "/admin/users/page": [
+    "/support/pending/loading": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/admin/users/page.js"
+      "static/chunks/app/support/pending/loading.js"
+    ],
+    "/support/pending/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/support/pending/page.js"
+    ],
+    "/support/assigned/loading": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/support/assigned/loading.js"
+    ],
+    "/support/assigned/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/support/assigned/page.js"
+    ],
+    "/support/history/loading": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/support/history/loading.js"
+    ],
+    "/support/history/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/support/history/page.js"
+    ],
+    "/support/trips/[tripId]/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/support/trips/[tripId]/page.js"
+    ],
+    "/admin/trips/loading": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/admin/trips/loading.js"
+    ],
+    "/admin/trips/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/admin/trips/page.js"
+    ],
+    "/admin/reviews/loading": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/admin/reviews/loading.js"
+    ],
+    "/admin/reviews/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/admin/reviews/page.js"
+    ],
+    "/admin/support-chat/loading": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/admin/support-chat/loading.js"
+    ],
+    "/admin/support-chat/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/admin/support-chat/page.css",
+      "static/chunks/app/admin/support-chat/page.js"
     ],
     "/_not-found/page": [
       "static/chunks/webpack.js",

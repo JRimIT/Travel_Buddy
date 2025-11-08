@@ -1,0 +1,23 @@
+# Dependencies
+/node_modules/
+
+# Environment variables
+.env
+
+# IDE configuration files
+.idea/
+
+# User uploaded files
+/uploads/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Optional: Log files
+*.log
+npm-debug.log*
+
+# Optional: OS-generated files
+.DS_Store
+Thumbs.db

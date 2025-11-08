@@ -5,6 +5,7 @@ import { Input } from "../../../components/ui/input"
 import { Search } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select"
 import { ReportsTable } from "../../../components/admin/reports-table"
+import { PageHeader } from "../../../components/admin/page-header"
 
 export default function ReportsPage() {
   const [searchTerm, setSearchTerm] = useState("")
@@ -25,10 +26,11 @@ export default function ReportsPage() {
 
   return (
     <main className="flex-1 space-y-8 p-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Reports</h1>
-        <p className="text-muted-foreground">View and manage violation reports</p>
-      </div>
+      <PageHeader
+        title="Reports"
+        description="View and manage violation reports"
+        breadcrumbs={[{ label: "Home", href: "/admin" }, { label: "Reports" }]}
+      />
 
       <div className="flex gap-4">
         {/* <div className="flex-1 relative">

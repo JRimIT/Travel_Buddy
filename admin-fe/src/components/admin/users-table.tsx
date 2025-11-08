@@ -14,6 +14,7 @@ import { Badge } from "../../components/ui/badge"
 import { useUsers } from "../../hooks/use-admin-data"
 import { apiClient } from "../../lib/api-client"
 import { Loader2, Lock, Unlock } from "lucide-react"
+import { TableSkeleton } from "./table-skeleton"
 
 export function UsersTable({ filters = {} }: { filters?: Record<string, any> }) {
   const [page, setPage] = useState(1)
@@ -56,7 +57,7 @@ export function UsersTable({ filters = {} }: { filters?: Record<string, any> }) 
   }
 
   if (isLoading && !data) {
-    return <div className="flex justify-center py-12">Loading users...</div>
+    return <TableSkeleton rows={6} cols={5} />
   }
 
   const users = data?.users || []
@@ -70,68 +71,72 @@ export function UsersTable({ filters = {} }: { filters?: Record<string, any> }) 
         </div>
       )}
 
-      <Table className={showLoadingIndicator ? "opacity-60 pointer-events-none" : ""}>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Username</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Phone</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {users.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={5} className="text-center text-muted-foreground">
-                No users found.
-              </TableCell>
-            </TableRow>
-          ) : (
-            users.map((user: any) => (
-              <TableRow key={user._id}>
-                <TableCell>{user.username}</TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>{user.phone || "N/A"}</TableCell>
-                <TableCell>
-                  <Badge variant={user.isLocked ? "destructive" : "default"}>
-                    {user.isLocked ? "Locked" : "Active"}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  {user.isLocked ? (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleUnlockUser(String(user._id))}
-                      disabled={actionLoading === user._id}
-                    >
-                      {actionLoading === user._id ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Unlock className="w-4 h-4" />
-                      )}
-                    </Button>
-                  ) : (
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => handleLockUser(String(user._id))}
-                      disabled={actionLoading === user._id}
-                    >
-                      {actionLoading === user._id ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Lock className="w-4 h-4" />
-                      )}
-                    </Button>
-                  )}
-                </TableCell>
+      <div className={showLoadingIndicator ? "opacity-60 pointer-events-none" : ""}>
+        <div className="overflow-x-auto rounded-lg border border-border">
+          <Table>
+            <TableHeader className="sticky top-0 z-10 bg-card">
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="min-w-[160px]">Username</TableHead>
+                <TableHead className="min-w-[220px]">Email</TableHead>
+                <TableHead className="min-w-[140px]">Phone</TableHead>
+                <TableHead className="min-w-[120px]">Status</TableHead>
+                <TableHead className="min-w-[120px]">Actions</TableHead>
               </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
+            </TableHeader>
+            <TableBody>
+              {users.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center text-muted-foreground">
+                    No users found.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                users.map((user: any) => (
+                  <TableRow key={user._id} className="odd:bg-muted/30 hover:bg-accent/50">
+                    <TableCell className="font-medium">{user.username}</TableCell>
+                    <TableCell>{user.email}</TableCell>
+                    <TableCell>{user.phone || "N/A"}</TableCell>
+                    <TableCell>
+                      <Badge variant={user.isLocked ? "destructive" : "default"}>
+                        {user.isLocked ? "Locked" : "Active"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {user.isLocked ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleUnlockUser(String(user._id))}
+                          disabled={actionLoading === user._id}
+                        >
+                          {actionLoading === user._id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Unlock className="w-4 h-4" />
+                          )}
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleLockUser(String(user._id))}
+                          disabled={actionLoading === user._id}
+                        >
+                          {actionLoading === user._id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Lock className="w-4 h-4" />
+                          )}
+                        </Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
 
       {/* Pagination */}
       {totalPages > 1 && (

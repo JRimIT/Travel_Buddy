@@ -1,0 +1,51 @@
+.container {
+    height: calc(100vh - 80px);
+    display: flex;
+    flex-direction: column;
+    background: #f5f7fa;
+}
+
+.header {
+    padding: 20px 30px;
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header h1 {
+    font-size: 24px;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0;
+}
+
+.stats {
+    display: flex;
+    gap: 12px;
+}
+
+.statBadge {
+    padding: 6px 12px;
+    background: #f3f4f6;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.chatLayout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+.loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-size: 18px;
+    color: #6b7280;
+}

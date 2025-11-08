@@ -34,7 +34,7 @@ export const verifyUser = (req, res, next) => {
     req.headers["authorization"] || `Bearer ${req.session.token}`;
 
   const token = authHeader && authHeader.split(" ")[1]; // 'Bearer <token>'
-
+  console.log("TOKEN USER", token);
   if (!token) {
     return res.status(403).json({ message: "No token provided!" });
   }
@@ -78,26 +78,21 @@ export const verifyAdmin = (req, res, next) => {
 };
 
 export const verifySupporter = (req, res, next) => {
-  const authHeader = req.headers["authorization"];
-  console.log("Authorization Header:", authHeader);
+  const authHeader =
+    req.headers["authorization"] || `Bearer ${req.session.token}`;
 
   const token = authHeader && authHeader.split(" ")[1]; // 'Bearer <token>'
+  console.log("TOKEN SUPPORT", token);
   if (!token) {
-    console.log("No token provided");
     return res.status(403).json({ message: "No token provided!" });
   }
 
   jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-    console.log("Token:", token);
-    console.log("Decoded:", decoded);
-    if (err) {
-      console.error("JWT verification error:", err);
-      return res.status(401).json({ message: "Invalid token!" });
-    }
+    if (err) return res.status(401).json({ message: "Invalid token!" });
 
     if (decoded.role !== "support") {
       console.log("User role:", decoded.role);
-      return res.status(403).json({ message: "Support access required." });
+      return res.status(403).json({ message: "Suport access required." });
     }
 
     req.user = decoded;
