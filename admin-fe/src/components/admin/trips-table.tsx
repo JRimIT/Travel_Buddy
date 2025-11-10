@@ -21,7 +21,7 @@ import { toast } from "../../components/ui/use-toast"
 import { Label } from "../../components/ui/label"
 import { Textarea } from "../../components/ui/textarea"
 
-// Format VND
+// Định dạng VND
 const formatVND = (amount: number): string => {
   return new Intl.NumberFormat("vi-VN", {
     style: "currency",
@@ -92,13 +92,22 @@ export function TripsTable({ filters = {} }: TripsTableProps) {
     setIsLoadingDetail(true)
     try {
       const detail = await apiClient.getTripDetail(id)
-      setSelectedTrip(detail)
+      const mappedDetail = {
+        ...detail,
+        status:
+          detail.status === "pending_review" ||
+          detail.status === "approved" ||
+          detail.status === "rejected"
+            ? detail.status
+            : undefined,
+      } as TripDetail
+      setSelectedTrip(mappedDetail)
       setIsModalOpen(true)
     } catch (error) {
-      console.error("Failed to load trip detail:", error)
+      console.error("Không thể tải chi tiết chuyến đi:", error)
       toast({
-        title: "Error",
-        description: "Failed to load trip details.",
+        title: "Lỗi",
+        description: "Không thể tải thông tin chuyến đi.",
         variant: "destructive",
       })
     } finally {
@@ -110,11 +119,11 @@ export function TripsTable({ filters = {} }: TripsTableProps) {
     setApprovingId(id)
     try {
       await apiClient.approveTripApproval(id)
-      toast({ title: "Success", description: "Trip approved and published." })
+      toast({ title: "Thành công", description: "Chuyến đi đã được duyệt và công khai." })
       mutate()
       setIsModalOpen(false)
     } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" })
+      toast({ title: "Lỗi", description: error.message, variant: "destructive" })
     } finally {
       setApprovingId(null)
     }
@@ -128,17 +137,17 @@ export function TripsTable({ filters = {} }: TripsTableProps) {
 
   const handleReject = async () => {
     if (!rejectReason.trim()) {
-      toast({ title: "Required", description: "Please provide a reason.", variant: "destructive" })
+      toast({ title: "Bắt buộc", description: "Vui lòng nhập lý do từ chối.", variant: "destructive" })
       return
     }
     try {
       await apiClient.rejectTripApproval(rejectingId!, rejectReason.trim())
-      toast({ title: "Rejected", description: "Trip has been rejected." })
+      toast({ title: "Đã từ chối", description: "Chuyến đi đã bị từ chối." })
       mutate()
       setShowRejectDialog(false)
       setIsModalOpen(false)
     } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" })
+      toast({ title: "Lỗi", description: error.message, variant: "destructive" })
     } finally {
       setRejectingId(null)
     }
@@ -164,19 +173,19 @@ export function TripsTable({ filters = {} }: TripsTableProps) {
           <Table>
             <TableHeader className="sticky top-0 z-10 bg-card">
               <TableRow className="hover:bg-transparent">
-                <TableHead className="min-w-[200px]">Title</TableHead>
-                <TableHead className="min-w-[160px]">User</TableHead>
-                <TableHead className="min-w-[140px]">Start Date</TableHead>
-                <TableHead className="min-w-[140px]">End Date</TableHead>
-                <TableHead className="min-w-[120px]">Visibility</TableHead>
-                <TableHead className="min-w-[120px]">Status</TableHead>
+                <TableHead className="min-w-[200px]">Tiêu đề</TableHead>
+                <TableHead className="min-w-[160px]">Người tạo</TableHead>
+                <TableHead className="min-w-[140px]">Ngày bắt đầu</TableHead>
+                <TableHead className="min-w-[140px]">Ngày kết thúc</TableHead>
+                <TableHead className="min-w-[120px]">Hiển thị</TableHead>
+                <TableHead className="min-w-[120px]">Trạng thái</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {trips.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center text-muted-foreground">
-                    No trips found.
+                    Không tìm thấy chuyến đi nào.
                   </TableCell>
                 </TableRow>
               ) : (
@@ -192,16 +201,20 @@ export function TripsTable({ filters = {} }: TripsTableProps) {
                     <TableCell>{formatDateSafe(trip.endDate)}</TableCell>
                     <TableCell>
                       <Badge variant={trip.isPublic ? "default" : "secondary"}>
-                        {trip.isPublic ? "Public" : "Private"}
+                        {trip.isPublic ? "Công khai" : "Riêng tư"}
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={
-                        trip.status === "approved" ? "success" :
-                        trip.status === "rejected" ? "destructive" :
-                        "outline"
-                      }>
-                        {trip.status ? trip.status.replace("_", " ") : "N/A"}
+                      <Badge
+                        variant={
+                          trip.status === "approved" ? "default" :
+                          trip.status === "rejected" ? "destructive" :
+                          "outline"
+                        }
+                      >
+                        {trip.status === "pending_review" ? "Chờ duyệt" :
+                         trip.status === "approved" ? "Đã duyệt" :
+                         trip.status === "rejected" ? "Bị từ chối" : "N/A"}
                       </Badge>
                     </TableCell>
                   </TableRow>
@@ -215,7 +228,7 @@ export function TripsTable({ filters = {} }: TripsTableProps) {
       {totalPages > 1 && (
         <div className="flex justify-between items-center">
           <div className="text-sm text-muted-foreground">
-            Page {page} of {totalPages}
+            Trang {page} / {totalPages}
           </div>
           <div className="space-x-2">
             <button
@@ -223,20 +236,20 @@ export function TripsTable({ filters = {} }: TripsTableProps) {
               disabled={page === 1}
               className="px-4 py-2 border rounded disabled:opacity-50"
             >
-              Previous
+              Trước
             </button>
             <button
               onClick={() => setPage(page + 1)}
               disabled={page >= totalPages}
               className="px-4 py-2 border rounded disabled:opacity-50"
             >
-              Next
+              Tiếp
             </button>
           </div>
         </div>
       )}
 
-      {/* DETAIL MODAL */}
+      {/* CHI TIẾT CHUYẾN ĐI */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
@@ -259,39 +272,39 @@ export function TripsTable({ filters = {} }: TripsTableProps) {
 
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <strong>Created by:</strong> {selectedTrip.user.username} ({selectedTrip.user.email || "N/A"})
+                  <strong>Người tạo:</strong> {selectedTrip.user.username} ({selectedTrip.user.email || "N/A"})
                 </div>
                 <div>
-                  <strong>Duration:</strong> {formatDateSafe(selectedTrip.startDate)} to {formatDateSafe(selectedTrip.endDate)}
+                  <strong>Thời gian:</strong> {formatDateSafe(selectedTrip.startDate)} → {formatDateSafe(selectedTrip.endDate)}
                 </div>
                 <div>
-                  <strong>Budget:</strong>
+                  <strong>Ngân sách:</strong>
                   <div className="ml-2">
-                    <div>Flight: {formatVND(selectedTrip.budget.flight)}</div>
-                    <div>Hotel: {formatVND(selectedTrip.budget.hotel)}</div>
-                    <div>Activities: {formatVND(selectedTrip.budget.fun)}</div>
+                    <div>Máy bay: {formatVND(selectedTrip.budget.flight)}</div>
+                    <div>Khách sạn: {formatVND(selectedTrip.budget.hotel)}</div>
+                    <div>Hoạt động: {formatVND(selectedTrip.budget.fun)}</div>
                   </div>
                 </div>
                 <div>
-                  <strong>Total:</strong>{" "}
+                  <strong>Tổng cộng:</strong>{" "}
                   {formatVND(selectedTrip.budget.flight + selectedTrip.budget.hotel + selectedTrip.budget.fun)}
                 </div>
               </div>
 
               {selectedTrip.description && (
                 <div>
-                  <strong>Description:</strong>
+                  <strong>Mô tả:</strong>
                   <p className="mt-1 text-sm whitespace-pre-wrap">{selectedTrip.description}</p>
                 </div>
               )}
 
               <div>
-                <strong>Itinerary:</strong>
+                <strong>Lịch trình:</strong>
                 <ScrollArea className="h-64 mt-2 border rounded p-3">
                   {selectedTrip.days.map((day: any, i: number) => (
                     <div key={i} className="mb-4 last:mb-0">
                       <p className="font-medium text-sm">
-                        Day {day.day}: {formatDateSafe(day.date)}
+                        Ngày {day.day}: {formatDateSafe(day.date)}
                       </p>
                       <ul className="ml-4 mt-1 space-y-1 text-xs">
                         {day.activities.map((act: any, j: number) => (
@@ -307,7 +320,7 @@ export function TripsTable({ filters = {} }: TripsTableProps) {
 
               {selectedTrip.rejectReason && (
                 <div className="p-4 bg-red-50 rounded-lg">
-                  <strong>Reject Reason:</strong>
+                  <strong>Lý do từ chối:</strong>
                   <p className="mt-1 text-sm text-red-600">{selectedTrip.rejectReason}</p>
                 </div>
               )}
@@ -324,36 +337,36 @@ export function TripsTable({ filters = {} }: TripsTableProps) {
                       }}
                       disabled={rejectingId === selectedTrip._id}
                     >
-                      Reject
+                      Từ chối
                     </Button>
                     <Button
                       className="bg-green-600 hover:bg-green-700 text-white"
                       onClick={() => handleApprove(selectedTrip._id as string)}
                       disabled={approvingId === selectedTrip._id}
                     >
-                      {approvingId === selectedTrip._id ? "Approving..." : "Approve & Publish"}
+                      {approvingId === selectedTrip._id ? "Đang duyệt..." : "Duyệt & Công khai"}
                     </Button>
                   </>
                 )}
-                <Button onClick={() => setIsModalOpen(false)}>Close</Button>
+                <Button onClick={() => setIsModalOpen(false)}>Đóng</Button>
               </DialogFooter>
             </div>
           ) : null}
         </DialogContent>
       </Dialog>
 
-      {/* REJECT REASON DIALOG */}
+      {/* TỪ CHỐI CHUYẾN ĐI */}
       <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Reject Trip</DialogTitle>
+            <DialogTitle>Từ chối chuyến đi</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="reason">Reason for rejection <span className="text-red-500">*</span></Label>
+              <Label htmlFor="reason">Lý do từ chối <span className="text-red-500">*</span></Label>
               <Textarea
                 id="reason"
-                placeholder="Enter detailed reason..."
+                placeholder="Nhập lý do chi tiết..."
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
                 className="mt-1 min-h-32"
@@ -362,14 +375,14 @@ export function TripsTable({ filters = {} }: TripsTableProps) {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowRejectDialog(false)}>
-              Cancel
+              Hủy
             </Button>
             <Button
               className="bg-red-600 hover:bg-red-700 text-white"
               onClick={handleReject}
               disabled={!rejectReason.trim() || rejectingId === null}
             >
-              {rejectingId ? "Rejecting..." : "Confirm Reject"}
+              {rejectingId ? "Đang từ chối..." : "Xác nhận từ chối"}
             </Button>
           </DialogFooter>
         </DialogContent>

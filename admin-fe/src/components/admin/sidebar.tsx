@@ -7,13 +7,12 @@ import { LayoutDashboard, Users, MapPin, Star, Calendar, BarChart3, AlertCircle,
 import { useAuth } from "../../lib/auth-context"
 
 const navigation = [
-  { name: "Dashboard", href: "/admin", icon: LayoutDashboard, roles: ["admin"] },
-  { name: "Users", href: "/admin/users", icon: Users, roles: ["admin"] },
-  { name: "Trips", href: "/admin/trips", icon: Calendar, roles: ["admin"] },
-  { name: "Reviews", href: "/admin/reviews", icon: Star, roles: ["admin"] },
-  { name: "Reports", href: "/admin/reports", icon: AlertCircle, roles: ["admin"] },
-  { name: "Locations", href: "/admin/locations", icon: MapPin, roles: ["admin"] },
-  { name: "Analytics", href: "/admin/analytics", icon: BarChart3, roles: ["admin"] },
+  { name: "Tổng quan", href: "/admin", icon: LayoutDashboard, roles: ["admin"] },
+  { name: "Người dùng", href: "/admin/users", icon: Users, roles: ["admin"] },
+  { name: "Chuyến đi", href: "/admin/trips", icon: Calendar, roles: ["admin"] },
+  { name: "Đánh giá", href: "/admin/reviews", icon: Star, roles: ["admin"] },
+  { name: "Báo cáo", href: "/admin/reports", icon: AlertCircle, roles: ["admin"] },
+  { name: "Địa điểm", href: "/admin/locations", icon: MapPin, roles: ["admin"] },
   { name: "Chat", href: "/admin/support-chat", icon: MessageCircleMore, roles: ["support", "admin"] },
 ]
 
@@ -33,14 +32,14 @@ export function Sidebar() {
           </div>
           <div className="leading-tight">
             <div className="text-base font-semibold">Travel Buddy</div>
-            <div className="text-xs text-muted-foreground">Admin Console</div>
+            <div className="text-xs text-muted-foreground">Bảng điều khiển</div>
           </div>
         </Link>
       </div>
       {user && (
         <div className="border-b border-border px-5 py-3">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Signed in as</span>
+            <span className="text-sm text-muted-foreground">Đã đăng nhập</span>
             <div
               className={cn(
                 "rounded-full px-2.5 py-1 text-[10px] font-semibold tracking-wide",

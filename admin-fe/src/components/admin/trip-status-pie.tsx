@@ -4,18 +4,19 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, LabelList } 
 import { useTripStatistics } from "../../hooks/use-admin-data"
 
 const COLORS = {
-  approved: "#10b981",   // green
-  rejected: "#ef4444",   // red
-  pending: "#f59e0b",    // amber
-  draft: "#6b7280",      // gray
+  approved: "#10b981",   // xanh lá
+  rejected: "#ef4444",   // đỏ
+  pending: "#f59e0b",    // vàng
+  draft: "#6b7280",      // xám
 }
 
+// Dịch trạng thái sang tiếng Việt
 const STATUS_LABELS: Record<string, string> = {
-  approved: "Approved",
-  rejected: "Rejected",
-  pending: "Pending",
-  draft: "Draft",
-  null: "Pending",
+  approved: "Đã duyệt",
+  rejected: "Từ chối",
+  pending: "Chờ duyệt",
+  draft: "Nháp",
+  null: "Chờ duyệt",
 }
 
 export function TripStatusPie() {
@@ -24,7 +25,7 @@ export function TripStatusPie() {
   if (isLoading) {
     return (
       <div className="h-64 flex items-center justify-center text-muted-foreground">
-        Loading data...
+        Đang tải dữ liệu...
       </div>
     )
   }
@@ -34,14 +35,31 @@ export function TripStatusPie() {
   const chartData = rawData.map((item: any) => {
     const statusKey = item.status === null ? "pending" : item.status
     return {
-      name: STATUS_LABELS[statusKey] || "Other",
+      name: STATUS_LABELS[statusKey] || "Khác",
       value: item.count,
       rawStatus: item.status,
     }
   })
 
-  // Calculate total to display in the center
+  // Tính tổng số chuyến
   const total = chartData.reduce((sum: number, item: any) => sum + item.value, 0)
+
+  // Tooltip tùy chỉnh
+  const CustomTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload[0]) {
+      return (
+        <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
+          <p className="text-sm font-semibold text-gray-700">
+            {payload[0].name}
+          </p>
+          <p className="text-sm font-medium text-gray-600">
+            {payload[0].value.toLocaleString("vi-VN")} chuyến
+          </p>
+        </div>
+      )
+    }
+    return null
+  }
 
   return (
     <ResponsiveContainer width="100%" height={280}>
@@ -73,13 +91,17 @@ export function TripStatusPie() {
                 dominantBaseline="middle"
                 style={{ fontSize: "12px", fontWeight: "bold", fill: "white" }}
               >
-                {value}
+                {typeof value === "number"
+                  ? value >= 1000
+                    ? `${(value / 1000).toFixed(1)}N`
+                    : value
+                  : value}
               </text>
             )}
           />
         </Pie>
 
-        {/* Display total in the center */}
+        {/* Tổng số ở giữa */}
         <text
           x="50%"
           y="50%"
@@ -87,13 +109,11 @@ export function TripStatusPie() {
           dominantBaseline="middle"
           className="text-2xl font-bold fill-gray-700"
         >
-          {total}
+          {total.toLocaleString("vi-VN")}
         </text>
 
-        <Tooltip
-          formatter={(value: number) => `${value} trips`}
-          contentStyle={{ borderRadius: "8px", border: "none", background: "#f9fafb" }}
-        />
+        <Tooltip content={<CustomTooltip />} />
+        
         <Legend
           verticalAlign="bottom"
           height={36}

@@ -16,17 +16,17 @@ export default function LocationsPage() {
   return (
     <main className="flex-1 space-y-8 p-8">
       <PageHeader
-        title="Locations"
-        description="Manage tourist attractions and points of interest"
-        breadcrumbs={[{ label: "Home", href: "/admin" }, { label: "Locations" }]}
-        actions={<Button><Plus className="w-4 h-4 mr-2" />Add Location</Button>}
+        title="Địa điểm"
+        description="Quản lý các điểm du lịch và địa điểm tham quan"
+        breadcrumbs={[{ label: "Trang chủ", href: "/admin" }, { label: "Địa điểm" }]}
+        actions={<Button><Plus className="w-4 h-4 mr-2" />Thêm Địa điểm</Button>}
       />
 
       <div className="sticky top-16 z-10 flex gap-4 bg-background/70 backdrop-blur supports-[backdrop-filter]:bg-background/50 p-3 rounded-lg border">
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search locations..."
+            placeholder="Tìm kiếm địa điểm..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
@@ -34,22 +34,22 @@ export default function LocationsPage() {
         </div>
         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
           <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Filter by category" />
+            <SelectValue placeholder="Lọc theo danh mục" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Categories</SelectItem>
-            <SelectItem value="attraction">Attraction</SelectItem>
-            <SelectItem value="restaurant">Restaurant</SelectItem>
-            <SelectItem value="entertainment">Entertainment</SelectItem>
-            <SelectItem value="shopping">Shopping</SelectItem>
+            <SelectItem value="all">Tất cả Danh mục</SelectItem>
+            <SelectItem value="attraction">Điểm tham quan</SelectItem>
+            <SelectItem value="restaurant">Nhà hàng</SelectItem>
+            <SelectItem value="entertainment">Giải trí</SelectItem>
+            <SelectItem value="shopping">Mua sắm</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       <FilterChips
         chips={[
-          ...(searchTerm ? [{ label: `Search: ${searchTerm}`, onRemove: () => setSearchTerm("") }] : []),
-          ...(categoryFilter !== "all" ? [{ label: `Category: ${categoryFilter}`, onRemove: () => setCategoryFilter("all") }] : []),
+          ...(searchTerm ? [{ label: `Tìm kiếm: ${searchTerm}`, onRemove: () => setSearchTerm("") }] : []),
+          ...(categoryFilter !== "all" ? [{ label: `Danh mục: ${categoryFilter}`, onRemove: () => setCategoryFilter("all") }] : []),
         ]}
         onClear={() => { setSearchTerm(""); setCategoryFilter("all") }}
       />

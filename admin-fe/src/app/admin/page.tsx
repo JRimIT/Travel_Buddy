@@ -26,11 +26,11 @@ export default function AdminDashboard() {
   return (
     <main className="flex-1 space-y-8 p-8">
       <PageHeader
-        title="Admin Overview"
-        description="Track revenue, users, trips, and reviews"
+        title="Tổng quan Quản trị"
+        description="Theo dõi doanh thu, người dùng, chuyến đi và đánh giá"
         breadcrumbs={[
-          { label: "Home", href: "/admin" },
-          { label: "Dashboard" }
+          { label: "Trang chủ", href: "/admin" },
+          { label: "Bảng điều khiển" }
         ]}
       />
 
@@ -41,7 +41,7 @@ export default function AdminDashboard() {
       <div className="grid gap-6 md:grid-cols-2">
         <Card className="shadow-sm">
           <CardHeader>
-            <CardTitle>Revenue Trends</CardTitle>
+            <CardTitle>Xu hướng Doanh thu</CardTitle>
           </CardHeader>
           <CardContent>
             <SalesTrendsChart />
@@ -50,7 +50,7 @@ export default function AdminDashboard() {
 
         <Card className="shadow-sm">
           <CardHeader>
-            <CardTitle>User Growth</CardTitle>
+            <CardTitle>Tăng trưởng Người dùng</CardTitle>
           </CardHeader>
           <CardContent>
             <UserGrowthChart />
@@ -62,7 +62,7 @@ export default function AdminDashboard() {
       <div className="grid gap-6 md:grid-cols-2">
         <Card className="shadow-sm">
           <CardHeader>
-            <CardTitle>Trip Status</CardTitle>
+            <CardTitle>Trạng thái Chuyến đi</CardTitle>
           </CardHeader>
           <CardContent>
             <TripStatusPie />
@@ -71,7 +71,7 @@ export default function AdminDashboard() {
 
         <Card className="shadow-sm">
           <CardHeader>
-            <CardTitle>Rating Distribution</CardTitle>
+            <CardTitle>Phân bố Đánh giá</CardTitle>
           </CardHeader>
           <CardContent>
             <ReviewRatingChart />
@@ -82,7 +82,7 @@ export default function AdminDashboard() {
       {/* Top users */}
       <Card className="shadow-sm">
         <CardHeader>
-          <CardTitle>Top Contributors</CardTitle>
+          <CardTitle>Người đóng góp Hàng đầu</CardTitle>
         </CardHeader>
         <CardContent>
           <TopContributors />

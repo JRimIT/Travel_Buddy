@@ -3,15 +3,15 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 import { useSalesTrends } from "../../hooks/use-admin-data"
 
-// Format large numbers: 1234567 → "1.23M", 1234 → "1.23K"
+// Định dạng số lớn: 1234567 → "1.23M", 1234 → "1.23K"
 const formatAxis = (value: number) => {
-  if (value >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(1)}B`
-  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`
-  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`
-  return value.toLocaleString("en-US")
+  if (value >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(1)} B`
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)} M`
+  if (value >= 1_000) return `${(value / 1_000).toFixed(1)} K`
+  return value.toLocaleString("vi-VN")
 }
 
-// Tooltip: show full number + currency
+// Tooltip: hiển thị tên kỳ + số tiền đầy đủ + đơn vị ₫
 const CustomTooltip = ({ active, payload }: any) => {
   if (active && payload && payload[0]) {
     const value = payload[0].value
@@ -21,7 +21,7 @@ const CustomTooltip = ({ active, payload }: any) => {
           {payload[0].payload.name}
         </p>
         <p className="text-sm text-blue-600 font-bold">
-          ${value.toLocaleString("en-US")}
+          {value.toLocaleString("vi-VN")} ₫
         </p>
       </div>
     )
@@ -35,7 +35,7 @@ export function SalesTrendsChart() {
   if (isLoading) {
     return (
       <div className="h-64 flex items-center justify-center text-muted-foreground">
-        Loading...
+        Đang tải...
       </div>
     )
   }
@@ -45,11 +45,11 @@ export function SalesTrendsChart() {
     value: t.totalRevenue,
   })) || []
 
-  // If no data
+  // Nếu không có dữ liệu
   if (chartData.length === 0) {
     return (
       <div className="h-64 flex items-center justify-center text-muted-foreground">
-        No revenue data available
+        Không có dữ liệu doanh thu
       </div>
     )
   }
