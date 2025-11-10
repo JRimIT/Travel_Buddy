@@ -7,151 +7,126 @@ import {
   Alert,
   TextInput,
   Modal,
+  Image,
+  Platform
 } from "react-native";
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { confirmSchedule } from "../../utils/api";
-import { useAuthStore } from "../../store/authStore";
+import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
-import { Platform, Image } from "react-native";
-
-import { useRouter } from "expo-router";
+import { confirmSchedule } from "../../utils/api";
+import { useAuthStore } from "../../store/authStore";
 
 const CostTab = () => {
-   const router = useRouter();
-  const budgetHotel = useSelector(
-    (state: any) => state.inforUserTravel.userHotelBudget
-  );
-  const budgetFlight = useSelector(
-    (state: any) => state.inforUserTravel.userFlightBudget
-  );
-  const budgetFun = useSelector(
-    (state: any) => state.inforUserTravel.userFunBudget
-  );
-  const startDate = useSelector(
-    (state: any) => state.inforUserTravel.userStartDate
-  );
-  const endDate = useSelector(
-    (state: any) => state.inforUserTravel.userEndDate
-  );
-  const days = useSelector((state: any) => state.inforUserTravel.userSchedule);
-  const flightTicket = useSelector(
-    (state: any) => state.inforUserTravel.userChosenFlight
-  );
-  const hotelDefault = useSelector(
-    (state: any) => state.inforUserTravel.userInforHotel
-  );
+  const router = useRouter();
+  const budgetHotel = useSelector((state:any) => state.inforUserTravel.userHotelBudget);
+  const budgetFlight = useSelector((state:any) => state.inforUserTravel.userFlightBudget);
+  const budgetFun = useSelector((state:any) => state.inforUserTravel.userFunBudget);
+  const days = useSelector((state:any) => state.inforUserTravel.userSchedule);
+  const hotelDefault = useSelector((state:any) => state.inforUserTravel.userInforHotel);
+  const flightTicket = useSelector((state:any) => state.inforUserTravel.userFlightTicket); // Nếu có: ví dụ máy bay/tàu
+  const mainTransport = useSelector((state:any) => state.inforUserTravel.userTransportMain); // Phương tiện chính đi tới nơi đến
+  const innerTransport = useSelector((state:any) => state.inforUserTravel.userTransportType); // Nội đô
+  const fromLocation = useSelector((state:any) => state.inforUserTravel.userCurrentLocation);
+  const province = useSelector((state:any) => state.inforUserTravel.userProvince);
+
+  const home = useSelector((state:any) => state.inforUserTravel.userHomeAddress);
+
+   const startDate = useSelector((state:any) => state.inforUserTravel.userStartDate); 
+  const endDate = useSelector((state:any) => state.inforUserTravel.userEndDate); 
+
+  const useHome = !!(home && home.lat && home.lon);
+  const baseStay = useHome ? home : hotelDefault;
+
 
   const [isPublic, setIsPublic] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-
   const [image, setImage] = useState<string | null>(null);
   const [imageBase64, setImageBase64] = useState<string | null>(null);
 
   const { token } = useAuthStore();
-  // Hàm lưu dữ liệu (giả lập truyền prop hoặc tự gọi API)
-  const handleSave = () => {
-    setModalVisible(true);
-  };
 
-  const handleConfirmSave = () => {
+
+  const handleSave = () => setModalVisible(true);
+
+
+console.log("days (Costabs): ", days);
+
+
+
+  const handleConfirmSave = async () => {
     setModalVisible(false);
-
+    if (!image || !imageBase64) {
+      Alert.alert("Chọn ảnh đại diện lịch trình!");
+      return;
+    }
     const budgets = {
-      flight: Number(budgetFlight.replace(/\./g, "")),
-      hotel: Number(budgetHotel.replace(/\./g, "")),
-      fun: Number(budgetFun.replace(/\./g, "")),
+      flight: Number(budgetFlight?.replace(/\./g, "")) || 0,
+      hotel: Number(budgetHotel?.replace(/\./g, "")) || 0,
+      fun: Number(budgetFun?.replace(/\./g, "")) || 0,
     };
-    // console.log("tile: ", title);
-    // console.log("description: ", description);
-    // console.log("isPublic: ", isPublic);
-    // console.log("budgets: ", budgets);
-    // console.log("schedule: ", days);
-    // console.log("hotelDefault: ", hotelDefault);
-    // console.log("ticketChosen: ", flightTicket);
-
     const uriParts = image.split(".");
     const fileType = uriParts[uriParts.length - 1];
-    const imageType = fileType
-      ? `image/${fileType.toLowerCase()}`
-      : "image/jpeg";
+    const imageType = fileType ? `image/${fileType.toLowerCase()}` : "image/jpeg";
     const imageDataUrl = `data:${imageType};base64,${imageBase64}`;
 
-    confirmSchedule(
-      title,
-      description,
-      isPublic,
-      budgets,
-      days,
-      hotelDefault,
-      flightTicket,
-      token,
-      imageDataUrl
+    const res = await confirmSchedule(
+      title, description, isPublic, budgets, days,baseStay,
+      hotelDefault, flightTicket, mainTransport, innerTransport, fromLocation, province.name,
+      token, imageDataUrl,useHome ,startDate, 
+      endDate
     );
-    router.replace("/");
+   
+   
+    if (res?.success) {
+      Alert.alert("Thành công", "Đã lưu lịch trình!");
+      router.replace("/");
+    }
   };
 
-   const pickImage = async () => {
-      try {
-        if (Platform.OS === "web") {
-          const { status } =
-            await ImagePicker.requestMediaLibraryPermissionsAsync();
-          if (status !== "granted") {
-            alert("Sorry, we need camera roll permissions to make this work!");
-            return;
-          }
+  const pickImage = async () => {
+    try {
+      if (Platform.OS === "web") {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== "granted") {
+          alert("Bạn cần cấp quyền truy cập ảnh!");
+          return;
         }
-  
-        const result = await ImagePicker.launchImageLibraryAsync({
-          mediaTypes: "images",
-          allowsEditing: true,
-          aspect: [4, 3],
-          quality: 0.5,
-          base64: true,
-        });
-  
-        if (!result.canceled) {
-          const selectedImage = result.assets[0];
-          console.log("Selected image:", result);
-  
-          setImage(result.assets[0].uri);
-          // setImageBase64(selectedImage.base64)
-          if (result.assets[0].base64) {
-            setImageBase64(result.assets[0].base64);
-          } else {
-            //otherwise, convert the image to base64
-            const base64 = await FileSystem.readAsStringAsync(
-              result.assets[0].uri,
-              {
-                encoding: "base64",
-              }
-            );
-            setImageBase64(base64);
-          }
-        } else {
-          console.log("Image selection was canceled");
-        }
-      } catch (error) {
-        console.error("Error requesting media library permissions:", error);
-        Alert.alert(
-          "Error",
-          "There was an error accessing the media library. Please try again later."
-        );
       }
-    };
-
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: "images",
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.5,
+        base64: true,
+      });
+      if (!result.canceled) {
+        const selectedImage = result.assets[0];
+        setImage(selectedImage.uri);
+        if (selectedImage.base64) setImageBase64(selectedImage.base64);
+        else {
+          const base64 = await FileSystem.readAsStringAsync(
+            selectedImage.uri,
+            { encoding: "base64" }
+          );
+          setImageBase64(base64);
+        }
+      }
+    } catch (error) {
+      Alert.alert("Lỗi", "Không lấy được ảnh");
+    }
+  };
+  
   return (
     <ScrollView contentContainerStyle={styles.infoTabBox}>
-      <View
-        style={[
-          styles.infoCard,
-          { backgroundColor: "#fff6db", borderColor: "#ffecb3" },
-        ]}
-      >
+      <View style={[
+        styles.infoCard,
+        { backgroundColor: "#fff6db", borderColor: "#ffecb3" },
+      ]}>
         <MaterialCommunityIcons
           name="cash-multiple"
           size={37}
@@ -165,20 +140,22 @@ const CostTab = () => {
           Khách sạn: <Text style={styles.boldText}>{budgetHotel} VNĐ</Text>
         </Text>
         <Text style={styles.infoField}>
-          Vé máy bay: <Text style={styles.boldText}>{budgetFlight} VNĐ</Text>
+          Vé phương tiện chính: <Text style={styles.boldText}>{budgetFlight} VNĐ</Text>
         </Text>
         <Text style={styles.infoField}>
           Quỹ đi chơi: <Text style={styles.boldText}>{budgetFun} VNĐ</Text>
         </Text>
-
-        {/* Lựa chọn lưu public/private */}
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "center",
-            marginTop: 25,
-          }}
-        >
+        <Text style={[styles.infoField, {color:"#0c5cad"}]}>
+          Phương tiện chính: <Text style={{fontWeight:"bold"}}>{mainTransport}</Text>
+        </Text>
+        <Text style={[styles.infoField, {color:"#0c5cad"}]}>
+          Phương tiện nội thành: <Text style={{fontWeight:"bold"}}>{innerTransport}</Text>
+        </Text>
+        <View style={{
+          flexDirection: "row",
+          justifyContent: "center",
+          marginTop: 25,
+        }}>
           <TouchableOpacity
             style={[
               styles.choseBtn,
@@ -190,9 +167,7 @@ const CostTab = () => {
             onPress={() => setIsPublic(false)}
           >
             <Ionicons name="lock-closed-outline" size={20} color="#1895ff" />
-            <Text
-              style={{ marginLeft: 8, color: "#1895ff", fontWeight: "bold" }}
-            >
+            <Text style={{ marginLeft: 8, color: "#1895ff", fontWeight: "bold" }}>
               Lưu riêng tư
             </Text>
           </TouchableOpacity>
@@ -207,37 +182,26 @@ const CostTab = () => {
             onPress={() => setIsPublic(true)}
           >
             <Ionicons name="earth-outline" size={20} color="#ec7f08" />
-            <Text
-              style={{ marginLeft: 8, color: "#ec7f08", fontWeight: "bold" }}
-            >
+            <Text style={{ marginLeft: 8, color: "#ec7f08", fontWeight: "bold" }}>
               Công khai
             </Text>
           </TouchableOpacity>
         </View>
-
-        {/* Nút lưu */}
         <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
           <Ionicons name="save-outline" size={20} color="#fff" />
           <Text
-            style={{
-              color: "#fff",
-              marginLeft: 8,
-              fontWeight: "bold",
-              fontSize: 16,
-            }}
+            style={{ color: "#fff", marginLeft: 8, fontWeight: "bold", fontSize: 16 }}
           >
             Lưu lịch trình
           </Text>
         </TouchableOpacity>
-
-        <TouchableOpacity style={styles.resetBtn}>
+        <TouchableOpacity style={styles.resetBtn} onPress={()=>Alert.alert("Tính năng reset sẽ cập nhật sau!")}>
           <Ionicons name="refresh-outline" size={17} color="#e53935" />
           <Text style={{ color: "#e53935", marginLeft: 7, fontWeight: "600" }}>
             Thiết lập lại
           </Text>
         </TouchableOpacity>
       </View>
-
       {/* -------- Modal nhập Title/Description -------- */}
       <Modal
         visible={modalVisible}
@@ -249,48 +213,35 @@ const CostTab = () => {
           <View style={styles.modalBox}>
             <Text
               style={{
-                fontWeight: "bold",
-                fontSize: 19,
-                color: "#269bfa",
-                marginBottom: 15,
-                textAlign: "center",
-              }}
-            >
+                fontWeight: "bold", fontSize: 19,
+                color: "#269bfa", marginBottom: 15, textAlign: "center",
+              }}>
               Thông tin lịch trình
             </Text>
             <View style={{ alignItems: "center" }}>
               {image && (
                 <Image
-                  source={{ uri: image }}
+                  source={{ uri: image } as any}
                   style={{
-                    width: 120,
-                    height: 90,
-                    borderRadius: 12,
-                    marginBottom: 10,
+                    width: 120, height: 90,
+                    borderRadius: 12, marginBottom: 10,
                   }}
                   resizeMode="cover"
                 />
               )}
               <TouchableOpacity
                 style={{
-                  backgroundColor: "#eeefff",
-                  borderRadius: 7,
-                  flexDirection: "row",
-                  alignItems: "center",
-                  marginBottom: 12,
-                  paddingVertical: 7,
-                  paddingHorizontal: 17,
+                  backgroundColor: "#eeefff", borderRadius: 7,
+                  flexDirection: "row", alignItems: "center",
+                  marginBottom: 12, paddingVertical: 7, paddingHorizontal: 17,
                 }}
                 onPress={pickImage}
               >
                 <Ionicons name="image-outline" size={20} color="#4577e5" />
                 <Text
                   style={{
-                    marginLeft: 8,
-                    fontWeight: "bold",
-                    color: "#4276e7",
-                  }}
-                >
+                    marginLeft: 8, fontWeight: "bold", color: "#4276e7",
+                  }}>
                   {image ? "Đổi ảnh đại diện" : "Chọn ảnh đại diện"}
                 </Text>
               </TouchableOpacity>
@@ -310,46 +261,28 @@ const CostTab = () => {
               multiline
               maxLength={180}
             />
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "flex-end",
-                marginTop: 17,
-              }}
-            >
+            <View style={{
+              flexDirection: "row", justifyContent: "flex-end", marginTop: 17,
+            }}>
               <TouchableOpacity
                 onPress={() => setModalVisible(false)}
-                style={{
-                  paddingHorizontal: 18,
-                  paddingVertical: 7,
-                  marginRight: 12,
-                }}
+                style={{ paddingHorizontal: 18, paddingVertical: 7, marginRight: 12 }}
               >
                 <Text
                   style={{ color: "#888", fontWeight: "bold", fontSize: 16 }}
-                >
-                  Huỷ
-                </Text>
+                >Huỷ</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.saveBtn, { marginTop: 0, minWidth: 92 }]}
                 onPress={handleConfirmSave}
               >
-                <Ionicons
-                  name="checkmark-circle-outline"
-                  size={19}
-                  color="#fff"
-                />
+                <Ionicons name="checkmark-circle-outline" size={19} color="#fff" />
                 <Text
                   style={{
-                    color: "#fff",
-                    fontWeight: "bold",
-                    fontSize: 16,
-                    marginLeft: 8,
+                    color: "#fff", fontWeight: "bold",
+                    fontSize: 16, marginLeft: 8,
                   }}
-                >
-                  Lưu
-                </Text>
+                >Lưu</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -358,7 +291,6 @@ const CostTab = () => {
     </ScrollView>
   );
 };
-
 export default CostTab;
 
 const styles = StyleSheet.create({
@@ -397,7 +329,6 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   boldText: { fontWeight: "bold" },
-
   resetBtn: {
     flexDirection: "row",
     marginTop: 25,

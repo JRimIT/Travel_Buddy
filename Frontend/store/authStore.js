@@ -1,122 +1,77 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+export const useAuthStore = create(
+  persist(
+    (set) => ({
+      // --- STATE ---
+      user: null,
+      token: null,
+      isCheckingAuth: true,
 
-export const useAuthStore = create((set) => ({
-    user: null,
-    token: null,
-    isLoading: false,
-
-    isCheckingAuth: false,
-
-    register: async (username, email, password) => {
-        set({ isLoading: true });
+      // --- ACTIONS ---
+      
+      // Action LOGIN: Thực hiện API call và trả về kết quả
+      login: async (email, password) => {
         try {
-            // const response = await fetch('http://10.0.2.2:3000/api/auth/register', {
+          const response = await fetch('http://10.0.2.2:3000/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+          });
+          const data = await response.json();
+          if (!response.ok) {
+            throw new Error(data.message || 'Login failed');
+          }
+          // Cập nhật state khi thành công
+          set({ user: data.user, token: data.token });
+          return { success: true };
+        } catch (error) {
+          console.error("Login error:", error);
+          return { success: false, error: error.message };
+        }
+      },
+      
+      // Action REGISTER: Tương tự login
+      register: async (username, email, password) => {
+        try {
             const response = await fetch('http://10.0.2.2:3000/api/auth/register', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, email, password })
             });
-
             const data = await response.json();
-            if (response.ok) {
-                await AsyncStorage.setItem("user", JSON.stringify(data.user));
-                await AsyncStorage.setItem("token", data.token)
-
-
-                set({ user: data.user, token: data.token, isLoading: false });
-                return {
-                    success: true
-                }
-            } else {
+            if (!response.ok) {
                 throw new Error(data.message || 'Registration failed');
             }
+            set({ user: data.user, token: data.token });
+            return { success: true };
         } catch (error) {
             console.error("Registration error:", error);
-            set({ isLoading: false });
-            return {
-                success: false,
-                error: error.message || 'Registration failed'
-            }
+            return { success: false, error: error.message };
         }
-    },
+      },
 
-    login: async (email, password) => {
-        set({ isLoading: true });
-        try {
-            // const response = await fetch('http:/
-            const response = await fetch('http://10.0.2.2:3000/api/auth/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ email, password })
-            })
-            const data = await response.json();
-            if (response.ok) {
-                await AsyncStorage.setItem("user", JSON.stringify(data.user));
-                await AsyncStorage.setItem("token", data.token);
+      // Action LOGOUT: Xóa state
+      logout: () => {
+        set({ user: null, token: null });
+      },
 
-                set({ user: data.user, token: data.token, isLoading: false });
-                return {
-                    success: true
-                }
-            } else {
-                throw new Error(data.message || 'Login failed');
-            }
-
-
-        } catch (error) {
-            console.error("Login error:", error);
-            set({ isLoading: false });
-            return {
-                success: false,
-                error: error.message || 'Login failed'
-            }
+      // Action SETUSER: Cập nhật user từ bên ngoài
+      setUser: (newUserData) => {
+        set({ user: newUserData });
+      },
+    }),
+    {
+      // --- Cấu hình Persist ---
+      name: 'auth-storage',
+      storage: createJSONStorage(() => AsyncStorage),
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          state.isCheckingAuth = false;
         }
-    },
-    checkAuth: async () => {
-        // set({ isLoading: true });
-        // try {
-        //     const user = await AsyncStorage.getItem("user");
-        //     const token = await AsyncStorage.getItem("token");
-
-        //     if (user && token) {
-        //         set({ user: JSON.parse(user), token, isLoading: false });
-        //     } else {
-        //         set({ user: null, token: null, isLoading: false });
-        //     }
-        // } catch (error) {
-        //     console.error("Check auth error:", error);
-        //     set({ isLoading: false });
-        // }
-        set({ isLoading: true });
-        try {
-            const userJson = await AsyncStorage.getItem("user");
-            const token = await AsyncStorage.getItem("token");
-            const user = userJson ? JSON.parse(userJson) : null;
-
-            set({ token, user, isLoading: false })
-        } catch (error) {
-            console.error("Check auth error:", error);
-            set({ isLoading: false });
-        } finally {
-            set({ isCheckingAuth: false });
-        }
-    },
-
-    logout: async () => {
-        set({ isLoading: true });
-        try {
-            await AsyncStorage.removeItem("user");
-            await AsyncStorage.removeItem("token");
-            set({ user: null, token: null, isLoading: false });
-        } catch (error) {
-            console.error("Logout error:", error);
-            set({ isLoading: false });
-        }
+      },
     }
-}))
+  )
+);

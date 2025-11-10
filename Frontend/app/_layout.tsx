@@ -1,57 +1,67 @@
-
+import React, { useEffect } from 'react';
 import { SplashScreen, Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { useEffect, useState } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
-import { useAuthStore } from "../store/authStore";
-import SafeScreen from "../components/SafeScreen";
-import { ThemeProvider } from "../contexts/ThemeContext";
 import { Provider } from "react-redux";
-import { store } from "../redux/store";
 
+import { useAuthStore } from "../store/authStore";
+import { store } from "../redux/store";
+import { ThemeProvider } from "../contexts/ThemeContext";
+import SafeScreen from "../components/SafeScreen";
+import Loader from '../components/Loader'; // Thêm Loader
+import { MenuProvider } from 'react-native-popup-menu';
+
+// Giữ màn hình chờ hiển thị
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const router = useRouter();
+  // Lấy các state cần thiết từ store đã cập nhật
+  const { user, isCheckingAuth } = useAuthStore();
+  
   const segments = useSegments();
+  const router = useRouter();
 
-  const { checkAuth, user, token, isLoading } = useAuthStore();
-  const [isReady, setIsReady] = useState(false);
-
-  const [fontsLoad] = useFonts({
+  // Tải fonts
+  const [fontsLoaded] = useFonts({
     "JetBrainsMono-Medium": require("../assets/fonts/JetBrainsMono-Medium.ttf"),
   });
 
+  // Logic ẩn Splash Screen
   useEffect(() => {
-    if (fontsLoad) {
+    // Chỉ ẩn Splash Screen khi fonts đã tải VÀ việc kiểm tra auth đã hoàn tất
+    if (fontsLoaded && !isCheckingAuth) {
       SplashScreen.hideAsync();
-      setIsReady(true);
     }
-  }, [fontsLoad]);
+  }, [fontsLoaded, isCheckingAuth]);
 
+  // Logic điều hướng
   useEffect(() => {
-    checkAuth();
-  }, []);
-
-  useEffect(() => {
-    if (!isReady || isLoading || !segments?.[0]) return;
+    // Nếu fonts chưa tải hoặc vẫn đang kiểm tra auth, không làm gì cả.
+    if (!fontsLoaded || isCheckingAuth) {
+      return;
+    }
 
     const inAuthGroup = segments[0] === "(auth)";
-    console.log("inAuthGroup: ", segments[0]);
-    console.log("user: ", user);
-    console.log("Token: ", token);
 
-    if (!user && !token && !inAuthGroup) {
-      router.replace("/(auth)");
-    } else if (user && token && inAuthGroup) {
+    if (user && inAuthGroup) {
+      // Đã đăng nhập và đang ở màn hình auth -> vào app
       router.replace("/(tabs)");
+    } else if (!user && !inAuthGroup) {
+      // Chưa đăng nhập và đang cố vào app -> ra màn hình auth
+      router.replace("/(auth)");
     }
-  }, [user, token, segments, isLoading, isReady]);
+  }, [user, segments, fontsLoaded, isCheckingAuth]);
 
+  // Trong khi fonts chưa tải hoặc auth chưa kiểm tra xong, hiển thị màn hình chờ.
+  if (!fontsLoaded || isCheckingAuth) {
+    return <Loader />; // Hiển thị Loader thay vì null để có trải nghiệm tốt hơn
+  }
+
+  // Khi mọi thứ đã sẵn sàng, render layout của ứng dụng
   return (
+    <MenuProvider>
     <Provider store={store}>
-
       <ThemeProvider>
         <SafeAreaProvider>
           <SafeScreen>
@@ -65,5 +75,6 @@ export default function RootLayout() {
         </SafeAreaProvider>
       </ThemeProvider>
     </Provider>
+    </MenuProvider>
   );
 }

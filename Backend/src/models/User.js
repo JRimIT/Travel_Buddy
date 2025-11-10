@@ -42,6 +42,14 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    savedPosts: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Post'
+    }],
+    savedTripSchedules: [{ 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: 'TripSchedule' 
+    }]
   },
   {
     timestamps: true,

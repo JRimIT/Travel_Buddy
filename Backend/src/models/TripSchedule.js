@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const TripSchedule = new mongoose.Schema({
+const TripScheduleSchema = new mongoose.Schema({
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     title: String,
     description: String,
@@ -9,40 +9,28 @@ const TripSchedule = new mongoose.Schema({
         hotel: Number,
         fun: Number,
     },
-
     days: [{
         day: Number,
-        date: String || undefined,
+        date: String,
         activities: [{
             time: String,
             name: String,
             cost: Number,
             place: Object
         }],
-
     }],
-    image: {
-        type: String,
-        required: true
-    },
+    startDate: String,
+    endDate: String,
     hotelDefault: Object,
     flightTicket: Object,
-    isPublic: {
-        type: Boolean,
-        default: false
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now
-    },
-    startDate: {
-        type: Date,
-        required: true
-    },
-    endDate: {
-        type: Date,
-        required: true
-    },
+    home: Object,
+    image: { type: String, required: true },
+    mainTransport: { type: String },
+    innerTransport: { type: String },
+    fromLocation: { type: String },
+    province: { type: String },
+    isPublic: { type: Boolean, default: false },
+    createdAt: { type: Date, default: Date.now },
     status: {
         type: String,
         enum: ['pending_review', 'approved', 'rejected'],
@@ -54,6 +42,7 @@ const TripSchedule = new mongoose.Schema({
     },
     reviewedAt: Date,
     rejectReason: String,
-})
+});
 
-export default mongoose.models.TripSchedule || mongoose.model('TripSchedule', TripSchedule);
+// Không tạo lại khi hot reload dev mode Next/MongoDB
+export default mongoose.models.TripSchedule || mongoose.model("TripSchedule", TripScheduleSchema);

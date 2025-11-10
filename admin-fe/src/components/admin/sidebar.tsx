@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "../../lib/utils"
-import { LayoutDashboard, Users, MapPin, Star, Calendar, BarChart3, AlertCircle } from "lucide-react"
+import { LayoutDashboard, Users, MapPin, Star, Calendar, BarChart3, AlertCircle, MessageCircleMore} from "lucide-react"
 import { useAuth } from "../../lib/auth-context"
 
 const navigation = [
@@ -13,13 +13,15 @@ const navigation = [
   { name: "Reviews", href: "/admin/reviews", icon: Star, roles: ["admin"] },
   { name: "Reports", href: "/admin/reports", icon: AlertCircle, roles: ["admin"] },
   { name: "Locations", href: "/admin/locations", icon: MapPin, roles: ["admin"] },
-  // { name: "Analytics", href: "/admin/analytics", icon: BarChart3, roles: ["admin"] },
+  { name: "Analytics", href: "/admin/analytics", icon: BarChart3, roles: ["admin"] },
+  { name: "Chat", href: "/admin/support-chat", icon: MessageCircleMore, roles: ["support", "admin"] },
 ]
 
 export function Sidebar() {
   const pathname = usePathname()
   const { user } = useAuth()
-
+  console.log("user admin: ", user);
+  
   const filteredNavigation = navigation.filter((item) => user && item.roles.includes(user.role))
 
   return (

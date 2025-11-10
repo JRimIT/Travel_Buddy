@@ -53,7 +53,7 @@ const FormScreen = () => {
     if (status !== 'granted') return;
     let location = await Location.getCurrentPositionAsync({});
     setCurrentLocation(location.coords);
-
+    
     // Reverse geocode chuyển lat/lon thành địa chỉ
     let addresses = await Location.reverseGeocodeAsync({
       latitude: location.coords.latitude,
@@ -63,14 +63,16 @@ const FormScreen = () => {
     if (addresses.length > 0) {
       // Thấy trong addresses[0] các trường thường trả ra: city, region, country, subregion...
       setuserProvinceState(addresses[0].city || addresses[0].region || "");
-     
+      
     }
   } catch (err) {
     console.log("Location Error:", err);
   }
 };
   const goToTravelPlanFormScreen = () => {
-    dispatch(setUserCurrentLocation(currentLocation || {}));
+    // dispatch(setUserCurrentLocation(currentLocation || {}));
+   
+    
     router.push("/TravelPlanFormScreen");
 
   }
@@ -80,9 +82,12 @@ const FormScreen = () => {
     const found = PROVINCES.find(p => p.code === selected);
     setBgImage(found?.image || PROVINCES[0].image);
     dispatch(setUserProvince(found || ""));
-    console.log("setUserProvince: ", found?.name || "");
+    dispatch(setUserCurrentLocation(userProvinceState === "Mountain View" ? "Da Nang" : userProvinceState || ""));
     
-  }, [selected]);
+    console.log("setUserProvince: ", found?.name || "");
+    // console.log("setUserProvince: ", found || "");
+    console.log("currentLocation: ", userProvinceState === "Mountain View" ? "Da Nang" : userProvinceState);
+  }, [selected, userProvinceState]);
 
   return (
     <ImageBackground source={bgImage} style={styles.bg}>

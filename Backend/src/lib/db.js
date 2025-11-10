@@ -1,18 +1,13 @@
 // lib/db.js
 import mongoose from "mongoose";
-import dotenv from "dotenv";
-
-dotenv.config();
-
+// MONGODB_URI=mongodb+srv://tphuc9398_db_user:admin123@truongcluster.nq3ga4g.mongodb.net/travelbuddy?retryWrites=true&w=majority&appName=truongcluster
 export const connectToMongoDB = async () => {
   try {
-    const uri = process.env.MONGODB_URI;
-    if (!uri) {
-      throw new Error("MONGODB_URI không được định nghĩa trong file .env");
-    }
-    await mongoose.connect(uri);
-    console.log("Kết nối thành công tới MongoDB");
+    await mongoose.connect('mongodb+srv://tphuc9398_db_user:admin123@truongcluster.nq3ga4g.mongodb.net/travelbuddy?retryWrites=true&w=majority&appName=truongcluster')
+    console.log("Connect to MongoDB");
+
   } catch (error) {
-    console.error("Lỗi kết nối tới MongoDB:", error.message);
+    console.log("Error connecting to MongoDB", error.message);
+
   }
-};
+}

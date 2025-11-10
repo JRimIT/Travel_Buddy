@@ -2,7 +2,7 @@ import { View, Text, TouchableOpacity, Alert } from "react-native";
 import React from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { useAuthStore } from "../store/authStore";
-import { useTheme } from "../../NoteMate/contexts/ThemeContext";
+import { useTheme } from "../contexts/ThemeContext";
 import createProfileStyles from "../assets/styles/profile.styles";
 
 const LogoutButton = () => {
