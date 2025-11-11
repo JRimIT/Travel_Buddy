@@ -143,6 +143,7 @@ const options = {
   apis: [
     path.join(__dirname, "../routes/adminRoutes.js"),
     path.join(__dirname, "../routes/authRoutes.js"),
+    path.join(__dirname, "../routes/reportRoutes.js"),
     // apis: [path.join(__dirname, "../routes/*.js")], như này là lấy all
   ],
 };

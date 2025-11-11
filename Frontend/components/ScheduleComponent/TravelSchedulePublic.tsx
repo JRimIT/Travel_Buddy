@@ -9,6 +9,10 @@ import {
   Image,
   Alert,
   Share,
+  Modal,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -25,7 +29,6 @@ import createHomeStyles from "../../assets/styles/home.styles";
 import { formatPublishDate } from "../../lib/utils";
 import { useAuthStore } from "../../store/authStore";
 
-
 const TravelSchedulePublicScreen = () => {
   const { colors } = useTheme();
   const styles = createHomeStyles(colors);
@@ -37,6 +40,13 @@ const TravelSchedulePublicScreen = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [savedTrips, setSavedTrips] = useState(user?.savedTripSchedules || []);
 
+  // Báo cáo
+  const [reportModalVisible, setReportModalVisible] = useState(false);
+  const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
+  const [reportReason, setReportReason] = useState('');
+  const [reportDescription, setReportDescription] = useState('');
+  const [reportLoading, setReportLoading] = useState(false);
+
   const fetchSchedules = async () => {
     try {
       const response = await fetch(`${API_URL}/tripSchedule/public`);
@@ -46,7 +56,7 @@ const TravelSchedulePublicScreen = () => {
       } else {
         throw new Error(res.error || "Không thể lấy dữ liệu.");
       }
-    } catch (e) {
+    } catch (e: any) {
       Alert.alert("Lỗi", "Không thể lấy dữ liệu lịch trình public.\n" + e.message);
     }
   };
@@ -59,7 +69,7 @@ const TravelSchedulePublicScreen = () => {
       });
       const savedData = await response.json();
       if (response.ok) {
-        const savedTripIds = savedData.map(trip => trip._id);
+        const savedTripIds = savedData.map((trip: any) => trip._id);
         setSavedTrips(savedTripIds);
         setUser({ ...user, savedTripSchedules: savedTripIds });
       }
@@ -87,44 +97,93 @@ const TravelSchedulePublicScreen = () => {
   const handleDetail = (item: any) => {
     router.push({ pathname: "/(page)/ScheduleDetailScreen", params: { id: item._id } });
   };
-  
-  const handleSaveTrip = async (tripId) => {
+
+  const handleSaveTrip = async (tripId: string) => {
     const isCurrentlySaved = savedTrips.includes(tripId);
-    
     const updatedSavedTrips = isCurrentlySaved
-        ? savedTrips.filter(id => id !== tripId)
-        : [...savedTrips, tripId];
+      ? savedTrips.filter(id => id !== tripId)
+      : [...savedTrips, tripId];
+
+    // Optimistic UI
     setSavedTrips(updatedSavedTrips);
     setUser({ ...user, savedTripSchedules: updatedSavedTrips });
 
     try {
-        const response = await fetch(`${API_URL}/tripSchedule/${tripId}/save`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (!response.ok) {
-            setSavedTrips(savedTrips); 
-            setUser({ ...user, savedTripSchedules: savedTrips });
-            Alert.alert("Lỗi", "Không thể lưu lịch trình.");
-        }
-    } catch (error) {
+      const response = await fetch(`${API_URL}/tripSchedule/${tripId}/save`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!response.ok) {
+        // Revert on error
         setSavedTrips(savedTrips);
         setUser({ ...user, savedTripSchedules: savedTrips });
-        Alert.alert("Lỗi", "Đã có lỗi xảy ra.");
+        Alert.alert("Lỗi", "Không thể lưu lịch trình.");
+      }
+    } catch (error) {
+      setSavedTrips(savedTrips);
+      setUser({ ...user, savedTripSchedules: savedTrips });
+      Alert.alert("Lỗi", "Đã có lỗi xảy ra.");
     }
+  };
+
+  const handleReport = async () => {
+    if (!selectedTripId || !reportReason.trim()) {
+      Alert.alert("Lỗi", "Vui lòng nhập lý do báo cáo.");
+      return;
+    }
+
+    setReportLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/reports/trip-schedule`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          targetId: selectedTripId,
+          reason: reportReason.trim(),
+          description: reportDescription.trim() || undefined,
+        }),
+      });
+
+      if (response.ok) {
+        Alert.alert("Thành công", "Báo cáo đã được gửi. Cảm ơn bạn!");
+        closeReportModal();
+      } else {
+        const error = await response.json();
+        Alert.alert("Lỗi", error.error || "Không thể gửi báo cáo.");
+      }
+    } catch (error) {
+      Alert.alert("Lỗi", "Đã có lỗi mạng. Vui lòng thử lại.");
+    } finally {
+      setReportLoading(false);
+    }
+  };
+
+  const openReportModal = (tripId: string) => {
+    setSelectedTripId(tripId);
+    setReportModalVisible(true);
+  };
+
+  const closeReportModal = () => {
+    setReportModalVisible(false);
+    setReportReason('');
+    setReportDescription('');
+    setSelectedTripId(null);
   };
 
   const renderItem = ({ item }: any) => {
     const isSaved = savedTrips.includes(item._id);
 
     const handleShareTrip = async () => {
-        try {
-            await Share.share({
-                message: `Thử xem lịch trình này nhé: ${item.title} | Travel Buddy`,
-            });
-        } catch (error) {
-            console.log("Share Error:", error);
-        }
+      try {
+        await Share.share({
+          message: `Thử xem lịch trình này nhé: ${item.title} | Travel Buddy`,
+        });
+      } catch (error) {
+        console.log("Share Error:", error);
+      }
     };
 
     return (
@@ -137,7 +196,7 @@ const TravelSchedulePublicScreen = () => {
 
           <Menu>
             <MenuTrigger>
-              <Ionicons name="ellipsis-vertical" size={24} color={colors.text} style={{ padding: 8 }}/>
+              <Ionicons name="ellipsis-vertical" size={24} color={colors.text} style={{ padding: 8 }} />
             </MenuTrigger>
             <MenuOptions customStyles={{ optionsContainer: styles.menuOptionsContainer }}>
               <MenuOption onSelect={() => handleSaveTrip(item._id)}>
@@ -154,23 +213,29 @@ const TravelSchedulePublicScreen = () => {
                   <Text style={styles.menuOptionText}>Chia sẻ</Text>
                 </View>
               </MenuOption>
+              <MenuOption onSelect={() => openReportModal(item._id)}>
+                <View style={styles.menuOption}>
+                  <Ionicons name="flag-outline" size={22} color={colors.text} />
+                  <Text style={styles.menuOptionText}>Báo cáo</Text>
+                </View>
+              </MenuOption>
             </MenuOptions>
           </Menu>
         </View>
 
         <TouchableOpacity activeOpacity={0.9} onPress={() => handleDetail(item)}>
-            <View style={styles.bookImageContainer}>
-                <Image source={{ uri: item.image }} style={styles.bookImage} />
-            </View>
-            <View style={styles.bookDetails}>
-                <Text style={styles.bookTitle} numberOfLines={2}>{item.title}</Text>
-                {item.description ? (
-                <Text style={styles.caption} numberOfLines={2}>{item.description}</Text>
-                ) : null}
-                <Text style={styles.date}>
-                Public {item.createdAt ? formatPublishDate(item.createdAt) : ""}
-                </Text>
-            </View>
+          <View style={styles.bookImageContainer}>
+            <Image source={{ uri: item.image }} style={styles.bookImage} />
+          </View>
+          <View style={styles.bookDetails}>
+            <Text style={styles.bookTitle} numberOfLines={2}>{item.title}</Text>
+            {item.description ? (
+              <Text style={styles.caption} numberOfLines={2}>{item.description}</Text>
+            ) : null}
+            <Text style={styles.date}>
+              Public {item.createdAt ? formatPublishDate(item.createdAt) : ""}
+            </Text>
+          </View>
         </TouchableOpacity>
       </View>
     );
@@ -189,6 +254,7 @@ const TravelSchedulePublicScreen = () => {
       <Text style={{ fontSize: 21, fontWeight: "bold", color: colors.primary, margin: 16, marginBottom: 0 }}>
         Lịch trình cộng đồng
       </Text>
+
       <FlatList
         data={data}
         renderItem={renderItem}
@@ -209,6 +275,8 @@ const TravelSchedulePublicScreen = () => {
           </Text>
         }
       />
+
+      {/* Nút tạo lịch trình */}
       <TouchableOpacity
         style={{
           position: "absolute",
@@ -232,6 +300,108 @@ const TravelSchedulePublicScreen = () => {
       >
         <Ionicons name="add" size={38} color="#fff" />
       </TouchableOpacity>
+
+      {/* Modal Báo cáo */}
+      <Modal
+        visible={reportModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={closeReportModal}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ flex: 1 }}
+        >
+          <View style={{
+            flex: 1,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: 20,
+          }}>
+            <View style={{
+              backgroundColor: colors.background,
+              borderRadius: 16,
+              padding: 20,
+              width: '100%',
+              maxWidth: 400,
+            }}>
+              <Text style={{ fontSize: 18, fontWeight: 'bold', color: colors.text, marginBottom: 16 }}>
+                Báo cáo lịch trình
+              </Text>
+
+              <Text style={{ color: colors.text, marginBottom: 8 }}>Lý do báo cáo:</Text>
+              <TextInput
+                style={{
+                  borderWidth: 1,
+                  borderColor: colors.border || '#ddd',
+                  borderRadius: 8,
+                  padding: 12,
+                  color: colors.text,
+                  backgroundColor: colors.card || '#fff',
+                  marginBottom: 16,
+                }}
+                placeholder="Ví dụ: spam, nội dung không phù hợp..."
+                placeholderTextColor="#999"
+                value={reportReason}
+                onChangeText={setReportReason}
+              />
+
+              <Text style={{ color: colors.text, marginBottom: 8 }}>Mô tả chi tiết (tùy chọn):</Text>
+              <TextInput
+                style={{
+                  borderWidth: 1,
+                  borderColor: colors.border || '#ddd',
+                  borderRadius: 8,
+                  padding: 12,
+                  color: colors.text,
+                  backgroundColor: colors.card || '#fff',
+                  height: 100,
+                  textAlignVertical: 'top',
+                  marginBottom: 20,
+                }}
+                placeholder="Mô tả thêm lý do báo cáo..."
+                placeholderTextColor="#999"
+                multiline
+                value={reportDescription}
+                onChangeText={setReportDescription}
+              />
+
+              <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 12 }}>
+                <TouchableOpacity
+                  onPress={closeReportModal}
+                  style={{
+                    paddingVertical: 10,
+                    paddingHorizontal: 20,
+                    borderRadius: 8,
+                    backgroundColor: '#eee',
+                  }}
+                >
+                  <Text style={{ color: '#333', fontWeight: '600' }}>Hủy</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={handleReport}
+                  disabled={reportLoading || !reportReason.trim()}
+                  style={{
+                    paddingVertical: 10,
+                    paddingHorizontal: 20,
+                    borderRadius: 8,
+                    backgroundColor: reportReason.trim() ? colors.primary : '#ccc',
+                    opacity: reportLoading ? 0.7 : 1,
+                  }}
+                >
+                  {reportLoading ? (
+                    <ActivityIndicator color="#fff" size="small" />
+                  ) : (
+                    <Text style={{ color: '#fff', fontWeight: '600' }}>Gửi</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </View>
   );
 };

@@ -773,14 +773,60 @@ router.get("/places/top", async (req, res) => {
 router.get("/reports", async (req, res) => {
   try {
     const { status } = req.query;
-    const filter = status ? { status } : {};
+
+    // CHỈ LẤY BÁO CÁO VỀ TRIPSCHEDULE
+    const filter = { targetType: "TripSchedule" };
+    if (status) filter.status = status;
+
     const reports = await Report.find(filter)
-      .populate("reporter", "username")
-      .populate("targetId")
+      .populate("reporter", "username profileImage")
       .sort({ createdAt: -1 });
-    res.json(reports);
+
+    // Populate chi tiết TripSchedule
+    const populatedReports = await Promise.all(
+      reports.map(async (report) => {
+        let target = null;
+
+        if (report.targetId) {
+          target = await TripSchedule.findById(report.targetId)
+            .select("title image isPublic user")
+            .populate("user", "username profileImage");
+        }
+
+        return {
+          _id: report._id,
+          reason: report.reason,
+          description: report.description,
+          status: report.status,
+          createdAt: report.createdAt,
+          reporter: {
+            _id: report.reporter._id,
+            username: report.reporter.username,
+            profileImage: report.reporter.profileImage,
+          },
+          target: target
+            ? {
+                _id: target._id,
+                title: target.title,
+                image: target.image,
+                isPublic: target.isPublic,
+                owner: target.user
+                  ? {
+                      _id: target.user._id,
+                      username: target.user.username,
+                      profileImage: target.user.profileImage,
+                    }
+                  : null,
+              }
+            : null,
+        };
+      })
+    );
+
+    res.json(populatedReports);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Error fetching trip reports:", error);
+    res.status(500).json({ message: "Lỗi server" });
   }
 });
 
