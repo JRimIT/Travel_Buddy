@@ -2,8 +2,9 @@
   "/_not-found/page": "app/_not-found/page.js",
   "/support/pending/page": "app/support/pending/page.js",
   "/admin/support-chat/page": "app/admin/support-chat/page.js",
-  "/support/assigned/page": "app/support/assigned/page.js",
   "/support/history/page": "app/support/history/page.js",
+  "/support/assigned/page": "app/support/assigned/page.js",
   "/admin/login/page": "app/admin/login/page.js",
-  "/admin/page": "app/admin/page.js"
+  "/admin/page": "app/admin/page.js",
+  "/admin/users/page": "app/admin/users/page.js"
 }

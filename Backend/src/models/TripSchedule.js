@@ -1,56 +1,71 @@
 import mongoose from "mongoose";
 
-const TripScheduleSchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-  title: String,
-  description: String,
-  budget: {
-    flight: Number,
-    hotel: Number,
-    fun: Number,
-  },
-  days: [
-    {
-      day: Number,
-      date: String,
-      activities: [
-        {
-          time: String,
-          name: String,
-          cost: Number,
-          place: Object,
-        },
-      ],
+const TripScheduleSchema = new mongoose.Schema(
+  {
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    title: String,
+    description: String,
+    budget: {
+      flight: Number,
+      hotel: Number,
+      fun: Number,
     },
-  ],
-  startDate: String,
-  endDate: String,
-  hotelDefault: Object,
-  flightTicket: Object,
-  home: Object,
-  image: { type: String, required: true },
-  mainTransport: { type: String },
-  innerTransport: { type: String },
-  fromLocation: { type: String },
-  province: { type: String },
-  isPublic: { type: Boolean, default: false },
-  bookingStatus: {
-    type: String,
-    enum: [
-      "not_booking",
-      "booking_pending",
-      "booking_assigned",
-      "booking_done",
+    days: [
+      {
+        day: Number,
+        date: String,
+        activities: [
+          {
+            time: String,
+            name: String,
+            cost: Number,
+            place: Object,
+          },
+        ],
+      },
     ],
-    default: "not_booking",
+    startDate: String,
+    endDate: String,
+    hotelDefault: Object,
+    flightTicket: Object,
+    home: Object,
+    image: { type: String, required: true },
+    mainTransport: { type: String },
+    innerTransport: { type: String },
+    fromLocation: { type: String },
+    province: { type: String },
+    isPublic: { type: Boolean, default: false },
+    bookingStatus: {
+      type: String,
+      enum: [
+        "not_booking",
+        "booking_pending",
+        "booking_assigned",
+        "booking_done",
+      ],
+      default: "not_booking",
+    },
+    supporter: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    status: {
+      type: String,
+      enum: ["pending_review", "approved", "rejected"],
+      default: "pending_review",
+    },
+    reviewedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    reviewedAt: Date,
+    rejectReason: String,
   },
-  supporter: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    default: null,
-  },
-  createdAt: { type: Date, default: Date.now },
-});
+  {
+    timestamps: true,
+  }
+);
 
 // Không tạo lại khi hot reload dev mode Next/MongoDB
 export default mongoose.models.TripSchedule ||

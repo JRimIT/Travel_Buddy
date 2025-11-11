@@ -10,7 +10,7 @@ import { DashboardStats } from "../../components/admin/dashboard-stats";
 import { RecentTrips } from "../../components/admin/recent-trips";
 import { PopularDestinations } from "../../components/admin/popular-destinations";
 import { useAuth } from "@/src/lib/auth-context";
-import { SupportDashboard } from "../support/support-dashboard";
+import SupportDashboard from "../support/support-dashboard";
 import Unauthorized from "../unauthorized/page";
 import { PageHeader } from "../../components/admin/page-header";
 

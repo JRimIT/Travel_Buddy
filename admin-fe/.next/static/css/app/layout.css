@@ -44,6 +44,7 @@ font-weight: 100 900;
     --color-green-50: oklch(98.2% 0.018 155.826);
     --color-green-500: oklch(72.3% 0.219 149.579);
     --color-green-600: oklch(62.7% 0.194 149.214);
+    --color-green-700: oklch(52.7% 0.154 150.069);
     --color-blue-500: oklch(62.3% 0.214 259.815);
     --color-blue-600: oklch(54.6% 0.245 262.881);
     --color-blue-700: oklch(48.8% 0.243 264.376);
@@ -1050,9 +1051,6 @@ font-weight: 100 900;
   .justify-center {
     justify-content: center;
   }
-  .justify-end {
-    justify-content: flex-end;
-  }
   .justify-start {
     justify-content: flex-start;
   }
@@ -1393,6 +1391,9 @@ font-weight: 100 900;
       background-color: color-mix(in oklab, var(--color-green-500) 10%, transparent);
     }
   }
+  .bg-green-600 {
+    background-color: var(--color-green-600);
+  }
   .bg-input {
     background-color: var(--input);
   }
@@ -1548,6 +1549,9 @@ font-weight: 100 900;
   .stroke-muted {
     stroke: var(--muted);
   }
+  .object-cover {
+    object-fit: cover;
+  }
   .p-0 {
     padding: calc(var(--spacing) * 0);
   }
@@ -1622,6 +1626,9 @@ font-weight: 100 900;
   }
   .py-8 {
     padding-block: calc(var(--spacing) * 8);
+  }
+  .py-10 {
+    padding-block: calc(var(--spacing) * 10);
   }
   .py-12 {
     padding-block: calc(var(--spacing) * 12);
@@ -2627,6 +2634,13 @@ font-weight: 100 900;
     &:hover {
       @media (hover: hover) {
         background-color: var(--color-green-600);
+      }
+    }
+  }
+  .hover\:bg-green-700 {
+    &:hover {
+      @media (hover: hover) {
+        background-color: var(--color-green-700);
       }
     }
   }

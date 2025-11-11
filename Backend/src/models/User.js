@@ -36,17 +36,19 @@ const userSchema = new mongoose.Schema(
     // },
     role: {
       type: String,
-      enum: ['user', 'admin', 'support'],
-      default: 'user'
+      enum: ["user", "admin", "support"],
+      default: "user",
     },
     isLocked: {
       type: Boolean,
       default: false,
     },
-    savedPosts: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Post'
-    }]
+    savedPosts: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Post",
+      },
+    ],
   },
   {
     timestamps: true,

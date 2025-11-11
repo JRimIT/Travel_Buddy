@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import Link from "next/link";
 import { PlaneTakeoff, Search as SearchIcon } from "lucide-react";
 import {
   Card,
@@ -12,23 +11,57 @@ import {
 } from "@/src/components/ui/card";
 import { Input } from "@/src/components/ui/input";
 import { useSupportTrips } from "@/src/hooks/use-support-data";
+import { useToast } from "../../components/ui/use-toast";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
+
+interface Activity {
+  time: string;
+  name: string;
+  cost: number;
+  place: { city: string; address: string };
+}
+
+interface Day {
+  day: number;
+  date: string;
+  activities: Activity[];
+}
+
+interface FlightTicket {
+  from: string;
+  to: string;
+  airline: string;
+  price: number;
+}
+
+interface Hotel {
+  name: string;
+  formatted?: string;
+  contact?: { phone?: string; email?: string };
+  website?: string;
+  facebook?: string;
+}
+
+interface Home {
+  image: string;
+}
 
 interface Trip {
   _id: string;
   title: string;
-  user: { username: string; profileImage?: string };
+  user: { _id: string; username: string; profileImage?: string };
   startDate: string;
   endDate: string;
   budget?: { flight?: number; hotel?: number; fun?: number };
-  tasks?: { completed: boolean }[];
-  notes?: string;
-  location?: string;
-  transport?: string;
+  days?: Day[];
   description?: string;
-  status?: string;
-  totalCost?: number;
-  createdAt?: string;
-  updatedAt?: string;
+  province?: string;
+  mainTransport?: string;
+  innerTransport?: string;
+  hotelDefault?: Hotel;
+  flightTicket?: FlightTicket[];
+  home?: Home;
 }
 
 interface TripGridProps {
@@ -38,8 +71,13 @@ interface TripGridProps {
 }
 
 export function TripGrid({ type, title, description }: TripGridProps) {
+  const { toast } = useToast();
   const { data: trips, isLoading, error, mutate } = useSupportTrips(type);
   const [searchTerm, setSearchTerm] = useState("");
+  const [sortOption, setSortOption] = useState<"date" | "budget" | "title">(
+    "date"
+  );
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
   const filteredTrips = useMemo(() => {
     if (!trips) return [];
@@ -49,19 +87,91 @@ export function TripGrid({ type, title, description }: TripGridProps) {
     );
   }, [searchTerm, trips]);
 
+  const sortedTrips = useMemo(() => {
+    const tripsToSort = [...filteredTrips];
+
+    if (sortOption === "date") {
+      tripsToSort.sort((a, b) => {
+        const diff =
+          new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
+        return sortOrder === "asc" ? diff : -diff;
+      });
+    } else if (sortOption === "budget") {
+      tripsToSort.sort((a, b) => {
+        const aBudget =
+          (a.budget?.flight || 0) +
+          (a.budget?.hotel || 0) +
+          (a.budget?.fun || 0);
+        const bBudget =
+          (b.budget?.flight || 0) +
+          (b.budget?.hotel || 0) +
+          (b.budget?.fun || 0);
+        return sortOrder === "asc" ? aBudget - bBudget : bBudget - aBudget;
+      });
+    } else if (sortOption === "title") {
+      tripsToSort.sort((a, b) => a.title.localeCompare(b.title));
+    }
+
+    return tripsToSort;
+  }, [filteredTrips, sortOption, sortOrder]);
+
   const handleAccept = async (tripId: string) => {
     try {
-      await fetch(`http://localhost:3000/api/supporter/assign/${tripId}`, {
+      const res = await fetch(`${API_URL}/supporter/assign/${tripId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("supporterToken")}`,
+          Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
         },
       });
-
+      if (!res.ok) throw new Error("Failed to accept trip");
+      toast({
+        title: "✅ Assigned!",
+        description: "Trip assigned successfully.",
+      });
       mutate();
-    } catch (err) {
-      console.error(err);
+    } catch {
+      toast({
+        title: "❌ Error!",
+        description: "Failed to assign trip",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleComplete = async (tripId: string) => {
+    try {
+      const res = await fetch(`${API_URL}/supporter/complete/${tripId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("adminToken")}`,
+        },
+      });
+      if (!res.ok) throw new Error("Failed to complete trip");
+      toast({ title: "✅ Completed!", description: "Trip marked as done." });
+      mutate();
+    } catch {
+      toast({
+        title: "❌ Error!",
+        description: "Failed to complete trip",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleChat = async (trip: Trip) => {
+    try {
+      const res = await fetch(`${API_URL}/conversation/user/${trip.user._id}`);
+      if (!res.ok) throw new Error("Failed to get conversation");
+      const conversation = await res.json();
+      window.location.href = `/admin/support-chat?conversationId=${conversation._id}`;
+    } catch {
+      toast({
+        title: "❌ Error!",
+        description: "Cannot start chat",
+        variant: "destructive",
+      });
     }
   };
 
@@ -74,23 +184,52 @@ export function TripGrid({ type, title, description }: TripGridProps) {
         <p className="text-sm text-muted-foreground">{description}</p>
       )}
 
-      <div className="mb-4 relative max-w-sm">
-        <SearchIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search by title"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10"
-        />
+      <div className="mb-4 flex items-center gap-4">
+        <div className="relative max-w-sm">
+          <SearchIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by title"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+
+        <select
+          value={sortOption}
+          onChange={(e) => setSortOption(e.target.value as any)}
+          className="border rounded px-2 py-1 text-sm"
+        >
+          <option value="date">Sort by Date</option>
+          <option value="budget">Sort by Budget</option>
+          <option value="title">Sort by Title</option>
+        </select>
+
+        <select
+          value={sortOption}
+          onChange={(e) => setSortOption(e.target.value as any)}
+        >
+          <option value="date">Date</option>
+          <option value="budget">Budget</option>
+          <option value="title">Title</option>
+        </select>
+
+        <select
+          value={sortOrder}
+          onChange={(e) => setSortOrder(e.target.value as any)}
+        >
+          <option value="asc">Ascending</option>
+          <option value="desc">Descending</option>
+        </select>
       </div>
 
       {isLoading ? (
         <p>Loading...</p>
-      ) : filteredTrips.length === 0 ? (
+      ) : sortedTrips.length === 0 ? (
         <p>No trips found.</p>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredTrips.map((trip: Trip) => (
+          {sortedTrips.map((trip: Trip) => (
             <Card key={trip._id} className="flex flex-col justify-between">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -102,38 +241,123 @@ export function TripGrid({ type, title, description }: TripGridProps) {
                 </p>
               </CardHeader>
 
-              <CardContent className="space-y-1 text-sm">
-                <p>📍 Location: {trip.location}</p>
-                <p>🚌 Transport: {trip.transport}</p>
+              <CardContent className="space-y-2 text-sm">
+                <p>📍 Location: {trip.province}</p>
+                <p>🚌 Main transport: {trip.mainTransport}</p>
+                <p>🚗 Inner transport: {trip.innerTransport}</p>
                 <p>📝 Description: {trip.description}</p>
                 <p>
-                  💰 Flight: {trip.budget?.flight || 0}$ | Hotel:{" "}
-                  {trip.budget?.hotel || 0}$ | Fun: {trip.budget?.fun || 0}$
+                  🗓 Start Date: {new Date(trip.startDate).toLocaleDateString()}
                 </p>
                 <p>
-                  ✅ Tasks completed:{" "}
-                  {trip.tasks?.filter((t) => t.completed).length}/
-                  {trip.tasks?.length}
+                  🏁 End Date: {new Date(trip.endDate).toLocaleDateString()}
                 </p>
 
-                <p>📄 Notes: {trip.notes}</p>
+                <div>
+                  <p className="font-semibold">💰 Budget:</p>
+                  <ul className="ml-4 list-disc">
+                    <li>Flight: {trip.budget?.flight || 0}$</li>
+                    <li>Hotel: {trip.budget?.hotel || 0}$</li>
+                    <li>Fun: {trip.budget?.fun || 0}$</li>
+                  </ul>
+                </div>
+
+                {trip.hotelDefault && (
+                  <div>
+                    <p className="font-semibold">🏨 Hotel:</p>
+                    <p>{trip.hotelDefault.name}</p>
+                    <p>{trip.hotelDefault.formatted || "-"}</p>
+                    <p>
+                      🔗 Facebook:{" "}
+                      {trip.hotelDefault.facebook ? (
+                        <a
+                          href={trip.hotelDefault.facebook}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          {trip.hotelDefault.facebook}
+                        </a>
+                      ) : (
+                        "-"
+                      )}
+                    </p>
+                    <p>
+                      🌐 Website:{" "}
+                      {trip.hotelDefault.website ? (
+                        <a
+                          href={trip.hotelDefault.website}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          {trip.hotelDefault.website}
+                        </a>
+                      ) : (
+                        "-"
+                      )}
+                    </p>
+                    {trip.hotelDefault.contact?.phone && (
+                      <p>📞 {trip.hotelDefault.contact.phone}</p>
+                    )}
+                    {trip.hotelDefault.contact?.email && (
+                      <p>✉ {trip.hotelDefault.contact.email}</p>
+                    )}
+                  </div>
+                )}
+
+                {(() => {
+                  const tickets = trip.flightTicket || [];
+                  if (tickets.length === 0) return null;
+                  return (
+                    <div>
+                      <p className="font-semibold">✈ Flight Tickets:</p>
+                      <ul className="ml-4 list-disc">
+                        {tickets.map((f: FlightTicket, idx: number) => (
+                          <li key={idx}>
+                            {f.airline}: {f.from} → {f.to} ({f.price}$)
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                })()}
+
+                {trip.home?.image && (
+                  <div>
+                    <p className="font-semibold">🏠 Home Image:</p>
+                    <img
+                      src={trip.home.image}
+                      alt="Home"
+                      className="w-full h-32 object-cover rounded"
+                    />
+                  </div>
+                )}
               </CardContent>
 
               <CardFooter className="flex justify-between items-center">
-                <Link
-                  href={`/support/trips/${trip._id}`}
-                  className="rounded-md bg-secondary px-3 py-1 text-sm hover:bg-secondary/80"
-                >
-                  View
-                </Link>
-
                 {type === "pending" && (
                   <button
                     onClick={() => handleAccept(trip._id)}
                     className="rounded-md bg-primary px-3 py-1 text-sm text-white hover:bg-primary/80"
                   >
-                    Nhận
+                    Assigned
                   </button>
+                )}
+
+                {type === "assigned" && (
+                  <>
+                    <button
+                      onClick={() => handleComplete(trip._id)}
+                      className="rounded-md bg-green-600 px-3 py-1 text-sm text-white hover:bg-green-700"
+                    >
+                      Completed
+                    </button>
+                    <button
+                      onClick={() => handleChat(trip)}
+                      className="rounded-md bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700"
+                    >
+                      Chat
+                    </button>
+                  </>
                 )}
               </CardFooter>
             </Card>
