@@ -97,9 +97,6 @@ const CommentModal = ({ visible, onClose, postId, onCommentPosted }: {
             }
         });
             const data = await response.json();
-            
-            console.log("--- DATA FROM SERVER (GET) ---", JSON.stringify(data, null, 2)); // <--- THÊM DÒNG NÀY
-
             if (!response.ok) throw new Error(data.message || "Failed to load comments");
             setComments(data);
         } catch (error) {
