@@ -11,7 +11,7 @@ router.post("/create", verifyUser, async (req, res) => {
     try {
         const {
             title, description, isPublic, budget,
-            days, baseStay, hotelDefault, flightTicket, image,
+            days, baseStay, hotelDefault, flightTicket,ticket, image,
             mainTransport, innerTransport, fromLocation,
             province, baseStayType, startDate, endDate
         } = req.body;
@@ -19,7 +19,7 @@ router.post("/create", verifyUser, async (req, res) => {
         let scheduleData = {
             user: req.user.userId,
             title, description, isPublic, budget,
-            days, flightTicket, image,
+            days, flightTicket,ticket: req.body.ticket, image,
             mainTransport, innerTransport, fromLocation, province, startDate, endDate
         };
 

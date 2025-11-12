@@ -27,6 +27,7 @@ const CostTab = () => {
   const days = useSelector((state:any) => state.inforUserTravel.userSchedule);
   const hotelDefault = useSelector((state:any) => state.inforUserTravel.userInforHotel);
   const flightTicket = useSelector((state:any) => state.inforUserTravel.userFlightTicket); // Nếu có: ví dụ máy bay/tàu
+  const ticket = useSelector((state:any) => state.inforUserTravel.userTicket);
   const mainTransport = useSelector((state:any) => state.inforUserTravel.userTransportMain); // Phương tiện chính đi tới nơi đến
   const innerTransport = useSelector((state:any) => state.inforUserTravel.userTransportType); // Nội đô
   const fromLocation = useSelector((state:any) => state.inforUserTravel.userCurrentLocation);
@@ -76,12 +77,12 @@ console.log("days (Costabs): ", days);
 
     const res = await confirmSchedule(
       title, description, isPublic, budgets, days,baseStay,
-      hotelDefault, flightTicket, mainTransport, innerTransport, fromLocation, province.name,
-      token, imageDataUrl,useHome ,startDate, 
+      hotelDefault, flightTicket,ticket, mainTransport, innerTransport, fromLocation, province.name,
+      token, imageDataUrl,useHome ,startDate,
       endDate
     );
-   
-   
+
+
     if (res?.success) {
       Alert.alert("Thành công", "Đã lưu lịch trình!");
       router.replace("/");
@@ -120,7 +121,7 @@ console.log("days (Costabs): ", days);
       Alert.alert("Lỗi", "Không lấy được ảnh");
     }
   };
-  
+
   return (
     <ScrollView contentContainerStyle={styles.infoTabBox}>
       <View style={[
@@ -242,7 +243,7 @@ console.log("days (Costabs): ", days);
                   style={{
                     marginLeft: 8, fontWeight: "bold", color: "#4276e7",
                   }}>
-                  {image ? "Đổi ảnh đại diện" : "Chọn ảnh đại diện"}
+                    {image ? "Đổi ảnh đại diện" : "Chọn ảnh đại diện"}
                 </Text>
               </TouchableOpacity>
             </View>
