@@ -56,6 +56,22 @@ const Profile = () => {
     latestTitle: "",
   });
 
+// --- 2️⃣ useEffect khi userInfo thay đổi ---
+React.useEffect(() => {
+  const defaultAvatar =
+    "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+
+  console.log("👀 userInfo thay đổi:", userInfo);
+  console.log("🔍 Avatar đang xét:", userInfo?.profileImage);
+
+  if (userInfo?.profileImage && userInfo.profileImage.trim() !== "") {
+    setNewAvatar(userInfo.profileImage);
+  } else {
+    setNewAvatar(defaultAvatar);
+  }
+}, [userInfo]);
+
+
   useFocusEffect(
     React.useCallback(() => { fetchAllData(); }, [])
   );
@@ -66,19 +82,30 @@ const Profile = () => {
     setLoading(false);
   };
 
-  const fetchUserInfo = async () => {
-    try {
-      const response = await fetch(`${API_URL}/profile/me`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Tải thông tin user thất bại");
-      setUserInfo(data.user);
-      setNewAvatar(data.user.profileImage || "");
-    } catch (error) {
-      Alert.alert("Lỗi", error instanceof Error ? error.message : "Tải thông tin user thất bại");
-    }
-  };
+// --- 1️⃣ Sau khi fetch user info ---
+const fetchUserInfo = async () => {
+  try {
+    const response = await fetch(`${API_URL}/profile/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || "Tải thông tin user thất bại");
+    
+    console.log("📥 Dữ liệu user nhận được:", data.user);
+    console.log("👉 Avatar từ backend:", data.user.profileImage);
+
+    setUserInfo(data.user);
+    setNewAvatar(
+      data.user.profileImage?.trim()
+        ? data.user.profileImage
+        : "https://cdn-icons-png.flaticon.com/512/149/149071.png"
+    );
+
+  } catch (error) {
+    Alert.alert("Lỗi", error instanceof Error ? error.message : "Tải thông tin user thất bại");
+  }
+};
+
 
   const fetchUserTrips = async () => {
     try {
@@ -180,6 +207,9 @@ const Profile = () => {
   const handleOpenSupportChat = () => {
     router.push("/SupportChatScreen");
   };
+  React.useEffect(() => {
+  console.log("🖼️ Avatar hiển thị trong UI:", newAvatar);
+}, [newAvatar]);
 
   // Search bar animation
   const openSearch = () => {
@@ -260,10 +290,15 @@ const Profile = () => {
       <View style={styles.profileHeader}>
         <View style={{ alignItems: 'center', marginRight: 18 }}>
           {newAvatar ? (
-            <Image source={{ uri: newAvatar }} style={styles.avatar} />
-          ) : (
-            <Ionicons name="person-circle-outline" size={76} color={colors.primary} />
-          )}
+              <Image
+                  source={{
+                    uri: userInfo.profileImage?.replace('/svg?', '/png?'),
+                  }}
+                  style={{ width: 80, height: 80, borderRadius: 40 }}
+                />
+            ) : (
+              <Ionicons name="person-circle-outline" size={76} color={colors.primary} />
+            )}
           <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 8, gap: 10 }}>
             <TouchableOpacity onPress={handlePickAvatar}>
               <Ionicons name="camera-outline" size={23} color={colors.primary} />

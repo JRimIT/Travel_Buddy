@@ -88,7 +88,7 @@ const TravelSchedulePublicScreen = () => {
   useEffect(() => {
     loadAllData();
   }, [token]);
-
+  
   const onRefresh = () => {
     setRefreshing(true);
     loadAllData();
@@ -190,8 +190,15 @@ const TravelSchedulePublicScreen = () => {
       <View style={styles.bookCard}>
         <View style={styles.bookHeader}>
           <TouchableOpacity onPress={() => handleDetail(item)} style={styles.userInfo}>
-            <Image source={{ uri: item.user?.profileImage }} style={styles.avatar} />
-            <Text style={styles.username}>{item.user?.username || "Unknown"}</Text>
+            <Image
+              source={{
+                uri: item.user?.profileImage?.includes("dicebear.com")
+                  ? item.user.profileImage.replace("/svg?", "/png?")
+                  : item.user?.profileImage || "https://cdn-icons-png.flaticon.com/512/847/847969.png",
+              }}
+              style={styles.avatar}
+            />
+            <Text style={styles.username}>{item.user?.username || "Người dùng"}</Text>
           </TouchableOpacity>
 
           <Menu>

@@ -20,8 +20,9 @@ const userSchema = new mongoose.Schema(
     },
     profileImage: {
       type: String,
-      default:
-        "https://i.pinimg.com/1200x/dc/6c/b0/dc6cb0521d182f959da46aaee82e742f.jpg",
+      default: function () {
+        return `https://api.dicebear.com/7.x/avataaars/png?seed=${this.username || 'default'}`;
+      },
     },
     favorites: [
       {
