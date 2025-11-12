@@ -62,6 +62,16 @@ const TripScheduleSchema = new mongoose.Schema({
     gioDen: String,
     soGheTrong: Number,
   },
+  bookingStatus: {
+        type: String,
+        enum: [
+          "not_booking",
+          "booking_pending",
+          "booking_assigned",
+          "booking_done",
+        ],
+        default: "not_booking",
+      },
 });
 
 // Tránh tạo lại model khi hot reload

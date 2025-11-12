@@ -75,18 +75,41 @@ console.log("days (Costabs): ", days);
     const imageType = fileType ? `image/${fileType.toLowerCase()}` : "image/jpeg";
     const imageDataUrl = `data:${imageType};base64,${imageBase64}`;
 
+    // ⚠️ Hiển thị alert hỏi người dùng có muốn đặt giúp không
+    Alert.alert(
+      "Xác nhận",
+      "Bạn có muốn đặt giúp (booking) không?",
+      [
+        {
+          text: "Không",
+          onPress: async () => {
+            await saveTrip("not_booking"); // ❌ Không booking
+          },
+          style: "cancel",
+        },
+        {
+          text: "Có",
+          onPress: async () => {
+            await saveTrip("booking_pending"); // ⏳ Người dùng chọn đặt giúp, trạng thái chờ xử lý
+          },
+        },
+      ],
+      { cancelable: true }
+    );
+    const saveTrip = async (bookingStatus) => {
     const res = await confirmSchedule(
       title, description, isPublic, budgets, days,baseStay,
       hotelDefault, flightTicket,ticket, mainTransport, innerTransport, fromLocation, province.name,
       token, imageDataUrl,useHome ,startDate,
-      endDate
+      endDate,bookingStatus
     );
 
 
     if (res?.success) {
       Alert.alert("Thành công", "Đã lưu lịch trình!");
       router.replace("/");
-    }
+        }
+    };
   };
 
   const pickImage = async () => {

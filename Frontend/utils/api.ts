@@ -19,7 +19,8 @@ export const confirmSchedule = async (
   imageDataUrl,
   isHome,
   startDate,
-  endDate
+  endDate,
+  bookingStatus
 ) => {
   try {
     const response = await fetch(`${API_URL}/tripSchedule/create`, {
@@ -45,7 +46,8 @@ export const confirmSchedule = async (
         province,
         baseStayType: isHome ? "home" : "hotel",
         startDate,
-        endDate
+        endDate,
+        bookingStatus
       }),
     });
 
