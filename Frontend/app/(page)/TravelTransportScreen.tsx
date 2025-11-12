@@ -20,6 +20,7 @@ import {
   setUserFlightBudget,
   setUserTransportType,
   setUserTransportMain,
+  setUserStartingPoint,
 } from "../../redux/inforUserTravel/inforUserTravelSlice";
 import axios from "axios";
 import { API_URL } from "../../constants/api";
@@ -206,7 +207,7 @@ const TravelTransportScreen = () => {
 
   // Lấy điểm đến từ redux (province)
   const destination = userProvince?.name || "";
-
+  const [startingPoint, setStartingPoint] = useState("");
   const [flightBudget, setFlightBudget] = useState("");
   const [aiAutoSuggest, setAIAutoSuggest] = useState(null);
   const [loadingAI, setLoadingAI] = useState(false);
@@ -229,7 +230,8 @@ const TravelTransportScreen = () => {
       axios
         .post(`${API_URL}/AI/suggest-transport-auto`, {
           budget: flightBudget.trim().replace(/\D/g, ""),
-          fromLocation: currentLocation,
+          fromLocation: startingPoint || currentLocation,
+//           fromLocation: currentLocation,
           destination,
           hotel,
           activities,
@@ -265,6 +267,7 @@ const TravelTransportScreen = () => {
       )
     );
     dispatch(setUserTransportMain(selectedMainTransport));
+    dispatch(setUserStartingPoint(startingPoint));
     setIsSaved(true);
     setShowAISuggestion(false);
   };
@@ -276,6 +279,7 @@ const TravelTransportScreen = () => {
     try {
       const res = await axios.post(`${API_URL}/AI/suggest-transport`, {
         budget: flightBudget,
+        fromLocation: startingPoint || currentLocation,
         destination,
         hotel,
         activities,
@@ -297,7 +301,16 @@ const TravelTransportScreen = () => {
     <ScrollView style={styles.scroll} keyboardShouldPersistTaps="handled">
       <View style={styles.container}>
         <Text style={styles.header}>Thông Tin Di Chuyển Chuyến Du Lịch</Text>
-
+        <Text style={styles.subLabel}>Điểm đi:</Text>
+        <View style={styles.provinceBox}>
+          <Ionicons name="location-sharp" size={18} color="#2586eb" style={{ marginRight: 8 }} />
+          <TextInput
+            placeholder="Nhập điểm đi"
+            style={styles.provinceTextInput}
+            value={startingPoint}
+            onChangeText={setStartingPoint}
+          />
+        </View>
         {/* Điểm đến không cho nhập, tự lấy từ Redux */}
         <Text style={styles.subLabel}>Điểm đến:</Text>
         <View style={styles.provinceBox}>
@@ -425,6 +438,7 @@ const TravelTransportScreen = () => {
           disabled={
             !flightBudget ||
             !destination ||
+            !startingPoint ||
             (selectedVehicle === "other" && !customVehicle) ||
             !selectedVehicle
           }
@@ -785,6 +799,13 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   provinceText: { fontSize: 16, fontWeight: "bold", color: "#2294cb" },
+  provinceTextInput: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#2294cb",
+    flex: 1,
+  },
+
 });
 
 export default TravelTransportScreen;
