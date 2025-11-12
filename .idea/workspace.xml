@@ -6,10 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="8ea227c4-f82a-4fa0-ae6f-a5e748e19fd6" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Backend/src/models/TripSchedule.js" beforeDir="false" afterPath="$PROJECT_DIR$/Backend/src/models/TripSchedule.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Backend/src/routes/tripScheduleRoutes.js" beforeDir="false" afterPath="$PROJECT_DIR$/Backend/src/routes/tripScheduleRoutes.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Frontend/components/RouteTabsSchedule/CostTab.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Frontend/components/RouteTabsSchedule/CostTab.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Frontend/utils/api.ts" beforeDir="false" afterPath="$PROJECT_DIR$/Frontend/utils/api.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Frontend/app/(page)/ScheduleDetailScreen.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Frontend/app/(page)/ScheduleDetailScreen.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
