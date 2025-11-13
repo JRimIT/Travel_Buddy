@@ -237,7 +237,7 @@ router.get("/trips/:id", async (req, res) => {
     res.json(trip)
   } catch (error) {
     console.error("Get trip detail error:", error)
-    
+
     if (error.name === "CastError") {
       return res.status(400).json({
         message: "Invalid ID format",
@@ -433,11 +433,13 @@ router.get("/sales/trends", async (req, res) => {
 
     const trends = await Booking.aggregate([
       { $match: match },
-      { $group: {
-        _id: groupId,
-        totalRevenue: { $sum: "$amount" },
-        bookingCount: { $sum: 1 }
-      }},
+      {
+        $group: {
+          _id: groupId,
+          totalRevenue: { $sum: "$amount" },
+          bookingCount: { $sum: 1 }
+        }
+      },
       { $sort: { _id: 1 } },
       { $project: { period: "$_id", totalRevenue: 1, bookingCount: 1, _id: 0 } }
     ]);
@@ -528,11 +530,13 @@ router.get("/users/stats", async (req, res) => {
     const topUsers = await User.aggregate([
       { $lookup: { from: "tripschedules", localField: "_id", foreignField: "user", as: "trips" } },
       { $lookup: { from: "bookings", localField: "_id", foreignField: "user", as: "bookings" } },
-      { $project: {
-        username: 1,
-        tripCount: { $size: "$trips" },
-        bookingCount: { $size: "$bookings" }
-      }},
+      {
+        $project: {
+          username: 1,
+          tripCount: { $size: "$trips" },
+          bookingCount: { $size: "$bookings" }
+        }
+      },
       { $sort: { bookingCount: -1 } },
       { $limit: 10 }
     ]);
@@ -686,11 +690,13 @@ router.get("/reviews/stats", async (req, res) => {
       ]),
       Review.aggregate([
         { $match: match },
-        { $group: {
-          _id: { $dateToString: { format: "%Y-%m", date: "$createdAt" } },
-          count: { $sum: 1 },
-          avgRating: { $avg: "$rating" }
-        }},
+        {
+          $group: {
+            _id: { $dateToString: { format: "%Y-%m", date: "$createdAt" } },
+            count: { $sum: 1 },
+            avgRating: { $avg: "$rating" }
+          }
+        },
         { $sort: { _id: 1 } },
         { $project: { period: "$_id", count: 1, avgRating: 1, _id: 0 } }
       ]),
@@ -967,8 +973,8 @@ router.post("/trips/:id/approve", async (req, res) => {
     if (!trip) return res.status(404).json({ message: "Trip not found" });
 
     // KIỂM TRA ĐIỀU KIỆN HỢP LỆ
-    const isPending = 
-      trip.status === "pending_review" || 
+    const isPending =
+      trip.status === "pending_review" ||
       (!trip.status && trip.isPublic === false);
 
     if (!isPending) {
@@ -1040,8 +1046,8 @@ router.post("/trips/:id/reject", async (req, res) => {
     if (!trip) return res.status(404).json({ message: "Trip not found" });
 
     // KIỂM TRA ĐIỀU KIỆN HỢP LỆ
-    const isPending = 
-      trip.status === "pending_review" || 
+    const isPending =
+      trip.status === "pending_review" ||
       (!trip.status && trip.isPublic === false);
 
     if (!isPending) {

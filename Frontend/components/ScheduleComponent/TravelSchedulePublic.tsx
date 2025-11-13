@@ -28,6 +28,8 @@ import { useTheme } from "../../contexts/ThemeContext";
 import createHomeStyles from "../../assets/styles/home.styles";
 import { formatPublishDate } from "../../lib/utils";
 import { useAuthStore } from "../../store/authStore";
+import api from "../../utils/apiClient";
+
 
 const TravelSchedulePublicScreen = () => {
   const { colors } = useTheme();
@@ -58,9 +60,9 @@ const TravelSchedulePublicScreen = () => {
   // === FETCH DATA ===
   const fetchSchedules = async () => {
     try {
-      const response = await fetch(`${API_URL}/tripSchedule/public`);
-      const res = await response.json();
-      if (response.ok) {
+      const response = await api.get(`/tripSchedule/public`);
+      const res = await response.data;      
+      if (response.status === 200) {
         setData(res);
       } else {
         throw new Error(res.error || "Không thể lấy dữ liệu.");
@@ -73,15 +75,16 @@ const TravelSchedulePublicScreen = () => {
   const fetchSavedTrips = async () => {
     if (!token) return;
     try {
-      const response = await fetch(`${API_URL}/tripSchedule/saved/my`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const savedData = await response.json();
-      if (response.ok) {
-        const ids = savedData.map((trip: any) => trip._id);
-        setSavedTrips(ids);
-        setUser({ ...user, savedTripSchedules: ids });
+      const response = await api.get(`/tripSchedule/saved/my`);
+      const res = await response.data;
+      if (response.status === 200) {
+        const savedTripIds = res.map(trip => trip._id);
+        setSavedTrips(savedTripIds);
+        setUser({ ...user, savedTripSchedules: savedTripIds });
+      } else {
+        throw new Error(res.error || "Không thể lấy dữ liệu.");
       }
+      
     } catch (error) {
       console.error("Failed to fetch saved trips:", error);
     }
