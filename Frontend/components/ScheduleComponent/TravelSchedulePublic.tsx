@@ -12,6 +12,9 @@ import {
   Animated,
   Easing,
   TextInput,
+  KeyboardAvoidingView,
+  Platform,
+  Modal,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -21,7 +24,6 @@ import {
   MenuOption,
   MenuTrigger,
 } from "react-native-popup-menu";
-
 import { API_URL } from "../../constants/api";
 import { useTheme } from "../../contexts/ThemeContext";
 import createHomeStyles from "../../assets/styles/home.styles";
@@ -34,32 +36,39 @@ const TravelSchedulePublicScreen = () => {
   const styles = createHomeStyles(colors);
   const { token, user, setUser } = useAuthStore();
   const router = useRouter();
-
-  const [rawData, setRawData] = useState([]);
+  const rawDataRef = useRef([]);
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [savedTrips, setSavedTrips] = useState(user?.savedTripSchedules || []);
-
-  // Search/filter/sort states
+  const [completedTrips, setCompletedTrips] = useState([]);
+  // --- SEARCH/FILTER/SORT ---
   const [searchText, setSearchText] = useState("");
-  const [sortBy, setSortBy] = useState("newest"); // or "oldest"
+  const [sortBy, setSortBy] = useState("newest");
   const [destinationFilter, setDestinationFilter] = useState("");
   const [showSearchBar, setShowSearchBar] = useState(false);
-
   const searchAnim = useRef(new Animated.Value(0)).current;
+  // --- MODAL STATE ---
+  const [reviewModalVisible, setReviewModalVisible] = useState(false);
+  const [rating, setRating] = useState(0);
+  const [reviewText, setReviewText] = useState("");
+  const [reviewLoading, setReviewLoading] = useState(false);
+  const [selectedTripId, setSelectedTripId] = useState(null);
+  const [reportModalVisible, setReportModalVisible] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+  const [reportDescription, setReportDescription] = useState("");
+  const [reportLoading, setReportLoading] = useState(false);
 
+  // === FETCH DATA FUNCTIONS ===
   const fetchSchedules = async () => {
     try {
       const response = await api.get(`/tripSchedule/public`);
       const res = await response.data;
-      setRawData(res);
+      // save rawData to ref for filter/sort usage
+      rawDataRef.current = res || [];
       setData(res || []);
     } catch (e) {
-      Alert.alert(
-        "Lỗi",
-        "Không thể lấy dữ liệu lịch trình public.\n" + e.message
-      );
+      Alert.alert("Lỗi", "Không thể lấy dữ liệu lịch trình public.\n" + e.message);
     }
   };
 
@@ -72,13 +81,14 @@ const TravelSchedulePublicScreen = () => {
         const savedTripIds = res.map(trip => trip._id);
         setSavedTrips(savedTripIds);
         setUser({ ...user, savedTripSchedules: savedTripIds });
-      } else {
-        throw new Error(res.error || "Không thể lấy dữ liệu.");
       }
     } catch (error) {
       console.error("Failed to fetch saved trips:", error);
     }
   };
+
+  // Nếu muốn hỗ trợ completedTrips, thêm phần này:
+  // const fetchCompletedTrips = async () => { ... }
 
   const loadAllData = async () => {
     setLoading(true);
@@ -91,74 +101,171 @@ const TravelSchedulePublicScreen = () => {
     loadAllData();
   }, [token]);
 
+  // SEARCH/FILTER/SORT logic
   useEffect(() => {
-    let filtered = rawData;
-
-    // Tìm kiếm đa trường
+    let filtered = rawDataRef.current;
+    // Search multi-field
     if (searchText.trim()) {
       const query = searchText.trim().toLowerCase();
       filtered = filtered.filter(item =>
-        (item.title?.toLowerCase().includes(query) ||
-          item.description?.toLowerCase().includes(query) ||
-          item.user?.username?.toLowerCase().includes(query) ||
-          item.destination?.toLowerCase().includes(query))||
-          item.province?.toLowerCase().includes(query)
+        (item.title?.toLowerCase().includes(query)
+        || item.description?.toLowerCase().includes(query)
+        || item.user?.username?.toLowerCase().includes(query)
+        || item.destination?.toLowerCase().includes(query)
+        || item.province?.toLowerCase().includes(query))
       );
     }
-    // Lọc nơi đến
+    // Filter by destination
     if (destinationFilter) {
       filtered = filtered.filter(item =>
         item.destination?.toLowerCase().includes(destinationFilter.toLowerCase())
       );
     }
-    // Sắp xếp
-    
-
+    // Sort
     filtered = filtered.slice().sort((a, b) => {
       const da = new Date(a.createdAt).getTime();
       const db = new Date(b.createdAt).getTime();
       return sortBy === "newest" ? db - da : da - db;
     });
-
     setData(filtered);
-  }, [searchText, sortBy, destinationFilter, rawData]);
+  }, [searchText, sortBy, destinationFilter]);
 
   const onRefresh = () => {
     setRefreshing(true);
     loadAllData();
   };
 
+  // === ACTIONS ===
   const handleDetail = (item) => {
     router.push({ pathname: "/(page)/ScheduleDetailScreen", params: { id: item._id } });
   };
 
   const handleSaveTrip = async (tripId) => {
-    const isCurrentlySaved = savedTrips.includes(tripId);
-    const updatedSavedTrips = isCurrentlySaved
-      ? savedTrips.filter(id => id !== tripId)
-      : [...savedTrips, tripId];
-    setSavedTrips(updatedSavedTrips);
-    setUser({ ...user, savedTripSchedules: updatedSavedTrips });
+  const isCurrentlySaved = savedTrips.includes(tripId);
+  const updatedSavedTrips = isCurrentlySaved
+    ? savedTrips.filter(id => id !== tripId)
+    : [...savedTrips, tripId];
+  setSavedTrips(updatedSavedTrips);
+  setUser({ ...user, savedTripSchedules: updatedSavedTrips });
 
+  try {
+    const response = await fetch(`${API_URL}/tripSchedule/${tripId}/save`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const res = await response.json();
+
+    if (!response.ok || !res.success) {
+      throw new Error(res.error || "Unknown error");
+    }
+    // Có thể hiển thị alert/res.message: res.message === "Trip saved" || "Trip unsaved"
+  } catch (error) {
+    setSavedTrips(savedTrips);
+    setUser({ ...user, savedTripSchedules: savedTrips });
+    Alert.alert("Lỗi", error.message || "Không thể lưu lịch trình.");
+  }
+};
+
+
+  const handleShareTrip = async (item) => {
     try {
-      const response = await fetch(`${API_URL}/tripSchedule/${tripId}/save`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
+      await Share.share({
+        message: `Thử xem lịch trình này nhé: ${item.title} | Travel Buddy`,
       });
+    } catch (_) {}
+  };
+
+  // REVIEW
+  const openReviewModal = (tripId) => {
+    setSelectedTripId(tripId);
+    setReviewModalVisible(true);
+  };
+  const closeReviewModal = () => {
+    setReviewModalVisible(false);
+    setRating(0);
+    setReviewText("");
+    setSelectedTripId(null);
+  };
+  const handleSubmitReview = async () => {
+    if (rating === 0 || !reviewText.trim()) {
+      Alert.alert("Lỗi", "Vui lòng chọn số sao và nhập nhận xét.");
+      return;
+    }
+    setReviewLoading(true);
+    try {
+      const url = `${API_URL}/reviews/trip-schedule/${selectedTripId}`;
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          rating,
+          comment: reviewText.trim(),
+        }),
+      });
+      const text = await response.text();
       if (!response.ok) {
-        setSavedTrips(savedTrips);
-        setUser({ ...user, savedTripSchedules: savedTrips });
-        Alert.alert("Lỗi", "Không thể lưu lịch trình.");
+        Alert.alert("Lỗi", `Mã lỗi: ${response.status}`);
+        return;
       }
+      Alert.alert("Thành công", "Đánh giá đã được gửi. Cảm ơn bạn!");
+      closeReviewModal();
+      onRefresh();
     } catch (error) {
-      setSavedTrips(savedTrips);
-      setUser({ ...user, savedTripSchedules: savedTrips });
-      Alert.alert("Lỗi", "Đã có lỗi xảy ra.");
+      Alert.alert("Lỗi", "Không thể kết nối đến server");
+    } finally {
+      setReviewLoading(false);
     }
   };
 
-  // Nút search bar animation show/hide
-  const toggleSearchBar = () => {
+  // REPORT
+  const [selectedReportId, setSelectedReportId] = useState(null);
+  const openReportModal = (tripId) => {
+    setSelectedReportId(tripId);
+    setReportModalVisible(true);
+  };
+  const closeReportModal = () => {
+    setReportModalVisible(false);
+    setReportReason("");
+    setReportDescription("");
+    setSelectedReportId(null);
+  };
+  const handleReport = async () => {
+    if (!selectedReportId || !reportReason.trim()) {
+      Alert.alert("Lỗi", "Vui lòng nhập lý do báo cáo.");
+      return;
+    }
+    setReportLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/reports/trip-schedule`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          targetId: selectedReportId,
+          reason: reportReason.trim(),
+          description: reportDescription.trim() || undefined,
+        }),
+      });
+      if (response.ok) {
+        Alert.alert("Thành công", "Báo cáo đã được gửi. Cảm ơn bạn!");
+        closeReportModal();
+      } else {
+        const error = await response.json();
+        Alert.alert("Lỗi", error.error || "Không thể gửi báo cáo.");
+      }
+    } catch (error) {
+      Alert.alert("Lỗi", "Đã có lỗi mạng. Vui lòng thử lại.");
+    } finally {
+      setReportLoading(false);
+    }
+  };
+
+ const toggleSearchBar = () => {
     setShowSearchBar(val => {
       Animated.timing(searchAnim, {
         toValue: !val ? 1 : 0,
@@ -170,76 +277,59 @@ const TravelSchedulePublicScreen = () => {
     });
   };
 
-  // Tạo destination (nơi đến) duy nhất cho dropdown
-  const destinationList = [...new Set(rawData.map(item => item.destination).filter(Boolean))];
+  // --- UI & RENDERING ---
+  const destinationList = [...new Set(rawDataRef.current.map(item => item.destination).filter(Boolean))];
 
   const renderItem = ({ item }) => {
     const isSaved = savedTrips.includes(item._id);
-
-    const handleShareTrip = async () => {
-      try {
-        await Share.share({
-          message: `Thử xem lịch trình này nhé: ${item.title} | Travel Buddy`,
-        });
-      } catch (error) {
-        // ignore
-      }
-    };
-
+    const tripReviews = item.reviews || [];
     return (
       <View style={styles.bookCard}>
         <View style={styles.bookHeader}>
-          <TouchableOpacity
-            onPress={() => handleDetail(item)}
-            style={styles.userInfo}
-          >
-            <Image
-              source={{ uri: item.user?.profileImage }}
-              style={styles.avatar}
-            />
-            <Text style={styles.username}>
-              {item.user?.username || "Unknown"}
-            </Text>
+          <TouchableOpacity onPress={() => handleDetail(item)} style={styles.userInfo}>
+            <Image source={{ uri: item.user?.profileImage }} style={styles.avatar} />
+            <Text style={styles.username}>{item.user?.username || "Unknown"}</Text>
           </TouchableOpacity>
           <Menu>
             <MenuTrigger>
               <Ionicons name="ellipsis-vertical" size={24} color={colors.text} style={{ padding: 8 }} />
             </MenuTrigger>
-            <MenuOptions
-              customStyles={{ optionsContainer: styles.menuOptionsContainer }}
-            >
+            <MenuOptions customStyles={{ optionsContainer: styles.menuOptionsContainer }}>
               <MenuOption onSelect={() => handleSaveTrip(item._id)}>
                 <View style={styles.menuOption}>
-                  <Ionicons
-                    name={isSaved ? "bookmark" : "bookmark-outline"}
-                    size={22}
-                    color={colors.text}
-                  />
-                  <Text style={styles.menuOptionText}>
-                    {isSaved ? "Bỏ lưu" : "Lưu lịch trình"}
-                  </Text>
+                  <Ionicons name={isSaved ? "bookmark" : "bookmark-outline"} size={22} color={colors.text} />
+                  <Text style={styles.menuOptionText}>{isSaved ? "Bỏ lưu" : "Lưu lịch trình"}</Text>
                 </View>
               </MenuOption>
-              <MenuOption onSelect={handleShareTrip}>
+              <MenuOption onSelect={() => handleShareTrip(item)}>
                 <View style={styles.menuOption}>
-                  <Ionicons
-                    name="paper-plane-outline"
-                    size={22}
-                    color={colors.text}
-                  />
+                  <Ionicons name="paper-plane-outline" size={22} color={colors.text} />
                   <Text style={styles.menuOptionText}>Chia sẻ</Text>
+                </View>
+              </MenuOption>
+              <MenuOption onSelect={() => openReviewModal(item._id)}>
+                <View style={styles.menuOption}>
+                  <Ionicons name="star-outline" size={22} color={colors.text} />
+                  <Text style={styles.menuOptionText}>Đánh giá</Text>
+                </View>
+              </MenuOption>
+              <MenuOption onSelect={() => openReportModal(item._id)}>
+                <View style={styles.menuOption}>
+                  <Ionicons name="flag-outline" size={22} color={colors.text} />
+                  <Text style={styles.menuOptionText}>Báo cáo</Text>
                 </View>
               </MenuOption>
             </MenuOptions>
           </Menu>
         </View>
-
         <TouchableOpacity activeOpacity={0.9} onPress={() => handleDetail(item)}>
           <View style={styles.bookImageContainer}>
             <Image source={{ uri: item.image }} style={styles.bookImage} />
           </View>
           <View style={styles.bookDetails}>
-            <Text style={styles.bookTitle} numberOfLines={2}>{item.title}</Text>
+            <Text style={styles.bookTitle} numberOfLines={2}>
+              {item.title}
+            </Text>
             {item.description ? (
               <Text style={styles.caption} numberOfLines={2}>{item.description}</Text>
             ) : null}
@@ -251,6 +341,56 @@ const TravelSchedulePublicScreen = () => {
             </Text>
           </View>
         </TouchableOpacity>
+        {/* Quick reviews */}
+        {tripReviews.length > 0 && (
+          <View style={{ paddingHorizontal: 16, paddingVertical: 8, borderTopWidth: 1, borderTopColor: colors.border }}>
+            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
+              <Text style={{ fontWeight: "bold", color: colors.text, marginRight: 8 }}>Đánh giá</Text>
+              <View style={{ flexDirection: "row" }}>
+                {[1, 2, 3, 4, 5].map(star => (
+                  <Ionicons
+                    key={star}
+                    name="star"
+                    size={14}
+                    color={star <= item.averageRating ? "#f59e0b" : "#ddd"}
+                  />
+                ))}
+              </View>
+              <Text style={{ color: "#666", marginLeft: 4 }}>({item.reviewCount})</Text>
+            </View>
+            {tripReviews.slice(0, 2).map((review, idx) => (
+              <View key={idx} style={{ marginBottom: 12 }}>
+                <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
+                  <Image
+                    source={{ uri: review.user.profileImage }}
+                    style={{ width: 24, height: 24, borderRadius: 12, marginRight: 8 }}
+                  />
+                  <Text style={{ fontWeight: "500", color: colors.text }}>{review.user.username}</Text>
+                </View>
+                <View style={{ flexDirection: "row", marginBottom: 4 }}>
+                  {[1, 2, 3, 4, 5].map(star => (
+                    <Ionicons
+                      key={star}
+                      name="star"
+                      size={14}
+                      color={star <= review.rating ? "#f59e0b" : "#ddd"}
+                    />
+                  ))}
+                </View>
+                <Text style={{ color: "#555", fontSize: 13 }} numberOfLines={2}>
+                  {review.comment}
+                </Text>
+              </View>
+            ))}
+            {tripReviews.length > 2 && (
+              <TouchableOpacity onPress={() => handleDetail(item)}>
+                <Text style={{ color: colors.primary, fontSize: 13, fontWeight: "500" }}>
+                  Xem thêm {tripReviews.length - 2} đánh giá...
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
       </View>
     );
   };
@@ -265,20 +405,13 @@ const TravelSchedulePublicScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text
-        style={{
-          fontSize: 21,
-          fontWeight: "bold",
-          color: colors.primary,
-          margin: 16,
-          marginBottom: 0,
-        }}
-      >
+      {/* Heading */}
+      <Text style={{ fontSize: 21, fontWeight: "bold", color: colors.primary, margin: 16, marginBottom: 0 }}>
         Lịch trình cộng đồng
       </Text>
 
-      {/* Nút Search nổi */}
-      {!showSearchBar &&
+      {/* --- SEARCH/FILTER/SORT UI --- */}
+      {!showSearchBar && (
         <TouchableOpacity
           style={{
             position: "absolute",
@@ -293,13 +426,21 @@ const TravelSchedulePublicScreen = () => {
             elevation: 4,
           }}
           activeOpacity={0.92}
-          onPress={toggleSearchBar}
+          onPress={() => {
+            setShowSearchBar(true);
+            Animated.timing(searchAnim, {
+              toValue: 1,
+              duration: 350,
+              useNativeDriver: true,
+              easing: Easing.out(Easing.ease),
+            }).start();
+          }}
         >
-          <Ionicons name="search-outline" size={28} color="#fff"/>
+          <Ionicons name="search-outline" size={28} color="#fff" />
         </TouchableOpacity>
-      }
+      )}
 
-      {/* Search + Filter + Sắp xếp (ẩn/hiện + animation) */}
+      {/* Search filter bar (animated) */}
       <Animated.View
         style={{
           opacity: searchAnim,
@@ -323,7 +464,6 @@ const TravelSchedulePublicScreen = () => {
             alignItems: "center",
             gap: 8,
           }}>
-            {/* Search input */}
             <TextInput
               style={{
                 flex: 1,
@@ -339,6 +479,8 @@ const TravelSchedulePublicScreen = () => {
               onChangeText={setSearchText}
               autoFocus
             />
+            {/* Xóa lọc
+
 
             {/* Destination filter */}
             <TouchableOpacity onPress={() => setDestinationFilter("")}>
@@ -398,6 +540,8 @@ const TravelSchedulePublicScreen = () => {
         }
       />
       {/* nút "+" mặc định */}
+
+      {/* FAB */}
       <TouchableOpacity
         style={{
           position: "absolute",
@@ -405,7 +549,7 @@ const TravelSchedulePublicScreen = () => {
           right: 30,
           width: 62,
           height: 62,
-          backgroundColor: colors.primary || "#276ef1",
+          backgroundColor: colors.primary,
           borderRadius: 31,
           justifyContent: "center",
           alignItems: "center",
@@ -421,6 +565,154 @@ const TravelSchedulePublicScreen = () => {
       >
         <Ionicons name="add" size={38} color="#fff" />
       </TouchableOpacity>
+
+      {/* === REVIEW MODAL === */}
+      <Modal visible={reviewModalVisible} transparent animationType="fade" onRequestClose={closeReviewModal}>
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
+          <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center", padding: 20 }}>
+            <View style={{ backgroundColor: colors.background, borderRadius: 16, padding: 20, width: "100%", maxWidth: 400 }}>
+              <Text style={{ fontSize: 18, fontWeight: "bold", color: colors.text, marginBottom: 16 }}>
+                Đánh giá lịch trình
+              </Text>
+
+              <Text style={{ color: colors.text, marginBottom: 8 }}>Chọn số sao:</Text>
+              <View style={{ flexDirection: "row", justifyContent: "center", marginBottom: 16 }}>
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <TouchableOpacity key={star} onPress={() => setRating(star)} style={{ marginHorizontal: 4 }}>
+                    <Ionicons
+                      name={star <= rating ? "star" : "star-outline"}
+                      size={36}
+                      color="#f59e0b"
+                    />
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <Text style={{ color: colors.text, marginBottom: 8 }}>Nhận xét:</Text>
+              <TextInput
+                style={{
+                  borderWidth: 1,
+                  borderColor: colors.border || "#ddd",
+                  borderRadius: 8,
+                  padding: 12,
+                  height: 100,
+                  textAlignVertical: "top",
+                  color: colors.text,
+                  backgroundColor: colors.card || "#fff",
+                  marginBottom: 20,
+                }}
+                placeholder="Chia sẻ trải nghiệm của bạn..."
+                placeholderTextColor="#999"
+                multiline
+                value={reviewText}
+                onChangeText={setReviewText}
+              />
+
+              <View style={{ flexDirection: "row", justifyContent: "flex-end", gap: 12 }}>
+                <TouchableOpacity
+                  onPress={closeReviewModal}
+                  style={{ paddingVertical: 10, paddingHorizontal: 20, borderRadius: 8, backgroundColor: "#eee" }}
+                >
+                  <Text style={{ color: "#333", fontWeight: "600" }}>Hủy</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={handleSubmitReview}
+                  disabled={reviewLoading || rating === 0 || !reviewText.trim()}
+                  style={{
+                    paddingVertical: 10,
+                    paddingHorizontal: 20,
+                    borderRadius: 8,
+                    backgroundColor: (rating > 0 && reviewText.trim()) ? colors.primary : "#ccc",
+                    opacity: reviewLoading ? 0.7 : 1,
+                  }}
+                >
+                  {reviewLoading ? (
+                    <ActivityIndicator color="#fff" size="small" />
+                  ) : (
+                    <Text style={{ color: "#fff", fontWeight: "600" }}>Gửi</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      {/* === REPORT MODAL === */}
+      <Modal visible={reportModalVisible} transparent animationType="fade" onRequestClose={closeReportModal}>
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
+          <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center", padding: 20 }}>
+            <View style={{ backgroundColor: colors.background, borderRadius: 16, padding: 20, width: "100%", maxWidth: 400 }}>
+              <Text style={{ fontSize: 18, fontWeight: "bold", color: colors.text, marginBottom: 16 }}>
+                Báo cáo lịch trình
+              </Text>
+
+              <Text style={{ color: colors.text, marginBottom: 8 }}>Lý do báo cáo:</Text>
+              <TextInput
+                style={{
+                  borderWidth: 1,
+                  borderColor: colors.border || "#ddd",
+                  borderRadius: 8,
+                  padding: 12,
+                  color: colors.text,
+                  backgroundColor: colors.card || "#fff",
+                  marginBottom: 16,
+                }}
+                placeholder="Ví dụ: spam, nội dung không phù hợp..."
+                placeholderTextColor="#999"
+                value={reportReason}
+                onChangeText={setReportReason}
+              />
+
+              <Text style={{ color: colors.text, marginBottom: 8 }}>Mô tả chi tiết (tùy chọn):</Text>
+              <TextInput
+                style={{
+                  borderWidth: 1,
+                  borderColor: colors.border || "#ddd",
+                  borderRadius: 8,
+                  padding: 12,
+                  color: colors.text,
+                  backgroundColor: colors.card || "#fff",
+                  height: 100,
+                  textAlignVertical: "top",
+                  marginBottom: 20,
+                }}
+                placeholder="Mô tả thêm lý do báo cáo..."
+                placeholderTextColor="#999"
+                multiline
+                value={reportDescription}
+                onChangeText={setReportDescription}
+              />
+
+              <View style={{ flexDirection: "row", justifyContent: "flex-end", gap: 12 }}>
+                <TouchableOpacity
+                  onPress={closeReportModal}
+                  style={{ paddingVertical: 10, paddingHorizontal: 20, borderRadius: 8, backgroundColor: "#eee" }}
+                >
+                  <Text style={{ color: "#333", fontWeight: "600" }}>Hủy</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={handleReport}
+                  disabled={reportLoading || !reportReason.trim()}
+                  style={{
+                    paddingVertical: 10,
+                    paddingHorizontal: 20,
+                    borderRadius: 8,
+                    backgroundColor: reportReason.trim() ? colors.primary : "#ccc",
+                    opacity: reportLoading ? 0.7 : 1,
+                  }}
+                >
+                  {reportLoading ? (
+                    <ActivityIndicator color="#fff" size="small" />
+                  ) : (
+                    <Text style={{ color: "#fff", fontWeight: "600" }}>Gửi</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </View>
   );
 };

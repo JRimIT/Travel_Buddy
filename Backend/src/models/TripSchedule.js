@@ -1,3 +1,4 @@
+// models/TripSchedule.js
 import mongoose from "mongoose";
 
 const TripScheduleSchema = new mongoose.Schema(
@@ -72,15 +73,38 @@ const TripScheduleSchema = new mongoose.Schema(
       ],
       default: "not_booking",
     },
+    savedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    completedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+
+    averageRating: { type: Number, default: 0, min: 0, max: 5 },
+    reviewCount: { type: Number, default: 0 },
+
     supporter: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       default: null,
     },
-  },
-  { timestamps: true }
-);
+  }
+  ,
+  { timestamps: true });
 
-// Tránh tạo lại model khi hot reload
+// Index để query nhanh
+TripScheduleSchema.index({ isPublic: 1 });
+TripScheduleSchema.index({ savedBy: 1 });
+TripScheduleSchema.index({ completedBy: 1 });
+
+TripScheduleSchema.virtual('reviews', {
+  ref: 'Review',
+  localField: '_id',
+  foreignField: 'targetId',
+  justOne: false,
+  options: {
+    match: { targetType: 'TripSchedule', status: 'visible' },
+    sort: { createdAt: -1 }
+  }
+});
+TripScheduleSchema.set('toObject', { virtuals: true });
+TripScheduleSchema.set('toJSON', { virtuals: true });
+
 export default mongoose.models.TripSchedule ||
   mongoose.model("TripSchedule", TripScheduleSchema);

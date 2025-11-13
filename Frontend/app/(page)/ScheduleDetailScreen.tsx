@@ -69,17 +69,22 @@ const ScheduleDetailScreen = () => {
   }, [id]);
 
   const fetchScheduleDetail = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(`${API_URL}/tripSchedule/${id}`);
-      const json = await res.json();
-      setData(json);
-    } catch (err) {
-      setData(null);
-    } finally {
-      setLoading(false);
-    }
-  };
+  setLoading(true);
+  try {
+    // In ra id để kiểm tra
+    console.log("Fetch detail với id:", id);
+
+    const res = await fetch(`${API_URL}/tripSchedule/${id}`);
+    const json = await res.json();
+    console.log("Chi tiết trả về từ server:", json); // DEBUG
+    setData(json);
+  } catch (err) {
+    setData(null);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleGoToBookingPage = (user, scheduleId, fromLocation, province) => {
     router.push({
@@ -87,6 +92,7 @@ const ScheduleDetailScreen = () => {
       params: { user, scheduleId, fromLocation, province },
     });
   };
+
 
   if (loading)
     return (
@@ -112,6 +118,15 @@ const ScheduleDetailScreen = () => {
   ) : (
     <Ionicons name="business" size={18} color={colors.primary} />
   );
+
+  const a = data;
+
+// THÊM 3 DÒNG NÀY ĐỂ DEBUG – QUAN TRỌNG NHẤT!!!
+console.log("=== DEBUG REVIEW DATA ===");
+console.log("data.averageRating:", data.averageRating);
+console.log("data.reviewCount:", data.reviewCount);
+console.log("data.reviews:", data.reviews);
+console.log("==========================");
 
   const tripStartDate =
     s.startDate || (Array.isArray(s.days) && s.days[0]?.date) || null;
@@ -452,6 +467,85 @@ console.log("fromLocation: ", fromLocationStr);
             );
           })}
       </View>
+{/* PHẦN ĐÁNH GIÁ – HIỆN RA NGAY DÙ CHƯA CÓ REVIEW */}
+        <View style={[styles.reviewSection, { backgroundColor: colors.cardBackground }]}>
+          <View style={styles.reviewHeader}>
+            <Text style={[styles.reviewTitle, { color: colors.textDark }]}>
+              Đánh giá từ cộng đồng
+            </Text>
+            <View style={styles.ratingSummary}>
+              <Text style={styles.averageRating}>
+                {(data.averageRating || 0).toFixed(1)}
+              </Text>
+              <View style={styles.starsRow}>
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Ionicons
+                    key={star}
+                    name={star <= Math.round(data.averageRating || 0) ? "star" : "star-outline"}
+                    size={20}
+                    color="#FFB800"
+                  />
+                ))}
+              </View>
+              <Text style={[styles.reviewCountText, { color: colors.textSecondary }]}>
+                ({data.reviewCount || 0} đánh giá)
+              </Text>
+            </View>
+          </View>
+
+          {data.reviews && data.reviews.length > 0 ? (
+            <>
+              {data.reviews.slice(0, 3).map((review: any) => (
+                <View key={review._id} style={styles.reviewItem}>
+                  <Image
+                    source={{
+                      uri: review.user?.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(review.user?.username?.[0] || "U")}&background=random`,
+                    }}
+                    style={styles.reviewAvatar}
+                  />
+                  <View style={styles.reviewContent}>
+                    <View style={styles.reviewTop}>
+                      <Text style={[styles.reviewUsername, { color: colors.textPrimary }]}>
+                        {review.user?.username || "Người dùng"}
+                      </Text>
+                      <View style={styles.reviewStars}>
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Ionicons
+                            key={star}
+                            name={star <= (review.rating || 0) ? "star" : "star-outline"}
+                            size={14}
+                            color="#FFB800"
+                          />
+                        ))}
+                      </View>
+                    </View>
+                    <Text style={[styles.reviewComment, { color: colors.textDark }]}>
+                      {review.comment || "Không có bình luận"}
+                    </Text>
+                    <Text style={[styles.reviewDate, { color: colors.textSecondary }]}>
+                      {formatPublishDate(review.createdAt)}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+
+              {data.reviewCount > 3 && (
+                <TouchableOpacity
+                  style={styles.seeAllButton}
+                  onPress={() => router.push({ pathname: "/ReviewsScreen", params: { tripId: id, tripTitle: data.title } })}
+                >
+                  <Text style={styles.seeAllText}>Xem tất cả {data.reviewCount} đánh giá</Text>
+                  <Ionicons name="chevron-forward" size={18} color={colors.primary} />
+                </TouchableOpacity>
+              )}
+            </>
+          ) : (
+            <Text style={[styles.noReviewText, { color: colors.textSecondary }]}>
+              Chưa có đánh giá nào
+            </Text>
+          )}
+        </View>
+
       {/* Vé tàu/xe nếu có */}
       {s.ticket && (
         <View
@@ -606,6 +700,89 @@ const styles = StyleSheet.create({
   noActivity: { color: "#b7a2c4", fontStyle: "italic", marginLeft: 2 },
   hotelInfo: { color: "#be0272", marginLeft: 18, fontSize: 14, marginTop: 3 },
   moveInfo: { marginLeft: 18, color: "#3f486f", fontSize: 13, marginTop: 1 },
+  reviewSection: {
+  marginTop: 10,
+  padding: 18,
+  borderRadius: 16,
+  marginBottom: 20,
+},
+reviewHeader: {
+  flexDirection: "row",
+  justifyContent: "space-between",
+  alignItems: "center",
+  marginBottom: 12,
+},
+reviewTitle: {
+  fontSize: 18,
+  fontWeight: "bold",
+},
+ratingSummary: {
+  alignItems: "center",
+},
+averageRating: {
+  fontSize: 32,
+  fontWeight: "bold",
+  color: COLORS.primary,
+},
+starsRow: {
+  flexDirection: "row",
+  marginVertical: 4,
+},
+reviewCountText: {
+  fontSize: 13,
+  marginTop: 2,
+},
+reviewItem: {
+  flexDirection: "row",
+  marginBottom: 14,
+},
+reviewAvatar: {
+  width: 40,
+  height: 40,
+  borderRadius: 20,
+  marginRight: 12,
+},
+reviewContent: {
+  flex: 1,
+},
+reviewTop: {
+  flexDirection: "row",
+  justifyContent: "space-between",
+  alignItems: "center",
+  marginBottom: 4,
+},
+reviewUsername: {
+  fontWeight: "600",
+  fontSize: 15,
+},
+reviewStars: {
+  flexDirection: "row",
+},
+reviewComment: {
+  fontSize: 14.5,
+  lineHeight: 20,
+  marginBottom: 4,
+},
+reviewDate: {
+  fontSize: 12,
+},
+noReviewText: {
+  textAlign: "center",
+  fontStyle: "italic",
+  marginTop: 10,
+},
+seeAllButton: {
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "center",
+  paddingVertical: 10,
+  marginTop: 8,
+},
+seeAllText: {
+  color: COLORS.primary,
+  fontWeight: "600",
+  marginRight: 4,
+},
 });
 
 export default ScheduleDetailScreen;

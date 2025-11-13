@@ -68,14 +68,7 @@ export function Header() {
               <Avatar className="h-10 w-10">
                 <AvatarImage
                   // @ts-expect-error: Property 'avatar' might not exist on User type
-                  src={
-                    user &&
-                    typeof user === "object" &&
-                    "avatar" in user &&
-                    user.avatar
-                      ? user.avatar
-                      : "/placeholder.svg"
-                  }
+                  src={user && typeof user === "object" && "avatar" in user && user.avatar ? user.avatar : ""}
                   alt={user?.name || "User"}
                 />
                 <AvatarFallback className="text-sm font-bold bg-gradient-to-br from-primary to-primary/80 text-white">
