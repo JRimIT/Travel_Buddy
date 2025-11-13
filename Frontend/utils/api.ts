@@ -10,6 +10,7 @@ export const confirmSchedule = async (
   baseStay,
   hotelDefault,
   flightTicket,
+  ticket,
   mainTransport,
   innerTransport,
   fromLocation,
@@ -18,7 +19,8 @@ export const confirmSchedule = async (
   imageDataUrl,
   isHome,
   startDate,
-  endDate 
+  endDate,
+  bookingStatus
 ) => {
   try {
     const response = await fetch(`${API_URL}/tripSchedule/create`, {
@@ -36,6 +38,7 @@ export const confirmSchedule = async (
         baseStay,
         hotelDefault,
         flightTicket,
+        ticket,
         image: imageDataUrl,
         mainTransport,
         innerTransport,
@@ -43,16 +46,17 @@ export const confirmSchedule = async (
         province,
         baseStayType: isHome ? "home" : "hotel",
         startDate,
-        endDate
+        endDate,
+        bookingStatus
       }),
     });
 
     const result = await response.json();
-   
-    
+
+
     if (!response.ok) {
       console.log("result.error: ", response);
-      
+
       Alert.alert("Lỗi", result.error || "Server returned error");
       return;
     }

@@ -11,16 +11,16 @@ router.post("/create", verifyUser, async (req, res) => {
     try {
         const {
             title, description, isPublic, budget,
-            days, baseStay, hotelDefault, flightTicket, image,
+            days, baseStay, hotelDefault, flightTicket,ticket, image,
             mainTransport, innerTransport, fromLocation,
-            province, baseStayType, startDate, endDate
+            province, baseStayType, startDate, endDate,bookingStatus
         } = req.body;
 
         let scheduleData = {
             user: req.user.userId,
             title, description, isPublic, budget,
-            days, flightTicket, image,
-            mainTransport, innerTransport, fromLocation, province, startDate, endDate
+            days, flightTicket,ticket: req.body.ticket, image,
+            mainTransport, innerTransport, fromLocation, province, startDate, endDate,bookingStatus
         };
 
         if (baseStayType === "home" && baseStay) {
