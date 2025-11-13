@@ -3,6 +3,8 @@ import bcrypt from "bcryptjs";
 
 const userSchema = new mongoose.Schema(
   {
+    resetPasswordToken: String,
+    resetPasswordExpires: Date,
     facebookId: { type: String, unique: true, sparse: true },
     username: {
       type: String,

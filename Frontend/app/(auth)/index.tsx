@@ -201,6 +201,14 @@ const Login = () => {
                 />
               </View>
             </View>
+            <TouchableOpacity
+              style={{ marginTop: 10 }}
+              onPress={() => router.push("/forgot-password")}
+            >
+              <Text style={{ color: colors.primary, textAlign: "right" }}>
+                Forgot Password?
+              </Text>
+            </TouchableOpacity>
 
             {/* Login button */}
             <TouchableOpacity

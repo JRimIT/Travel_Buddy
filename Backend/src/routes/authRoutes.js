@@ -8,7 +8,8 @@ import protectRoute from "../middleware/auth.middleware.js";
 import passport from "passport";
 import { OAuth2Client } from "google-auth-library";
 import { generateJWT } from "../config/jwtConfig.js";
-
+import crypto from "crypto";
+import sendEmail from "../../utils/mailer.js";
 dotenv.config();
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -429,5 +430,72 @@ router.post("/login", async (req, res) => {
 //     res.status(500).json({ message: err.message });
 //   }
 // });
+// ====================== FORGOT PASSWORD ======================
+// POST /api/auth/forgot-password
+router.post("/forgot-password", async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ message: "Email is required" });
+
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Tạo token reset (dùng crypto hoặc JWT)
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpires = Date.now() + 3600000; // 1h
+    await user.save();
+
+    const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+
+    // Gửi email
+    await sendEmail(
+      email,
+      "Reset your password",
+      `Click this link to reset your password: ${resetUrl}`
+    );
+
+    res.json({ success: true, message: "Check your email for reset link" });
+  } catch (error) {
+    console.error("Forgot password error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// ====================== RESET PASSWORD ======================
+// POST /api/auth/reset-password/:token
+router.post("/reset-password/:token", async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { password } = req.body;
+
+    if (!password || password.length < 6)
+      return res
+        .status(400)
+        .json({ message: "Password must be at least 6 characters" });
+
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() },
+    });
+
+    if (!user)
+      return res
+        .status(400)
+        .json({ message: "Invalid or expired reset token" });
+
+    // Cập nhật password
+    user.password = password; // Model User nên hash password trong pre-save hook
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+
+    await user.save();
+
+    res.json({ success: true, message: "Password reset successful" });
+  } catch (error) {
+    console.error("Reset password error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
 
 export default router;
