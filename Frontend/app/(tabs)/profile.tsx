@@ -291,11 +291,11 @@ const fetchUserInfo = async () => {
         <View style={{ alignItems: 'center', marginRight: 18 }}>
           {newAvatar ? (
               <Image
-                  source={{
-                    uri: userInfo.profileImage?.replace('/svg?', '/png?'),
-                  }}
-                  style={{ width: 80, height: 80, borderRadius: 40 }}
-                />
+                source={{
+                  uri: userInfo.profileImage.replace('/svg?', '/png?'),
+                }}
+                style={styles.avatar}
+              />
             ) : (
               <Ionicons name="person-circle-outline" size={76} color={colors.primary} />
             )}
