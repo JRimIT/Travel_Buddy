@@ -2,6 +2,8 @@ import express from "express";
 import TripSchedule from "../models/TripSchedule.js";
 import { verifyUser } from "../config/jwtConfig.js";
 import cloudinary from '../lib/cloudinary.js';
+import User from '../models/User.js';
+
 const router = express.Router();
 
 // Tạo mới lịch trình
@@ -9,16 +11,16 @@ router.post("/create", verifyUser, async (req, res) => {
     try {
         const {
             title, description, isPublic, budget,
-            days, baseStay, hotelDefault, flightTicket, image,
+            days, baseStay, hotelDefault, flightTicket,ticket, image,
             mainTransport, innerTransport, fromLocation,
-            province, baseStayType, startDate, endDate
+            province, baseStayType, startDate, endDate,bookingStatus
         } = req.body;
 
         let scheduleData = {
             user: req.user.userId,
             title, description, isPublic, budget,
-            days, flightTicket, image,
-            mainTransport, innerTransport, fromLocation, province, startDate, endDate
+            days, flightTicket,ticket: req.body.ticket, image,
+            mainTransport, innerTransport, fromLocation, province, startDate, endDate,bookingStatus
         };
 
         if (baseStayType === "home" && baseStay) {
@@ -49,7 +51,7 @@ router.get("/my", verifyUser, async (req, res) => {
 });
 
 // Lấy tất cả lịch trình công khai (dùng cho explore/du lịch cộng đồng)
-router.get("/public", async (req, res) => {
+router.get("/public", verifyUser, async (req, res) => {
     try {
         const schedules = await TripSchedule.find({ isPublic: true }).populate("user", "username email profileImage").sort({ createdAt: -1 });
         res.json(schedules);
@@ -98,6 +100,47 @@ router.delete("/:id", verifyUser, async (req, res) => {
     try {
         await TripSchedule.deleteOne({ _id: req.params.id, user: req.user.userId });
         res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+router.post('/:id/save', verifyUser, async (req, res) => {
+    try {
+        const tripId = req.params.id;
+        const user = await User.findById(req.user.userId);
+
+        if (!user) return res.status(404).json({ error: 'User not found' });
+
+        const isSaved = user.savedTripSchedules.includes(tripId);
+
+        if (isSaved) {
+            // Nếu đã lưu -> Bỏ lưu
+            user.savedTripSchedules.pull(tripId);
+            await user.save();
+            res.json({ success: true, message: 'Trip unsaved' });
+        } else {
+            // Nếu chưa lưu -> Lưu
+            user.savedTripSchedules.push(tripId);
+            await user.save();
+            res.json({ success: true, message: 'Trip saved' });
+        }
+    } catch (err) {
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+
+// Thêm route để lấy các trip đã lưu
+router.get("/saved/my", verifyUser, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.userId)
+            .populate({
+                path: 'savedTripSchedules',
+                populate: { path: 'user', select: 'username profileImage' }
+            });
+        if (!user) return res.status(404).json({ error: 'User not found' });
+        res.json(user.savedTripSchedules);
     } catch (e) {
         res.status(500).json({ error: e.message });
     }

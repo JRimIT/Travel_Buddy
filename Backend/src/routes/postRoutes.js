@@ -15,6 +15,20 @@ const extractHashtags = (text) => {
   return matches ? [...new Set(matches.map(tag => tag.substring(1).toLowerCase()))] : [];
 };
 
+// Helper function để populate đệ quy các replies
+const populateReplies = async (comments) => {
+    for (const comment of comments) {
+        if (comment.replies && comment.replies.length > 0) {
+            const populatedReplies = await Comment.find({ '_id': { $in: comment.replies } })
+                .populate('user', 'username profileImage');
+            
+            comment.replies = await populateReplies(populatedReplies);
+        }
+    }
+    return comments;
+};
+
+
 // Lấy tất cả bài đăng (cho feed)
 router.get('/', async (req, res) => {
   try {
@@ -90,17 +104,19 @@ router.post('/:id/like', authMiddleware, async (req, res) => {
 });
 
 router.get('/:id/comments', authMiddleware, async (req, res) => {
-    const comments = await Comment.find({ post: req.params.id, parent: null }) // Chỉ lấy các comment gốc
-        .populate('user', 'username profileImage')
-        .populate({
-            path: 'replies', // Populate các câu trả lời cấp 1
-            populate: {
-                path: 'user', // Populate user của các câu trả lời cấp 1
-                select: 'username profileImage'
-            }
-        });
-    res.json(comments);
+    try {
+        let comments = await Comment.find({ post: req.params.id, parent: null })
+            .populate('user', 'username profileImage')
+            .sort({ createdAt: 'desc' });
+            
+        comments = await populateReplies(comments);
+        
+        res.json(comments);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
 });
+
 
 router.put('/:id', authMiddleware, async (req, res) => {
   const { title, content } = req.body;

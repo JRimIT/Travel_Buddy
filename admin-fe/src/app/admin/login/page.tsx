@@ -29,7 +29,7 @@ export default function LoginPage() {
     if (success) {
       router.push("/admin")
     } else {
-      setError("Invalid email or password")
+      setError("Email hoặc mật khẩu không hợp lệ")
       setIsLoading(false)
     }
   }
@@ -40,11 +40,11 @@ export default function LoginPage() {
       <Card className="w-full max-w-md shadow-lg backdrop-blur">
         <CardHeader className="space-y-4 text-center">
           <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-xl bg-primary/90 text-primary-foreground shadow-sm">
-            <img src="/travelbuddy.png" alt="Custom Icon" className="h-16 w-16" />
+            <img src="/travelbuddy.png" alt="Biểu tượng tùy chỉnh" className="h-20 w-20" />
           </div>
           <div>
             <CardTitle className="text-2xl">Travel Buddy Admin</CardTitle>
-            <CardDescription>Sign in to access the admin dashboard</CardDescription>
+            <CardDescription>Đăng nhập để truy cập bảng điều khiển quản trị</CardDescription>
           </div>
         </CardHeader>
         <CardContent>
@@ -62,11 +62,11 @@ export default function LoginPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">Mật khẩu</Label>
               <Input
                 id="password"
                 type="password"
-                placeholder="Enter your password"
+                placeholder="Nhập mật khẩu của bạn"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -78,14 +78,14 @@ export default function LoginPage() {
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Signing in...
+                  Đang đăng nhập...
                 </>
               ) : (
-                "Sign in"
+                "Đăng nhập"
               )}
             </Button>
           </form>
-          <p className="mt-4 text-center text-xs text-muted-foreground">Use your admin credentials to continue</p>
+          <p className="mt-4 text-center text-xs text-muted-foreground">Sử dụng thông tin quản trị của bạn để tiếp tục</p>
         </CardContent>
       </Card>
     </div>

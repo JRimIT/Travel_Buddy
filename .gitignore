@@ -30,7 +30,7 @@ yarn-error.*
 *.pem
 
 # local env files in both folders
-NoteMate/.env*.local
+Frontend/.env*.local
 Backend/.env*.local
 
 # Ignore all .env files globally

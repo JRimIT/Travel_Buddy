@@ -51,7 +51,7 @@ export function ReviewsTable({ filters = {} }: { filters?: Record<string, any> }
       await apiClient.hideReview(reviewId)
       await mutate()
     } catch (error) {
-      console.error("Error hiding review:", error)
+      console.error("Lỗi khi ẩn đánh giá:", error)
     } finally {
       setActionLoading(null)
     }
@@ -63,7 +63,7 @@ export function ReviewsTable({ filters = {} }: { filters?: Record<string, any> }
       await apiClient.showReview(reviewId)
       await mutate()
     } catch (error) {
-      console.error("Error showing review:", error)
+      console.error("Lỗi khi hiển thị đánh giá:", error)
     } finally {
       setActionLoading(null)
     }
@@ -79,7 +79,7 @@ export function ReviewsTable({ filters = {} }: { filters?: Record<string, any> }
   if (reviews.length === 0) {
     return (
       <div className="py-12 text-center text-muted-foreground">
-        No reviews found.
+        Không tìm thấy đánh giá nào.
       </div>
     )
   }
@@ -127,10 +127,10 @@ export function ReviewsTable({ filters = {} }: { filters?: Record<string, any> }
 
       {!!selected.size && (
         <div className="flex items-center justify-between rounded-lg border border-border bg-card/70 p-3 text-sm">
-          <span className="text-muted-foreground">{selected.size} selected</span>
+          <span className="text-muted-foreground">{selected.size} đã chọn</span>
           <div className="space-x-2">
-            <Button size="sm" variant="outline" onClick={bulkShow} disabled={showLoadingIndicator}>Show</Button>
-            <Button size="sm" variant="destructive" onClick={bulkHide} disabled={showLoadingIndicator}>Hide</Button>
+            <Button size="sm" variant="outline" onClick={bulkShow} disabled={showLoadingIndicator}>Hiển thị</Button>
+            <Button size="sm" variant="destructive" onClick={bulkHide} disabled={showLoadingIndicator}>Ẩn</Button>
           </div>
         </div>
       )}
@@ -141,28 +141,28 @@ export function ReviewsTable({ filters = {} }: { filters?: Record<string, any> }
             <TableHeader className="sticky top-0 z-10 bg-card">
               <TableRow className="hover:bg-transparent">
                 <TableHead className="w-8">
-                  <Checkbox checked={allSelected} onCheckedChange={(v) => toggleAll(Boolean(v))} aria-label="Select all" />
+                  <Checkbox checked={allSelected} onCheckedChange={(v) => toggleAll(Boolean(v))} aria-label="Chọn tất cả" />
                 </TableHead>
-                <TableHead className="min-w-[160px]">User</TableHead>
-                <TableHead className="min-w-[140px]">Target Type</TableHead>
-                <TableHead className="min-w-[140px]">Rating</TableHead>
-                <TableHead className="min-w-[260px]">Comment</TableHead>
-                <TableHead className="min-w-[120px]">Status</TableHead>
-                <TableHead className="min-w-[120px]">Actions</TableHead>
+                <TableHead className="min-w-[160px]">Người dùng</TableHead>
+                <TableHead className="min-w-[140px]">Loại đối tượng</TableHead>
+                <TableHead className="min-w-[140px]">Đánh giá</TableHead>
+                <TableHead className="min-w-[260px]">Bình luận</TableHead>
+                <TableHead className="min-w-[120px]">Trạng thái</TableHead>
+                <TableHead className="min-w-[120px]">Hành động</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {reviews.map((review) => (
                 <TableRow key={review._id} className="odd:bg-muted/30 hover:bg-accent/50">
                   <TableCell>
-                    <Checkbox checked={selected.has(review._id)} onCheckedChange={(v) => toggleOne(review._id, Boolean(v))} aria-label="Select row" />
+                    <Checkbox checked={selected.has(review._id)} onCheckedChange={(v) => toggleOne(review._id, Boolean(v))} aria-label="Chọn dòng" />
                   </TableCell>
                   <TableCell className="font-medium">
-                    {review.user?.username || "Unknown"}
+                    {review.user?.username || "Không xác định"}
                   </TableCell>
                   <TableCell>
                     <Badge variant={review.targetType === "TripSchedule" ? "default" : "secondary"}>
-                      {review.targetType === "TripSchedule" ? "TripSchedule" : "Place"}
+                      {review.targetType === "TripSchedule" ? "Lịch trình" : "Địa điểm"}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -173,7 +173,9 @@ export function ReviewsTable({ filters = {} }: { filters?: Record<string, any> }
                     {review.comment}
                   </TableCell>
                   <TableCell>
-                    <Badge variant={review.status === "visible" ? "default" : "secondary"}>{review.status}</Badge>
+                    <Badge variant={review.status === "visible" ? "default" : "secondary"}>
+                      {review.status === "visible" ? "Hiển thị" : "Ẩn"}
+                    </Badge>
                   </TableCell>
                   <TableCell>
                     {review.status === "visible" ? (
@@ -193,11 +195,10 @@ export function ReviewsTable({ filters = {} }: { filters?: Record<string, any> }
         </div>
       </div>
 
-      {/* Pagination – chỉ hiện nếu có nhiều trang */}
       {totalPages > 1 && (
         <div className="flex justify-between items-center mt-6">
           <div className="text-sm text-muted-foreground">
-            Page {page} of {totalPages}
+            Trang {page} / {totalPages}
           </div>
           <div className="space-x-2">
             <Button
@@ -205,14 +206,14 @@ export function ReviewsTable({ filters = {} }: { filters?: Record<string, any> }
               onClick={() => setPage(Math.max(1, page - 1))}
               disabled={page === 1 || showLoadingIndicator}
             >
-              Previous
+              Trước
             </Button>
             <Button
               variant="outline"
               onClick={() => setPage(page + 1)}
               disabled={page >= totalPages || showLoadingIndicator}
             >
-              Next
+              Tiếp
             </Button>
           </div>
         </div>

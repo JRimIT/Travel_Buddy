@@ -118,31 +118,66 @@ class ApiClient {
 
     // Trip approval endpoints
     async getTripApprovals() {
-        return this.request<
-            Array<{
+        return this.request<{
+            trips: Array<{
                 _id: string
-                tripSchedule: {
-                    _id: string
-                    title: string
-                    startDate: string
-                    endDate: string
-                    user: { _id: string; username: string; email: string }
-                }
-                status: "pending" | "approved" | "rejected"
+                title: string
+                startDate: string
+                endDate: string
+                isPublic: boolean
+                status?: "pending_review" | "approved" | "rejected"
+                user: { _id: string; username: string; email: string }
                 createdAt: string
             }>
-        >("/admin/trip-approvals")
+            total: number
+            page: number
+            totalPages: number
+        }>("/admin/trips-pending")
     }
 
-    async approveTripApproval(id: string, reason?: string) {
-        return this.request(`/admin/trip-approvals/${id}/approve`, {
+    async getTripDetail(id: string) {
+        if (!/^[0-9a-fA-F]{24}$/.test(id)) {
+            throw new Error("Invalid trip ID format")
+        }
+
+        return this.request<{
+            _id: string
+            title: string
+            description: string
+            budget: { flight: number; hotel: number; fun: number }
+            days: Array<{
+                day: number
+                date: string
+                activities: Array<{
+                    time: string
+                    name: string
+                    cost: number
+                    place: any
+                }>
+            }>
+            image: string
+            hotelDefault: any
+            flightTicket: any
+            isPublic: boolean
+            status: string
+            user: { _id: string; username: string; email: string; phone: string }
+            reviewedBy?: { username: string }
+            reviewedAt?: string
+            rejectReason?: string
+            createdAt: string
+            startDate: string
+            endDate: string
+        }>(`/admin/trips/${id}`)
+    }
+
+    async approveTripApproval(id: string) {
+        return this.request(`/admin/trips/${id}/approve`, {
             method: "POST",
-            body: JSON.stringify({ reason }),
         })
     }
 
-    async rejectTripApproval(id: string, reason?: string) {
-        return this.request(`/admin/trip-approvals/${id}/reject`, {
+    async rejectTripApproval(id: string, reason: string) {
+        return this.request(`/admin/trips/${id}/reject`, {
             method: "POST",
             body: JSON.stringify({ reason }),
         })
@@ -255,6 +290,63 @@ class ApiClient {
 
     async unlockUser(id: string) {
         return this.request(`/admin/users/${id}/unlock`, { method: "PUT" })
+    }
+
+    // === SALES TRENDS ===
+    async getSalesTrends(params?: { groupBy?: string; fromDate?: string; toDate?: string }) {
+        const query = this.buildQuery({
+            groupBy: params?.groupBy,
+            fromDate: params?.fromDate,
+            toDate: params?.toDate,
+        })
+        return this.request<{
+            trends: Array<{
+                period: string
+                totalRevenue: number
+                bookingCount: number
+            }>
+            summary: {
+                totalRevenue: number
+                totalBookings: number
+                growthPercentage: number
+            }
+        }>(`/admin/sales/trends?${query}`)
+    }
+
+    // === USERS STATS ===
+    async getUsersStats() {
+        return this.request<{
+            growthTrends: Array<{ period: string; newUsers: number }>
+            summary: { totalUsers: number; activeUsers: number; lockedUsers: number }
+            topUsers: Array<{ _id: string; username: string; tripCount: number; bookingCount: number }>
+        }>("/admin/users/stats")
+    }
+
+    // === TRIPS STATISTICS ===
+    async getTripStatistics(params?: { fromDate?: string; toDate?: string }) {
+        const query = this.buildQuery({
+            fromDate: params?.fromDate,
+            toDate: params?.toDate,
+        })
+        return this.request<{
+            statusDistribution: Array<{ status: string; count: number }>
+            rejectionReasons: Array<{ reason: string; count: number }>
+            creationTrends: Array<{ period: string; count: number }>
+        }>(`/admin/trips-statistics?${query}`)
+    }
+
+    // === REVIEWS STATS ===
+    async getReviewStats(params?: { targetId?: string; fromDate?: string; toDate?: string }) {
+        const query = this.buildQuery({
+            targetId: params?.targetId,
+            fromDate: params?.fromDate,
+            toDate: params?.toDate,
+        })
+        return this.request<{
+            ratingDistribution: Array<{ rating: number; count: number }>
+            reviewTrends: Array<{ period: string; count: number; avgRating: number }>
+            averageRating: number
+        }>(`/admin/reviews/stats?${query}`)
     }
 }
 
