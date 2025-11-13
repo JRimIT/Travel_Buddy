@@ -234,4 +234,23 @@ router.get("/completed/my", verifyUser, async (req, res) => {
   }
 });
 
+// YÊU CẦU: phải import verifyUser từ middleware xác thực token
+
+router.delete("/save/:tripId", verifyUser, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { tripId } = req.params;
+
+    // Xoá tripId khỏi mảng savedTripSchedules của user
+    await User.findByIdAndUpdate(userId, {
+      $pull: { savedTripSchedules: tripId }
+    });
+
+    res.json({ success: true, message: "Đã bỏ lưu chuyến đi" });
+  } catch (error) {
+    res.status(500).json({ error: "Không bỏ lưu được chuyến đi" });
+  }
+});
+
+
 export default router;

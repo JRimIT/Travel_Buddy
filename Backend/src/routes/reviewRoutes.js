@@ -55,7 +55,7 @@ router.post("/trip-schedule/:tripId", verifyUser, async (req, res) => {
       targetType: "TripSchedule",
       rating: parseInt(rating),
       comment: comment.trim(),
-      status: "visible"
+      status: "pending"
     });
 
     // Cập nhật lại averageRating và reviewCount cho trip (chỉ tính các review status = "visible")

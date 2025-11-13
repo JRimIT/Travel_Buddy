@@ -34,6 +34,9 @@ const Profile = () => {
   const { colors } = useTheme();
   const styles = createProfileStyles(colors);
   const router = useRouter();
+  const [savedTrips, setSavedTrips] = useState([]);
+  const [tab, setTab] = useState("created"); // 'created' hoặc 'saved'
+  const [createdTrips, setCreatedTrips] = useState([]);
 
   // Search bar state
   const [searchOpen, setSearchOpen] = useState(false);
@@ -77,10 +80,10 @@ React.useEffect(() => {
   );
 
   const fetchAllData = async () => {
-    setLoading(true);
-    await Promise.all([fetchUserInfo(), fetchUserTrips()]);
-    setLoading(false);
-  };
+  setLoading(true);
+  await Promise.all([fetchUserInfo(), fetchUserTrips(), fetchSavedTrips()]);
+  setLoading(false);
+};
 
 // --- 1️⃣ Sau khi fetch user info ---
 const fetchUserInfo = async () => {
@@ -211,6 +214,23 @@ const fetchUserInfo = async () => {
   console.log("🖼️ Avatar hiển thị trong UI:", newAvatar);
 }, [newAvatar]);
 
+
+const fetchSavedTrips = async () => {
+  try {
+    const response = await fetch(`${API_URL}/tripSchedule/saved/my`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const result = await response.json();
+
+    if (!response.ok) throw new Error(result.error || "Lấy chuyến đi đã lưu thất bại");
+
+    setSavedTrips(result); // Sửa chỗ này!!! Không dùng setTrips nữa.
+    calculateStats(result);
+  } catch (error) {
+    Alert.alert("Lỗi", error.message || "Lấy chuyến đi đã lưu thất bại");
+  }
+};
+
   // Search bar animation
   const openSearch = () => {
     setSearchOpen(true);
@@ -233,11 +253,60 @@ const fetchUserInfo = async () => {
     });
   };
   const displayedTrips = searchText.trim()
-    ? trips.filter(t => t.title?.toLowerCase().includes(searchText.trim().toLowerCase()))
-    : trips;
+  ? (tab === "created" ? createdTrips : savedTrips).filter(t =>
+      t.title?.toLowerCase().includes(searchText.trim().toLowerCase())
+    )
+  : (tab === "created" ? createdTrips : savedTrips);
+
+  const handleSaveTrip = async (trip) => {
+    try {
+      // Nếu chưa lưu → gọi API lưu
+      const response = await fetch(`${API_URL}/tripSchedule/save/${trip._id}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!response.ok) throw new Error("Lưu chuyến đi thất bại");
+      fetchSavedTrips();
+    } catch (err) {
+      Alert.alert("Lỗi", "Không thể lưu chuyến đi");
+    }
+  };
+
+  const handleUnsaveTrip = (trip) => {
+    Alert.alert(
+      "Bỏ lưu chuyến đi",
+      "Bạn có chắc muốn bỏ lưu chuyến đi này không?",
+      [
+        { text: "Huỷ", style: "cancel" },
+        {
+          text: "Bỏ lưu",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const response = await fetch(`${API_URL}/tripSchedule/save/${trip._id}`, {
+                method: "DELETE",
+                headers: { Authorization: `Bearer ${token}` }
+              });
+              if (!response.ok) throw new Error("Không bỏ lưu được chuyến đi");
+              fetchSavedTrips();
+            } catch (err) {
+              Alert.alert("Lỗi", "Không thể bỏ lưu chuyến đi");
+            }
+          }
+        }
+      ]
+    );
+  };
+
+
+
 
   // Trip card
-  const renderTripItem = ({ item }) => (
+const renderTripItem = ({ item }) => {
+  // Xác định trạng thái đã lưu
+  const isSaved = savedTrips.some(t => t._id === item._id);
+
+  return (
     <TouchableOpacity
       style={styles.tripItem}
       onPress={() => router.push({ pathname: "/ScheduleDetailScreen", params: { id: item._id } })}
@@ -248,16 +317,21 @@ const fetchUserInfo = async () => {
         <Text style={styles.tripTitle}>{item.title}</Text>
         <View style={{ flexDirection: "row", alignItems: "center", marginVertical: 3 }}>
           <Ionicons name={item.isPublic ? "earth" : "lock-closed"} size={15} color={item.isPublic ? "#2da0f7" : "#999"} />
-          <Text style={{marginLeft:6, color: item.isPublic ? "#2da0f7" : "#888"}}>
+          <Text style={{ marginLeft: 6, color: item.isPublic ? "#2da0f7" : "#888" }}>
             {item.isPublic ? "Công khai" : "Riêng tư"}
           </Text>
           <Text style={{ marginLeft: 10, color: "#888" }}>
             {new Date(item.createdAt).toLocaleDateString()}
           </Text>
         </View>
-        {item.description && <Text numberOfLines={2} style={{ color: "#4a5d85", fontSize: 14 }}>{item.description}</Text>}
+        {item.description &&
+          <Text numberOfLines={2} style={{ color: "#4a5d85", fontSize: 14 }}>
+            {item.description}
+          </Text>
+        }
       </View>
       <View style={{ marginLeft: 12, alignItems: "center", justifyContent: "center" }}>
+        {/* Nút edit */}
         <TouchableOpacity onPress={() => {
           setEditTrip(item);
           setEditTitle(item.title);
@@ -267,16 +341,28 @@ const fetchUserInfo = async () => {
         }}>
           <Ionicons name="pencil-outline" size={21} color={colors.primary} />
         </TouchableOpacity>
-        <TouchableOpacity style={{ marginTop: 10 }} onPress={() => confirmDelete(item._id)}>
-          {deleteId === item._id ? (
-            <ActivityIndicator size="small" color={colors.primary} />
-          ) : (
-            <Ionicons name="trash-outline" size={21} color="#e54653" />
-          )}
+        {/* Nút đã lưu/huỷ lưu */}
+        <TouchableOpacity
+          style={{ marginTop: 10 }}
+          onPress={() => {
+            if (isSaved) {
+              handleUnsaveTrip(item);
+            } else {
+              handleSaveTrip(item);
+            }
+          }}
+        >
+          <Ionicons
+            name={isSaved ? "bookmark" : "bookmark-outline"}
+            size={21}
+            color={isSaved ? colors.primary : "#999"}
+          />
         </TouchableOpacity>
       </View>
     </TouchableOpacity>
   );
+};
+
 
   if (loading && !refreshing) return (
     <View style={{ flex:1, justifyContent:"center", alignItems:"center", backgroundColor:colors.background }}>
@@ -351,7 +437,6 @@ const fetchUserInfo = async () => {
 
       {/* --- Header danh sách + Search --- */}
       <View style={styles.tripsHeader}>
-        <Text style={styles.tripsTitle}>Chuyến đi của bạn</Text>
         <View style={{ flexDirection: 'row', alignItems: "center" }}>
           <Animated.View style={{
             width: searchWidth,
@@ -391,6 +476,36 @@ const fetchUserInfo = async () => {
           )}
           <Text style={styles.tripsCount}>{displayedTrips.length} chuyến</Text>
         </View>
+      </View>
+      <View style={{ flexDirection: "row", marginVertical: 12, marginHorizontal: 6 }}>
+        <TouchableOpacity
+          style={{
+            flex: 1,
+            padding: 10,
+            borderBottomWidth: 2,
+            borderBottomColor: tab === "created" ? colors.primary : "transparent",
+            alignItems: "center",
+          }}
+          onPress={() => setTab("created")}
+        >
+          <Text style={{ color: tab === "created" ? colors.primary : colors.textSecondary, fontWeight: "bold" }}>
+            Chuyến đi của tôi
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={{
+            flex: 1,
+            padding: 10,
+            borderBottomWidth: 2,
+            borderBottomColor: tab === "saved" ? colors.primary : "transparent",
+            alignItems: "center",
+          }}
+          onPress={() => setTab("saved")}
+        >
+          <Text style={{ color: tab === "saved" ? colors.primary : colors.textSecondary, fontWeight: "bold" }}>
+            Chuyến đi đã lưu
+          </Text>
+        </TouchableOpacity>
       </View>
 
       <FlatList
