@@ -289,16 +289,14 @@ const fetchUserInfo = async () => {
       {/* --- Header avatar + info --- */}
       <View style={styles.profileHeader}>
         <View style={{ alignItems: 'center', marginRight: 18 }}>
-          {newAvatar ? (
-              <Image
-                source={{
-                  uri: userInfo.profileImage.replace('/svg?', '/png?'),
-                }}
-                style={styles.avatar}
-              />
-            ) : (
-              <Ionicons name="person-circle-outline" size={76} color={colors.primary} />
-            )}
+          {userInfo?.profileImage ? (
+            <Image
+              source={{ uri: userInfo.profileImage.replace('/svg?', '/png?') }}
+              style={styles.avatar}
+            />
+          ) : (
+            <Ionicons name="person-circle-outline" size={76} color={colors.primary} />
+          )}
           <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 8, gap: 10 }}>
             <TouchableOpacity onPress={handlePickAvatar}>
               <Ionicons name="camera-outline" size={23} color={colors.primary} />

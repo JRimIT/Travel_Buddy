@@ -28,6 +28,8 @@ import bookingRoutes from "./routes/bookingRoute.js";
 import postRoutes from './routes/postRoutes.js';
 import conversationRoutes from './routes/conversationRoutes.js'; // Thêm route conversation
 import reportRoutes from "./routes/reportRoutes.js";
+import reviewRouter from "./routes/reviewRoutes.js";
+import adminReviewRouter from "./models/adminReviews.js";
 
 // Models imports (quan trọng cho Socket.IO)
 import Conversation from './models/Conversation.js';
@@ -64,6 +66,8 @@ app.use('/api/posts', postRoutes);
 app.use("/api/booking", bookingRoutes);
 app.use("/api/conversation", conversationRoutes); // Route conversation
 app.use("/api/reports", reportRoutes);
+app.use("/api/reviews", reviewRouter);
+app.use("/api/admin/reviews", adminReviewRouter);
 
 // Socket.IO Setup
 const io = new Server(server, {
