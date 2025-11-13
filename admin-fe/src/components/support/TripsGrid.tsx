@@ -47,6 +47,21 @@ interface Home {
   image: string;
 }
 
+interface Ticket {
+  gaDi?: string;
+  gaDen?: string;
+  chuyenTau?: string;
+  nhaXe?: string;
+  diemDi?: string;
+  diemDen?: string;
+  soXe?: string;
+  loaiXe?: string;
+  ngayDi?: string;
+  gioDi?: string;
+  gioDen?: string;
+  soGheTrong?: number;
+}
+
 interface Trip {
   _id: string;
   title: string;
@@ -62,6 +77,7 @@ interface Trip {
   hotelDefault?: Hotel;
   flightTicket?: FlightTicket[];
   home?: Home;
+  ticket?: Ticket;
 }
 
 interface TripGridProps {
@@ -245,6 +261,39 @@ export function TripGrid({ type, title, description }: TripGridProps) {
                 <p>📍 Location: {trip.province}</p>
                 <p>🚌 Main transport: {trip.mainTransport}</p>
                 <p>🚗 Inner transport: {trip.innerTransport}</p>
+                {trip.ticket && (
+                  <div>
+                    <p className="font-semibold">🎫 Ticket Info:</p>
+                    {trip.ticket.chuyenTau && (
+                      <p>🚆 Train: {trip.ticket.chuyenTau}</p>
+                    )}
+                    {trip.ticket.gaDi && (
+                      <p>🚉 Departure Station: {trip.ticket.gaDi}</p>
+                    )}
+                    {trip.ticket.gaDen && (
+                      <p>🏁 Arrival Station: {trip.ticket.gaDen}</p>
+                    )}
+                    {trip.ticket.nhaXe && (
+                      <p>🚌 Bus Company: {trip.ticket.nhaXe}</p>
+                    )}
+                    {trip.ticket.diemDi && (
+                      <p>🛫 Departure Point: {trip.ticket.diemDi}</p>
+                    )}
+                    {trip.ticket.diemDen && (
+                      <p>🛬 Arrival Point: {trip.ticket.diemDen}</p>
+                    )}
+                    {trip.ticket.gioDi && (
+                      <p>⏰ Departure Time: {trip.ticket.gioDi}</p>
+                    )}
+                    {trip.ticket.gioDen && (
+                      <p>⏰ Arrival Time: {trip.ticket.gioDen}</p>
+                    )}
+                    {/* {trip.ticket.soGheTrong !== undefined && (
+                      <p>🪑 Seats Available: {trip.ticket.soGheTrong}</p>
+                    )} */}
+                  </div>
+                )}
+
                 <p>📝 Description: {trip.description}</p>
                 <p>
                   🗓 Start Date: {new Date(trip.startDate).toLocaleDateString()}
@@ -254,7 +303,7 @@ export function TripGrid({ type, title, description }: TripGridProps) {
                 </p>
 
                 <div>
-                  <p className="font-semibold">💰 Budget:</p>
+                  <p>💰 Budget:</p>
                   <ul className="ml-4 list-disc">
                     <li>Flight: {trip.budget?.flight || 0}$</li>
                     <li>Hotel: {trip.budget?.hotel || 0}$</li>
@@ -281,7 +330,7 @@ export function TripGrid({ type, title, description }: TripGridProps) {
                         "-"
                       )}
                     </p>
-                    <p>
+                    <p className="font-semibold">
                       🌐 Website:{" "}
                       {trip.hotelDefault.website ? (
                         <a
@@ -304,7 +353,7 @@ export function TripGrid({ type, title, description }: TripGridProps) {
                   </div>
                 )}
 
-                {(() => {
+                {/* {(() => {
                   const tickets = trip.flightTicket || [];
                   if (tickets.length === 0) return null;
                   return (
@@ -319,7 +368,7 @@ export function TripGrid({ type, title, description }: TripGridProps) {
                       </ul>
                     </div>
                   );
-                })()}
+                })()} */}
 
                 {trip.home?.image && (
                   <div>

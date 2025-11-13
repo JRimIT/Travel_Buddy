@@ -5,7 +5,9 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import Book from "../models/Book.js";
 import protectRoute from "../middleware/auth.middleware.js";
+import passport from "passport";
 import { OAuth2Client } from "google-auth-library";
+import { generateJWT } from "../config/jwtConfig.js";
 
 dotenv.config();
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -18,57 +20,76 @@ const generateToken = (userId, role) => {
     expiresIn: "5h",
   });
 };
+// auth facebook
 
-//router google
-router.post("/google", async (req, res) => {
-  try {
-    const { idToken } = req.body;
+router.get("/facebook", passport.authenticate("facebook"));
 
-    if (!idToken) {
-      return res.status(400).json({ message: "Google ID Token required" });
-    }
+router.get(
+  "/facebook/callback",
+  passport.authenticate("facebook", {
+    session: false,
+    failureRedirect: "/login",
+  }),
+  (req, res) => {
+    const token = generateJWT(req.user);
+    const user = req.user;
+    console.log("User /facebook/callback: ", user);
 
-    // Verify token với Google
-    const ticket = await client.verifyIdToken({
-      idToken,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
-
-    const payload = ticket.getPayload();
-    const { sub, email, name, picture } = payload;
-
-    // Tìm user theo email
-    let user = await User.findOne({ email });
-
-    if (!user) {
-      // Nếu chưa có thì tạo mới
-      user = new User({
-        username: name,
-        email,
-        profileImage: picture,
-        password: Math.random().toString(36).slice(-8), // random password
-        googleId: sub,
-      });
-      await user.save();
-    }
-
-    const token = generateToken(user._id, user.role);
-
-    res.json({
-      message: "Login with Google successful",
-      user: {
-        _id: user._id,
-        username: user.username,
-        email: user.email,
-        profileImage: user.profileImage,
-      },
-      token,
-    });
-  } catch (error) {
-    console.error("Google login error:", error);
-    res.status(500).json({ message: "Internal server error" });
+    req.session.token = token;
+    req.session.user = user;
+    res.json({ token }); // Gửi JWT về client
   }
-});
+);
+//router google
+// router.post("/google", async (req, res) => {
+//   try {
+//     const { idToken } = req.body;
+
+//     if (!idToken) {
+//       return res.status(400).json({ message: "Google ID Token required" });
+//     }
+
+//     // Verify token với Google
+//     const ticket = await client.verifyIdToken({
+//       idToken,
+//       audience: process.env.GOOGLE_CLIENT_ID,
+//     });
+
+//     const payload = ticket.getPayload();
+//     const { sub, email, name, picture } = payload;
+
+//     // Tìm user theo email
+//     let user = await User.findOne({ email });
+
+//     if (!user) {
+//       // Nếu chưa có thì tạo mới
+//       user = new User({
+//         username: name,
+//         email,
+//         profileImage: picture,
+//         password: Math.random().toString(36).slice(-8), // random password
+//         googleId: sub,
+//       });
+//       await user.save();
+//     }
+
+//     const token = generateToken(user._id, user.role);
+
+//     res.json({
+//       message: "Login with Google successful",
+//       user: {
+//         _id: user._id,
+//         username: user.username,
+//         email: user.email,
+//         profileImage: user.profileImage,
+//       },
+//       token,
+//     });
+//   } catch (error) {
+//     console.error("Google login error:", error);
+//     res.status(500).json({ message: "Internal server error" });
+//   }
+// });
 
 /**
  * @swagger

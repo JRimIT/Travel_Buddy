@@ -65,7 +65,32 @@ export const useAuthStore = create(
       setUser: (newUserData) => {
         set({ user: newUserData });
       },
+      // LOGIN bằng Facebook
+      loginWithFacebook: async (accessToken) => {
+        set({ isLoading: true });
+        try {
+          const response = await fetch(
+            "http://192.168.1.8:3000/api/auth/facebook",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ accessToken }),
+            }
+          );
+          const data = await response.json();
+          if (!response.ok)
+            throw new Error(data.message || "Facebook login failed");
+
+          set({ user: data.user, token: data.token, isLoading: false });
+          return { success: true };
+        } catch (error) {
+          console.error("Facebook login error:", error);
+          set({ isLoading: false });
+          return { success: false, error: error.message };
+        }
+      },
     }),
+
     {
       // --- Cấu hình Persist ---
       name: "auth-storage",

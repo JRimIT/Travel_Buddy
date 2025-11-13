@@ -17,13 +17,18 @@ import * as AuthSession from "expo-auth-session";
 import { useAuthStore } from "../../store/authStore";
 import { useTheme } from "../../contexts/ThemeContext";
 import createLoginStyles from "../../assets/styles/login.styles";
-
+// Facebook Auth
+import * as Facebook from "expo-auth-session/providers/facebook";
 // Google Auth
 import * as Google from "expo-auth-session/providers/google";
 import * as WebBrowser from "expo-web-browser";
 WebBrowser.maybeCompleteAuthSession();
 
 const Login = () => {
+  const resetFacebookLogin = () => {
+    fbResponse?.type === "success" && AuthSession.dismiss();
+  };
+
   const router = useRouter();
   const { colors } = useTheme();
   const styles = createLoginStyles(colors);
@@ -32,26 +37,47 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  const { user, isLoading, login, isCheckingAuth, loginWithGoogle } =
-    useAuthStore();
+  const {
+    user,
+    isLoading,
+    login,
+    isCheckingAuth,
+    loginWithGoogle,
+    loginWithFacebook,
+  } = useAuthStore();
 
   const extra =
     Constants.expoConfig?.extra ||
     Constants.manifest2?.extra ||
     Constants.manifest?.extra;
 
-  const androidClientId = extra?.googleAndroidClientId;
-  const iosClientId = extra?.googleIosClientId;
-  const expoClientId = extra?.googleExpoClientId;
-  const redirectUri = AuthSession.makeRedirectUri({
-    scheme: "travelbuddy",
-  });
-  const [request, response, promptAsync] = Google.useAuthRequest({
-    androidClientId,
-    iosClientId,
-    clientId: expoClientId,
+  // === FACEBOOK LOGIN ===
+  const redirectUri = AuthSession.makeRedirectUri({ useProxy: true } as any);
+  console.log("✅ FB redirectUri:", redirectUri);
+  // Kết quả sẽ là: https://auth.expo.dev/@your-username/your-app-slug
+
+  console.log("✅ FB redirectUri:", redirectUri);
+
+  const [fbRequest, fbResponse, fbPromptAsync] = Facebook.useAuthRequest({
+    clientId: extra?.facebookAppId, // fallback cho web
+    androidClientId: extra?.facebookAppId,
+    iosClientId: extra?.facebookAppId,
     redirectUri,
   });
+  console.log("FB App ID:", extra?.facebookAppId);
+
+  // const androidClientId = extra?.googleAndroidClientId;
+  // const iosClientId = extra?.googleIosClientId;
+  // const expoClientId = extra?.googleExpoClientId;
+  // const redirectUri = AuthSession.makeRedirectUri({
+  //   scheme: "travelbuddy",
+  // });
+  // const [request, response, promptAsync] = Google.useAuthRequest({
+  //   androidClientId,
+  //   iosClientId,
+  //   clientId: expoClientId,
+  //   redirectUri,
+  // });
 
   // Login bằng email/password
   const handleLogin = async () => {
@@ -67,21 +93,54 @@ const Login = () => {
   };
 
   // Xử lý callback Google login
+  // useEffect(() => {
+  //   if (response?.type === "success") {
+  //     const idToken = response.authentication?.idToken;
+  //     if (idToken) {
+  //       loginWithGoogle(idToken).then((res) => {
+  //         if (res.success) {
+  //           // router.replace("/home");
+  //         } else {
+  //           Alert.alert("Google Login Failed", res.error);
+  //         }
+  //       });
+  //     }
+  //   }
+  // }, [response]);
+
   useEffect(() => {
-    if (response?.type === "success") {
-      const idToken = response.authentication?.idToken;
-      if (idToken) {
-        loginWithGoogle(idToken).then((res) => {
-          if (res.success) {
+    const handleFacebookLogin = async () => {
+      if (fbResponse?.type === "success") {
+        const accessToken = fbResponse.authentication?.accessToken;
+        if (!accessToken) return;
+
+        try {
+          // Gọi backend để xác thực Facebook
+          const res = await fetch("http://localhost:3000/api/auth/facebook", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ accessToken }),
+          });
+
+          const data = await res.json();
+          if (res.ok) {
+            await loginWithFacebook(data.token); // hoặc loginWithOAuth(data.token)
+            Alert.alert("Facebook Login", "Login successful!");
             // router.replace("/home");
           } else {
-            Alert.alert("Google Login Failed", res.error);
+            Alert.alert("Facebook Login Failed", data.message);
           }
-        });
+        } catch (err) {
+          console.error("Facebook login error:", err);
+          Alert.alert("Error", "Something went wrong");
+        }
       }
-    }
-  }, [response]);
+    };
 
+    handleFacebookLogin();
+  }, [fbResponse]);
+
+  //
   if (isCheckingAuth) return null;
 
   return (
@@ -161,9 +220,29 @@ const Login = () => {
                 <Text style={styles.buttonText}>Login</Text>
               )}
             </TouchableOpacity>
+            {/* Facebook Login Button */}
+            <TouchableOpacity
+              style={[
+                styles.button,
+                { backgroundColor: "#1877F2", flexDirection: "row", gap: 8 },
+              ]}
+              onPress={() => {
+                resetFacebookLogin(); // reset session cũ
+                fbPromptAsync(); // gọi login lại
+              }}
+              disabled={!fbRequest}
+            >
+              <Image
+                source={require("../../assets/images/fbicon.jpg")}
+                style={{ width: 20, height: 20 }}
+              />
+              <Text style={{ color: "#fff", fontWeight: "600" }}>
+                Login with Facebook
+              </Text>
+            </TouchableOpacity>
 
             {/* Google Login Button */}
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={[
                 styles.button,
                 { backgroundColor: "#fff", flexDirection: "row", gap: 8 },
@@ -178,7 +257,7 @@ const Login = () => {
               <Text style={{ color: "#000", fontWeight: "600" }}>
                 Sign in with Google
               </Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
 
             {/* Footer */}
             <View style={styles.footer}>

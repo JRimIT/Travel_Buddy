@@ -1,6 +1,6 @@
 import { View, Text, ActivityIndicator } from "react-native";
 import React from "react";
-import { useTheme } from "../../NoteMate/contexts/ThemeContext";
+import { useTheme } from "../contexts/ThemeContext";
 import createProfileStyles from "../assets/styles/profile.styles";
 
 const Loader = () => {

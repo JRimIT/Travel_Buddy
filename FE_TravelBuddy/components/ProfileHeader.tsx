@@ -2,7 +2,7 @@ import { View, Text, Image } from "react-native";
 import React from "react";
 import { useAuthStore } from "../store/authStore";
 import { formatMemberSince } from "../lib/utils";
-import { useTheme } from "../../NoteMate/contexts/ThemeContext";
+import { useTheme } from "../contexts/ThemeContext";
 import createProfileStyles from "../assets/styles/profile.styles";
 
 const ProfileHeader = () => {

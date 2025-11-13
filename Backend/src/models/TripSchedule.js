@@ -35,6 +35,21 @@ const TripScheduleSchema = new mongoose.Schema(
     fromLocation: { type: String },
     province: { type: String },
     isPublic: { type: Boolean, default: false },
+    // ✅ Chỉ cần lưu 1 vé duy nhất (tàu hoặc xe)
+    ticket: {
+      gaDi: String,
+      gaDen: String,
+      chuyenTau: String,
+      nhaXe: String,
+      diemDi: String,
+      diemDen: String,
+      soXe: String,
+      loaiXe: String,
+      ngayDi: String,
+      gioDi: String,
+      gioDen: String,
+      soGheTrong: Number,
+    },
     bookingStatus: {
       type: String,
       enum: [

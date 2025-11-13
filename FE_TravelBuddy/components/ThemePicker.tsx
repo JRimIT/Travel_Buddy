@@ -7,7 +7,7 @@ import {
   Pressable,
   StyleSheet,
 } from "react-native";
-import { themes } from "../../NoteMate/themes/theme";
+import { themes } from "../themes/theme";
 
 type Props = {
   visible: boolean;
