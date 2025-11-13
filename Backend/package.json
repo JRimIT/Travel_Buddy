@@ -31,6 +31,7 @@
     "mongodb": "^6.17.0",
     "mongoose": "^8.19.3",
     "multer": "^2.0.1",
+    "nodemailer": "^7.0.10",
     "nodemon": "^3.1.10",
     "openai": "^5.10.1",
     "passport": "^0.7.0",
@@ -39,6 +40,7 @@
     "socket.io": "^4.8.1",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
+    "twilio": "^5.10.4",
     "ws": "^8.18.3",
     "y-websocket": "^3.0.0",
     "yjs": "^13.6.27"

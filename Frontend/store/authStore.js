@@ -12,6 +12,7 @@ export const useAuthStore = create(
 
       // --- ACTIONS ---
 
+
       // Action LOGIN: Thực hiện API call và trả về kết quả
       login: async (email, password) => {
         try {
@@ -36,17 +37,14 @@ export const useAuthStore = create(
       // Action REGISTER: Tương tự login
       register: async (username, email, password) => {
         try {
-          const response = await fetch(
-            "http://10.0.2.2:3000/api/auth/register",
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ username, email, password }),
-            }
-          );
+          const response = await fetch('http://10.0.2.2:3000/api/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, email, password })
+          });
           const data = await response.json();
           if (!response.ok) {
-            throw new Error(data.message || "Registration failed");
+            throw new Error(data.message || 'Registration failed');
           }
           set({ user: data.user, token: data.token });
           return { success: true };
@@ -55,6 +53,7 @@ export const useAuthStore = create(
           return { success: false, error: error.message };
         }
       },
+
 
       // Action LOGOUT: Xóa state
       logout: () => {

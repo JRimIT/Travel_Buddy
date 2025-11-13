@@ -8,6 +8,9 @@ import protectRoute from "../middleware/auth.middleware.js";
 import passport from "passport";
 import { OAuth2Client } from "google-auth-library";
 import { generateJWT } from "../config/jwtConfig.js";
+import OTP from "../models/OTP.js";
+import sendEmail from "../services/emailService.js";
+
 
 dotenv.config();
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -392,42 +395,155 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// router.post("/favorite/:bookId", protectRoute, async (req, res) => {
+
+// //  API: Gửi OTP qua Email
+// router.post('/send-email-otp', async (req, res) => {
 //   try {
-//     const user = await User.findById(req.user._id);
-//     const { bookId } = req.params;
-//     if (!user.favorites.includes(bookId)) {
-//       user.favorites.push(bookId);
-//       await user.save();
+//     const { email, userId } = req.body;
+
+//     if (!email || !userId) {
+//       return res.status(400).json({ message: 'Thiếu email hoặc userId' });
 //     }
-//     res.json({ message: "Đã thêm vào yêu thích" });
-//   } catch (err) {
-//     res.status(500).json({ message: err.message });
-//   }
-// });
 
-// router.delete("/favorite/:bookId", protectRoute, async (req, res) => {
-//   try {
-//     const user = await User.findById(req.user._id);
-//     const { bookId } = req.params;
-//     user.favorites = user.favorites.filter((id) => id.toString() !== bookId);
-//     await user.save();
-//     res.json({ message: "Đã bỏ khỏi yêu thích" });
-//   } catch (err) {
-//     res.status(500).json({ message: err.message });
-//   }
-// });
+//     // Tạo OTP 6 số
+//     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-// router.get("/favorites", protectRoute, async (req, res) => {
-//   try {
-//     const user = await User.findById(req.user._id).populate({
-//       path: "favorites",
-//       populate: { path: "user", select: "username profileImage" },
+//     // Xóa OTP cũ nếu có
+//     await OTP.deleteMany({ userId, email });
+
+//     // Lưu OTP mới (hết hạn sau 5 phút)
+//     await OTP.create({
+//       userId,
+//       email,
+//       otp,
+//       expiresAt: new Date(Date.now() + 5 * 60 * 1000)
 //     });
-//     res.json(user.favorites);
-//   } catch (err) {
-//     res.status(500).json({ message: err.message });
+
+//     // Gửi Email
+//     const htmlContent = `
+//       <div style="font-family: Arial, sans-serif; padding: 20px;">
+//         <h2 style="color: #3488fa;">Mã xác thực Travel Buddy</h2>
+//         <p>Xin chào,</p>
+//         <p>Mã OTP của bạn là:</p>
+//         <h1 style="color: #ec407a; font-size: 36px; letter-spacing: 5px;">${otp}</h1>
+//         <p>Mã này có hiệu lực trong <strong>5 phút</strong>.</p>
+//         <p style="color: #999; font-size: 12px;">Nếu bạn không yêu cầu mã này, vui lòng bỏ qua email.</p>
+//       </div>
+//     `;
+
+//     await sendEmail(email, 'Mã xác thực Travel Buddy', htmlContent);
+
+//     res.json({ success: true, message: 'OTP đã được gửi đến email' });
+//   } catch (error) {
+//     console.error('Send Email OTP Error:', error);
+//     res.status(500).json({ success: false, message: 'Không thể gửi OTP' });
 //   }
 // });
+
+// //  API: Verify OTP Email
+// router.post('/verify-email-otp', async (req, res) => {
+//   try {
+//     const { email, otp, userId } = req.body;
+
+//     if (!email || !otp || !userId) {
+//       return res.status(400).json({ message: 'Thiếu thông tin bắt buộc' });
+//     }
+
+//     // Tìm OTP trong database
+//     const otpRecord = await OTP.findOne({
+//       userId,
+//       email,
+//       otp,
+//       expiresAt: { $gt: new Date() }
+//     });
+
+//     if (!otpRecord) {
+//       return res.status(400).json({ success: false, message: 'Mã OTP không đúng hoặc đã hết hạn' });
+//     }
+
+//     // Xóa OTP sau khi verify thành công
+//     await OTP.deleteOne({ _id: otpRecord._id });
+
+//     res.json({ success: true, message: 'Xác thực thành công' });
+//   } catch (error) {
+//     console.error('Verify Email OTP Error:', error);
+//     res.status(500).json({ success: false, message: 'Không thể xác thực OTP' });
+//   }
+// });
+
+
+
+// Gửi OTP qua Email (Chỉ cần email)
+router.post('/send-email-otp', async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: 'Thiếu email' });
+    }
+
+    // Tạo OTP 6 số
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Xóa OTP cũ cùng email
+    await OTP.deleteMany({ email });
+
+    // Lưu OTP mới (hết hạn sau 5 phút)
+    await OTP.create({
+      email,
+      otp,
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000)
+    });
+
+    // Gửi Email (tùy chỉnh content)
+    const htmlContent = `
+      <div style="font-family: Arial, sans-serif; padding: 20px;">
+        <h2 style="color: #3488fa;">Mã xác thực BookWorm</h2>
+        <p>Xin chào,</p>
+        <p>Mã OTP của bạn là:</p>
+        <h1 style="color: #ec407a; font-size: 36px; letter-spacing: 5px;">${otp}</h1>
+        <p>Mã này có hiệu lực trong <strong>5 phút</strong>.</p>
+        <p style="color: #999; font-size: 12px;">Nếu bạn không yêu cầu mã này, hãy bỏ qua email này.</p>
+      </div>
+    `;
+    await sendEmail(email, 'Mã xác thực BookWorm', htmlContent);
+
+    res.json({ success: true, message: 'OTP đã được gửi đến email' });
+  } catch (error) {
+    console.error('Send Email OTP Error:', error);
+    res.status(500).json({ success: false, message: 'Không thể gửi OTP' });
+  }
+});
+
+// Xác thực OTP (Chỉ cần email + otp)
+router.post('/verify-email-otp', async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({ message: 'Thiếu thông tin bắt buộc' });
+    }
+
+    // Tìm OTP còn hiệu lực
+    const otpRecord = await OTP.findOne({
+      email,
+      otp,
+      expiresAt: { $gt: new Date() }
+    });
+
+    if (!otpRecord) {
+      return res.status(400).json({ success: false, message: 'Mã OTP không đúng hoặc đã hết hạn' });
+    }
+
+    // Xóa OTP sau khi verify thành công
+    await OTP.deleteOne({ _id: otpRecord._id });
+
+    res.json({ success: true, message: 'Xác thực thành công' });
+  } catch (error) {
+    console.error('Verify Email OTP Error:', error);
+    res.status(500).json({ success: false, message: 'Không thể xác thực OTP' });
+  }
+});
+
 
 export default router;
