@@ -31,6 +31,16 @@
       "static/chunks/main-app.js",
       "static/chunks/app/support/layout.js"
     ],
+    "/support/pending/loading": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/support/pending/loading.js"
+    ],
+    "/support/pending/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/support/pending/page.js"
+    ],
     "/support/assigned/loading": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -51,16 +61,6 @@
       "static/chunks/main-app.js",
       "static/css/app/admin/support-chat/page.css",
       "static/chunks/app/admin/support-chat/page.js"
-    ],
-    "/support/pending/loading": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/support/pending/loading.js"
-    ],
-    "/support/pending/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/support/pending/page.js"
     ],
     "/support/history/loading": [
       "static/chunks/webpack.js",

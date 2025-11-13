@@ -20,34 +20,34 @@ passport.deserializeUser((obj, done) => {
 });
 
 // Facebook Strategy
-passport.use(
-  new FacebookStrategy(
-    {
-      clientID: process.env.FACEBOOK_APP_ID,
-      clientSecret: process.env.FACEBOOK_APP_SECRET,
-      callbackURL: "https://localhost:4000/auth/facebook/callback",
-      profileFields: ["id", "displayName", "emails"],
-    },
-    async (accessToken, refreshToken, profile, done) => {
-      console.log("Profile: ", profile);
+// passport.use(
+//   new FacebookStrategy(
+//     {
+//       clientID: process.env.FACEBOOK_APP_ID,
+//       clientSecret: process.env.FACEBOOK_APP_SECRET,
+//       callbackURL: "https://localhost:3000/auth/facebook/callback",
+//       profileFields: ["id", "displayName", "emails"],
+//     },
+//     async (accessToken, refreshToken, profile, done) => {
+//       console.log("Profile: ", profile);
 
-      try {
-        let user = await User.findOne({ facebookId: profile.id });
-        if (!user) {
-          user = await User.create({
-            facebookId: profile.id,
-            username: profile.displayName,
-          });
-        }
-        console.log("User facebook: ", user);
+//       try {
+//         let user = await User.findOne({ facebookId: profile.id });
+//         if (!user) {
+//           user = await User.create({
+//             facebookId: profile.id,
+//             username: profile.displayName,
+//           });
+//         }
+//         console.log("User facebook: ", user);
 
-        return done(null, user);
-      } catch (err) {
-        return done(err, null);
-      }
-    }
-  )
-);
+//         return done(null, user);
+//       } catch (err) {
+//         return done(err, null);
+//       }
+//     }
+//   )
+// );
 
 // JWT Strategy
 const jwtOptions = {

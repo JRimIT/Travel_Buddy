@@ -25,9 +25,9 @@ import * as WebBrowser from "expo-web-browser";
 WebBrowser.maybeCompleteAuthSession();
 
 const Login = () => {
-  const resetFacebookLogin = () => {
-    fbResponse?.type === "success" && AuthSession.dismiss();
-  };
+  // const resetFacebookLogin = () => {
+  //   fbResponse?.type === "success" && AuthSession.dismiss();
+  // };
 
   const router = useRouter();
   const { colors } = useTheme();
@@ -37,31 +37,24 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  const {
-    user,
-    isLoading,
-    login,
-    isCheckingAuth,
-    loginWithGoogle,
-    loginWithFacebook,
-  } = useAuthStore();
+  const { user, isLoading, login, isCheckingAuth } = useAuthStore();
 
-  const extra =
-    Constants.expoConfig?.extra ||
-    Constants.manifest2?.extra ||
-    Constants.manifest?.extra;
+  // const extra =
+  //   Constants.expoConfig?.extra ||
+  //   Constants.manifest2?.extra ||
+  //   Constants.manifest?.extra;
 
-  // === FACEBOOK LOGIN ===
-  const redirectUri = AuthSession.makeRedirectUri({ useProxy: true } as any);
-  console.log("✅ FB redirectUri:", redirectUri);
+  // // === FACEBOOK LOGIN ===
+  // const redirectUri = AuthSession.makeRedirectUri({ useProxy: true } as any);
+  // console.log("✅ FB redirectUri:", redirectUri);
 
-  const [fbRequest, fbResponse, fbPromptAsync] = Facebook.useAuthRequest({
-    clientId: extra?.facebookAppId, // fallback cho web
-    androidClientId: extra?.facebookAppId,
-    iosClientId: extra?.facebookAppId,
-    // redirectUri,
-  });
-  console.log("FB App ID:", extra?.facebookAppId);
+  // const [fbRequest, fbResponse, fbPromptAsync] = Facebook.useAuthRequest({
+  //   clientId: extra?.facebookAppId, // fallback cho web
+  //   androidClientId: extra?.facebookAppId,
+  //   iosClientId: extra?.facebookAppId,
+  //   // redirectUri,
+  // });
+  // console.log("FB App ID:", extra?.facebookAppId);
 
   // const androidClientId = extra?.googleAndroidClientId;
   // const iosClientId = extra?.googleIosClientId;
@@ -102,37 +95,37 @@ const Login = () => {
   //   }
   // }, [response]);
 
-  useEffect(() => {
-    const handleFacebookLogin = async () => {
-      if (fbResponse?.type === "success") {
-        const accessToken = fbResponse.authentication?.accessToken;
-        if (!accessToken) return;
+  // useEffect(() => {
+  //   const handleFacebookLogin = async () => {
+  //     if (fbResponse?.type === "success") {
+  //       const accessToken = fbResponse.authentication?.accessToken;
+  //       if (!accessToken) return;
 
-        try {
-          // Gọi backend để xác thực Facebook
-          const res = await fetch("http://localhost:3000/api/auth/facebook", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ accessToken }),
-          });
+  //       try {
+  //         // Gọi backend để xác thực Facebook
+  //         const res = await fetch("http://localhost:3000/api/auth/facebook", {
+  //           method: "POST",
+  //           headers: { "Content-Type": "application/json" },
+  //           body: JSON.stringify({ accessToken }),
+  //         });
 
-          const data = await res.json();
-          if (res.ok) {
-            await loginWithFacebook(data.token); // hoặc loginWithOAuth(data.token)
-            Alert.alert("Facebook Login", "Login successful!");
-            // router.replace("/home");
-          } else {
-            Alert.alert("Facebook Login Failed", data.message);
-          }
-        } catch (err) {
-          console.error("Facebook login error:", err);
-          Alert.alert("Error", "Something went wrong");
-        }
-      }
-    };
+  //         const data = await res.json();
+  //         if (res.ok) {
+  //           await loginWithFacebook(data.token); // hoặc loginWithOAuth(data.token)
+  //           Alert.alert("Facebook Login", "Login successful!");
+  //           // router.replace("/home");
+  //         } else {
+  //           Alert.alert("Facebook Login Failed", data.message);
+  //         }
+  //       } catch (err) {
+  //         console.error("Facebook login error:", err);
+  //         Alert.alert("Error", "Something went wrong");
+  //       }
+  //     }
+  //   };
 
-    handleFacebookLogin();
-  }, [fbResponse]);
+  //   handleFacebookLogin();
+  // }, [fbResponse]);
 
   //
   if (isCheckingAuth) return null;
@@ -215,7 +208,7 @@ const Login = () => {
               )}
             </TouchableOpacity>
             {/* Facebook Login Button */}
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={[
                 styles.button,
                 { backgroundColor: "#1877F2", flexDirection: "row", gap: 8 },
@@ -233,7 +226,7 @@ const Login = () => {
               <Text style={{ color: "#fff", fontWeight: "600" }}>
                 Login with Facebook
               </Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
 
             {/* Google Login Button */}
             {/* <TouchableOpacity

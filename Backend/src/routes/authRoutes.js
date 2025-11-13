@@ -22,24 +22,24 @@ const generateToken = (userId, role) => {
 };
 // auth facebook
 
-router.get("/facebook", passport.authenticate("facebook"));
+// router.get("/facebook", passport.authenticate("facebook"));
 
-router.get(
-  "/facebook/callback",
-  passport.authenticate("facebook", {
-    session: false,
-    failureRedirect: "/login",
-  }),
-  (req, res) => {
-    const token = generateJWT(req.user);
-    const user = req.user;
-    console.log("User /facebook/callback: ", user);
+// router.get(
+//   "/facebook/callback",
+//   passport.authenticate("facebook", {
+//     session: false,
+//     failureRedirect: "/login",
+//   }),
+//   (req, res) => {
+//     const token = generateJWT(req.user);
+//     const user = req.user;
+//     console.log("User /facebook/callback: ", user);
 
-    req.session.token = token;
-    req.session.user = user;
-    res.json({ token }); // Gửi JWT về client
-  }
-);
+//     req.session.token = token;
+//     req.session.user = user;
+//     res.json({ token }); // Gửi JWT về client
+//   }
+// );
 //router google
 // router.post("/google", async (req, res) => {
 //   try {

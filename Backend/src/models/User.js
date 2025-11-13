@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 
 const userSchema = new mongoose.Schema(
   {
-    facebookId: { type: String, unique: true, sparse: true },
+    // facebookId: { type: String, unique: true, sparse: true },
     username: {
       type: String,
       required: true,
@@ -19,7 +19,7 @@ const userSchema = new mongoose.Schema(
       require: true,
       minlength: 6,
     },
-    googleId: { type: String, unique: true, sparse: true },
+    // googleId: { type: String, unique: true, sparse: true },
     profileImage: {
       type: String,
       default:
