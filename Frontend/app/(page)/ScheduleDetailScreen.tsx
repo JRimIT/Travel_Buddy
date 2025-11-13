@@ -452,6 +452,74 @@ console.log("fromLocation: ", fromLocationStr);
             );
           })}
       </View>
+      {/* Vé tàu/xe nếu có */}
+      {s.ticket && (
+        <View
+          style={[styles.footer, { backgroundColor: colors.cardBackground }]}
+        >
+          <Text style={[styles.footerTitle, { color: colors.primary }]}>
+            Vé tàu / xe
+          </Text>
+
+          {/* Vé tàu */}
+          {s.ticket.chuyenTau && (
+            <>
+              <Text style={{ color: colors.textPrimary, marginBottom: 3 }}>
+                <Ionicons name="train" size={16} color={colors.textSecondary} />{" "}
+                {s.ticket.chuyenTau} | {s.ticket.gaDi} → {s.ticket.gaDen}
+              </Text>
+              <Text style={{ color: colors.textSecondary }}>
+                Ngày đi: {s.ticket.ngayDi || "-"}
+              </Text>
+              {s.ticket.gioDi && (
+                <Text style={{ color: colors.textSecondary }}>
+                  Giờ đi: {s.ticket.gioDi}
+                </Text>
+              )}
+              {s.ticket.gioDen && (
+                <Text style={{ color: colors.textSecondary }}>
+                  Giờ đến: {s.ticket.gioDen}
+                </Text>
+              )}
+              <Text style={{ color: colors.textSecondary }}>
+                Số ghế trống: {s.ticket.soGheTrong ?? "-"}
+              </Text>
+            </>
+          )}
+
+          {/* Vé xe khách */}
+          {s.ticket.nhaXe && (
+            <>
+              <Text style={{ color: colors.textPrimary, marginBottom: 3 }}>
+                <Ionicons name="bus" size={16} color={colors.textSecondary} />{" "}
+                {s.ticket.nhaXe} | {s.ticket.diemDi} → {s.ticket.diemDen}
+              </Text>
+              <Text style={{ color: colors.textSecondary }}>
+                Loại xe: {s.ticket.loaiXe || "-"}
+              </Text>
+              <Text style={{ color: colors.textSecondary }}>
+                Số xe: {s.ticket.soXe || "-"}
+              </Text>
+              <Text style={{ color: colors.textSecondary }}>
+                Ngày đi: {s.ticket.ngayDi || "-"}
+              </Text>
+              {s.ticket.gioDi && (
+                <Text style={{ color: colors.textSecondary }}>
+                  Giờ đi: {s.ticket.gioDi}
+                </Text>
+              )}
+              {s.ticket.gioDen && (
+                <Text style={{ color: colors.textSecondary }}>
+                  Giờ đến: {s.ticket.gioDen}
+                </Text>
+              )}
+              <Text style={{ color: colors.textSecondary }}>
+                Số ghế trống: {s.ticket.soGheTrong ?? "-"}
+              </Text>
+            </>
+          )}
+        </View>
+      )}
     </ScrollView>
   );
 };

@@ -5,6 +5,7 @@ const initialState = {
   userTravelDays: 0,
   userProvince: {},
   userCurrentLocation: "",
+  userLocation: "",
   userDistrict: "",
   userHomeType: "",
   userStartDate: "",
@@ -14,6 +15,7 @@ const initialState = {
   userFunBudget: "",
   userFlightBudget: "",
   userFlightTicket: [],
+  userTicket: null,
   userChosenFlight: [],
   userTransportMain: "",
   userTransportType: "",
@@ -36,6 +38,9 @@ const inforUserTravelSlice = createSlice({
     },
     setUserCurrentLocation: (state, action) => {
       state.userCurrentLocation = action.payload;
+    },
+    setUserStartingPoint: (state, action) => {
+      state.userLocation = action.payload;
     },
     setUserDistrict: (state, action) => {
       state.userDistrict = action.payload;
@@ -83,6 +88,9 @@ const inforUserTravelSlice = createSlice({
     setUserChosenFlight: (state, action) => {
       state.userChosenFlight = action.payload;
     },
+    setUserTicket: (state, action) => {
+      state.userTicket = action.payload;
+    },
     setUserPlaygrounds: (state, action) => {
       state.userPlaygrounds = action.payload;
     },
@@ -100,8 +108,10 @@ const inforUserTravelSlice = createSlice({
     state.userFunBudget = null;
     state.userHotelBudget = null;
     state.userPlaygrounds = [];
-    }
-
+    },
+     resetUserChosenTicket: (state) => {
+          state.userChosenTicket = null;
+       },
   },
 });
 
@@ -126,11 +136,14 @@ export const {
   setUserPlaygrounds,
   setUserTransportMain,
   setUserHomeAddress,
+  setUserTicket,
+  resetUserChosenTicket,
   resetUserHomeAddress,
   resetUserHotel,
   resetAllTravelInputs,
   resetUserFunBudget,
   resetUserHotelBudget,
-  resetUserPlaygrounds
+  resetUserPlaygrounds,
+  setUserStartingPoint
 } = inforUserTravelSlice.actions;
 export default inforUserTravelSlice.reducer;
