@@ -5,15 +5,91 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import Book from "../models/Book.js";
 import protectRoute from "../middleware/auth.middleware.js";
+import passport from "passport";
+import { OAuth2Client } from "google-auth-library";
+import { generateJWT } from "../config/jwtConfig.js";
 
 dotenv.config();
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const router = express.Router();
 
 // Hàm tạo token với role
 const generateToken = (userId, role) => {
-  return jwt.sign({ userId, role }, process.env.JWT_SECRET, { expiresIn: "5h" });
+  return jwt.sign({ userId, role }, process.env.JWT_SECRET, {
+    expiresIn: "5h",
+  });
 };
+// auth facebook
+
+router.get("/facebook", passport.authenticate("facebook"));
+
+router.get(
+  "/facebook/callback",
+  passport.authenticate("facebook", {
+    session: false,
+    failureRedirect: "/login",
+  }),
+  (req, res) => {
+    const token = generateJWT(req.user);
+    const user = req.user;
+    console.log("User /facebook/callback: ", user);
+
+    req.session.token = token;
+    req.session.user = user;
+    res.json({ token }); // Gửi JWT về client
+  }
+);
+//router google
+// router.post("/google", async (req, res) => {
+//   try {
+//     const { idToken } = req.body;
+
+//     if (!idToken) {
+//       return res.status(400).json({ message: "Google ID Token required" });
+//     }
+
+//     // Verify token với Google
+//     const ticket = await client.verifyIdToken({
+//       idToken,
+//       audience: process.env.GOOGLE_CLIENT_ID,
+//     });
+
+//     const payload = ticket.getPayload();
+//     const { sub, email, name, picture } = payload;
+
+//     // Tìm user theo email
+//     let user = await User.findOne({ email });
+
+//     if (!user) {
+//       // Nếu chưa có thì tạo mới
+//       user = new User({
+//         username: name,
+//         email,
+//         profileImage: picture,
+//         password: Math.random().toString(36).slice(-8), // random password
+//         googleId: sub,
+//       });
+//       await user.save();
+//     }
+
+//     const token = generateToken(user._id, user.role);
+
+//     res.json({
+//       message: "Login with Google successful",
+//       user: {
+//         _id: user._id,
+//         username: user.username,
+//         email: user.email,
+//         profileImage: user.profileImage,
+//       },
+//       token,
+//     });
+//   } catch (error) {
+//     console.error("Google login error:", error);
+//     res.status(500).json({ message: "Internal server error" });
+//   }
+// });
 
 /**
  * @swagger
@@ -43,7 +119,7 @@ const generateToken = (userId, role) => {
  *           description: URL to the user's profile image
  *         role:
  *           type: string
- *           enum: [user, admin]
+ *           enum: [user, admin,support]
  *           description: The user's role
  *         createdAt:
  *           type: string
@@ -156,11 +232,15 @@ router.post("/register", async (req, res) => {
     }
 
     if (password.length < 6) {
-      return res.status(400).json({ message: "Password must be at least 6 characters long" });
+      return res
+        .status(400)
+        .json({ message: "Password must be at least 6 characters long" });
     }
 
     if (username.length < 3) {
-      return res.status(400).json({ message: "Username must be at least 3 characters long" });
+      return res
+        .status(400)
+        .json({ message: "Username must be at least 3 characters long" });
     }
 
     const existingEmail = await User.findOne({ email });
@@ -280,7 +360,9 @@ router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
-      return res.status(400).json({ message: "Email and password are required" });
+      return res
+        .status(400)
+        .json({ message: "Email and password are required" });
     }
     const user = await User.findOne({ email });
     if (!user) {

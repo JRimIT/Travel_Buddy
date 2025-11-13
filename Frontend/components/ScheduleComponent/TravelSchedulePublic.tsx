@@ -17,14 +17,13 @@ import {
   MenuOptions,
   MenuOption,
   MenuTrigger,
-} from 'react-native-popup-menu';
+} from "react-native-popup-menu";
 
 import { API_URL } from "../../constants/api";
 import { useTheme } from "../../contexts/ThemeContext";
 import createHomeStyles from "../../assets/styles/home.styles";
 import { formatPublishDate } from "../../lib/utils";
 import { useAuthStore } from "../../store/authStore";
-
 
 const TravelSchedulePublicScreen = () => {
   const { colors } = useTheme();
@@ -47,7 +46,10 @@ const TravelSchedulePublicScreen = () => {
         throw new Error(res.error || "Không thể lấy dữ liệu.");
       }
     } catch (e) {
-      Alert.alert("Lỗi", "Không thể lấy dữ liệu lịch trình public.\n" + e.message);
+      Alert.alert(
+        "Lỗi",
+        "Không thể lấy dữ liệu lịch trình public.\n" + e.message
+      );
     }
   };
 
@@ -55,11 +57,11 @@ const TravelSchedulePublicScreen = () => {
     if (!token) return;
     try {
       const response = await fetch(`${API_URL}/tripSchedule/saved/my`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       const savedData = await response.json();
       if (response.ok) {
-        const savedTripIds = savedData.map(trip => trip._id);
+        const savedTripIds = savedData.map((trip) => trip._id);
         setSavedTrips(savedTripIds);
         setUser({ ...user, savedTripSchedules: savedTripIds });
       }
@@ -85,32 +87,35 @@ const TravelSchedulePublicScreen = () => {
   };
 
   const handleDetail = (item: any) => {
-    router.push({ pathname: "/(page)/ScheduleDetailScreen", params: { id: item._id } });
+    router.push({
+      pathname: "/(page)/ScheduleDetailScreen",
+      params: { id: item._id },
+    });
   };
-  
+
   const handleSaveTrip = async (tripId) => {
     const isCurrentlySaved = savedTrips.includes(tripId);
-    
+
     const updatedSavedTrips = isCurrentlySaved
-        ? savedTrips.filter(id => id !== tripId)
-        : [...savedTrips, tripId];
+      ? savedTrips.filter((id) => id !== tripId)
+      : [...savedTrips, tripId];
     setSavedTrips(updatedSavedTrips);
     setUser({ ...user, savedTripSchedules: updatedSavedTrips });
 
     try {
-        const response = await fetch(`${API_URL}/tripSchedule/${tripId}/save`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (!response.ok) {
-            setSavedTrips(savedTrips); 
-            setUser({ ...user, savedTripSchedules: savedTrips });
-            Alert.alert("Lỗi", "Không thể lưu lịch trình.");
-        }
-    } catch (error) {
+      const response = await fetch(`${API_URL}/tripSchedule/${tripId}/save`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) {
         setSavedTrips(savedTrips);
         setUser({ ...user, savedTripSchedules: savedTrips });
-        Alert.alert("Lỗi", "Đã có lỗi xảy ra.");
+        Alert.alert("Lỗi", "Không thể lưu lịch trình.");
+      }
+    } catch (error) {
+      setSavedTrips(savedTrips);
+      setUser({ ...user, savedTripSchedules: savedTrips });
+      Alert.alert("Lỗi", "Đã có lỗi xảy ra.");
     }
   };
 
@@ -118,39 +123,62 @@ const TravelSchedulePublicScreen = () => {
     const isSaved = savedTrips.includes(item._id);
 
     const handleShareTrip = async () => {
-        try {
-            await Share.share({
-                message: `Thử xem lịch trình này nhé: ${item.title} | Travel Buddy`,
-            });
-        } catch (error) {
-            console.log("Share Error:", error);
-        }
+      try {
+        await Share.share({
+          message: `Thử xem lịch trình này nhé: ${item.title} | Travel Buddy`,
+        });
+      } catch (error) {
+        console.log("Share Error:", error);
+      }
     };
 
     return (
       <View style={styles.bookCard}>
         <View style={styles.bookHeader}>
-          <TouchableOpacity onPress={() => handleDetail(item)} style={styles.userInfo}>
-            <Image source={{ uri: item.user?.profileImage }} style={styles.avatar} />
-            <Text style={styles.username}>{item.user?.username || "Unknown"}</Text>
+          <TouchableOpacity
+            onPress={() => handleDetail(item)}
+            style={styles.userInfo}
+          >
+            <Image
+              source={{ uri: item.user?.profileImage }}
+              style={styles.avatar}
+            />
+            <Text style={styles.username}>
+              {item.user?.username || "Unknown"}
+            </Text>
           </TouchableOpacity>
 
           <Menu>
             <MenuTrigger>
-              <Ionicons name="ellipsis-vertical" size={24} color={colors.text} style={{ padding: 8 }}/>
+              <Ionicons
+                name="ellipsis-vertical"
+                size={24}
+                color={colors.text}
+                style={{ padding: 8 }}
+              />
             </MenuTrigger>
-            <MenuOptions customStyles={{ optionsContainer: styles.menuOptionsContainer }}>
+            <MenuOptions
+              customStyles={{ optionsContainer: styles.menuOptionsContainer }}
+            >
               <MenuOption onSelect={() => handleSaveTrip(item._id)}>
                 <View style={styles.menuOption}>
-                  <Ionicons name={isSaved ? "bookmark" : "bookmark-outline"} size={22} color={colors.text} />
+                  <Ionicons
+                    name={isSaved ? "bookmark" : "bookmark-outline"}
+                    size={22}
+                    color={colors.text}
+                  />
                   <Text style={styles.menuOptionText}>
-                    {isSaved ? 'Bỏ lưu' : 'Lưu lịch trình'}
+                    {isSaved ? "Bỏ lưu" : "Lưu lịch trình"}
                   </Text>
                 </View>
               </MenuOption>
               <MenuOption onSelect={handleShareTrip}>
                 <View style={styles.menuOption}>
-                  <Ionicons name="paper-plane-outline" size={22} color={colors.text} />
+                  <Ionicons
+                    name="paper-plane-outline"
+                    size={22}
+                    color={colors.text}
+                  />
                   <Text style={styles.menuOptionText}>Chia sẻ</Text>
                 </View>
               </MenuOption>
@@ -158,19 +186,26 @@ const TravelSchedulePublicScreen = () => {
           </Menu>
         </View>
 
-        <TouchableOpacity activeOpacity={0.9} onPress={() => handleDetail(item)}>
-            <View style={styles.bookImageContainer}>
-                <Image source={{ uri: item.image }} style={styles.bookImage} />
-            </View>
-            <View style={styles.bookDetails}>
-                <Text style={styles.bookTitle} numberOfLines={2}>{item.title}</Text>
-                {item.description ? (
-                <Text style={styles.caption} numberOfLines={2}>{item.description}</Text>
-                ) : null}
-                <Text style={styles.date}>
-                Public {item.createdAt ? formatPublishDate(item.createdAt) : ""}
-                </Text>
-            </View>
+        <TouchableOpacity
+          activeOpacity={0.9}
+          onPress={() => handleDetail(item)}
+        >
+          <View style={styles.bookImageContainer}>
+            <Image source={{ uri: item.image }} style={styles.bookImage} />
+          </View>
+          <View style={styles.bookDetails}>
+            <Text style={styles.bookTitle} numberOfLines={2}>
+              {item.title}
+            </Text>
+            {item.description ? (
+              <Text style={styles.caption} numberOfLines={2}>
+                {item.description}
+              </Text>
+            ) : null}
+            <Text style={styles.date}>
+              Public {item.createdAt ? formatPublishDate(item.createdAt) : ""}
+            </Text>
+          </View>
         </TouchableOpacity>
       </View>
     );
@@ -186,7 +221,15 @@ const TravelSchedulePublicScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={{ fontSize: 21, fontWeight: "bold", color: colors.primary, margin: 16, marginBottom: 0 }}>
+      <Text
+        style={{
+          fontSize: 21,
+          fontWeight: "bold",
+          color: colors.primary,
+          margin: 16,
+          marginBottom: 0,
+        }}
+      >
         Lịch trình cộng đồng
       </Text>
       <FlatList

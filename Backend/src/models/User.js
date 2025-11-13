@@ -3,9 +3,10 @@ import bcrypt from "bcryptjs";
 
 const userSchema = new mongoose.Schema(
   {
+    facebookId: { type: String, unique: true, sparse: true },
     username: {
       type: String,
-      require: true,
+      required: true,
       unique: true,
     },
     email: {
@@ -18,6 +19,7 @@ const userSchema = new mongoose.Schema(
       require: true,
       minlength: 6,
     },
+    googleId: { type: String, unique: true, sparse: true },
     profileImage: {
       type: String,
       default:
@@ -35,21 +37,19 @@ const userSchema = new mongoose.Schema(
     // },
     role: {
       type: String,
-      enum: ['user', 'admin', 'support'],
-      default: 'user'
+      enum: ["user", "admin", "support"],
+      default: "user",
     },
     isLocked: {
       type: Boolean,
       default: false,
     },
-    savedPosts: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Post'
-    }],
-    savedTripSchedules: [{ 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'TripSchedule' 
-    }]
+    savedPosts: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Post",
+      },
+    ],
   },
   {
     timestamps: true,
