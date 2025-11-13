@@ -3,7 +3,6 @@ import bcrypt from "bcryptjs";
 
 const userSchema = new mongoose.Schema(
   {
-    // facebookId: { type: String, unique: true, sparse: true },
     username: {
       type: String,
       required: true,

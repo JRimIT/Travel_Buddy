@@ -11,7 +11,6 @@ import { generateJWT } from "../config/jwtConfig.js";
 import OTP from "../models/OTP.js";
 import sendEmail from "../services/emailService.js";
 
-
 dotenv.config();
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -23,76 +22,6 @@ const generateToken = (userId, role) => {
     expiresIn: "5h",
   });
 };
-// auth facebook
-
-// router.get("/facebook", passport.authenticate("facebook"));
-
-// router.get(
-//   "/facebook/callback",
-//   passport.authenticate("facebook", {
-//     session: false,
-//     failureRedirect: "/login",
-//   }),
-//   (req, res) => {
-//     const token = generateJWT(req.user);
-//     const user = req.user;
-//     console.log("User /facebook/callback: ", user);
-
-//     req.session.token = token;
-//     req.session.user = user;
-//     res.json({ token }); // Gửi JWT về client
-//   }
-// );
-//router google
-// router.post("/google", async (req, res) => {
-//   try {
-//     const { idToken } = req.body;
-
-//     if (!idToken) {
-//       return res.status(400).json({ message: "Google ID Token required" });
-//     }
-
-//     // Verify token với Google
-//     const ticket = await client.verifyIdToken({
-//       idToken,
-//       audience: process.env.GOOGLE_CLIENT_ID,
-//     });
-
-//     const payload = ticket.getPayload();
-//     const { sub, email, name, picture } = payload;
-
-//     // Tìm user theo email
-//     let user = await User.findOne({ email });
-
-//     if (!user) {
-//       // Nếu chưa có thì tạo mới
-//       user = new User({
-//         username: name,
-//         email,
-//         profileImage: picture,
-//         password: Math.random().toString(36).slice(-8), // random password
-//         googleId: sub,
-//       });
-//       await user.save();
-//     }
-
-//     const token = generateToken(user._id, user.role);
-
-//     res.json({
-//       message: "Login with Google successful",
-//       user: {
-//         _id: user._id,
-//         username: user.username,
-//         email: user.email,
-//         profileImage: user.profileImage,
-//       },
-//       token,
-//     });
-//   } catch (error) {
-//     console.error("Google login error:", error);
-//     res.status(500).json({ message: "Internal server error" });
-//   }
-// });
 
 /**
  * @swagger
@@ -395,7 +324,6 @@ router.post("/login", async (req, res) => {
   }
 });
 
-
 // //  API: Gửi OTP qua Email
 // router.post('/send-email-otp', async (req, res) => {
 //   try {
@@ -471,15 +399,13 @@ router.post("/login", async (req, res) => {
 //   }
 // });
 
-
-
 // Gửi OTP qua Email (Chỉ cần email)
-router.post('/send-email-otp', async (req, res) => {
+router.post("/send-email-otp", async (req, res) => {
   try {
     const { email } = req.body;
 
     if (!email) {
-      return res.status(400).json({ message: 'Thiếu email' });
+      return res.status(400).json({ message: "Thiếu email" });
     }
 
     // Tạo OTP 6 số
@@ -492,7 +418,7 @@ router.post('/send-email-otp', async (req, res) => {
     await OTP.create({
       email,
       otp,
-      expiresAt: new Date(Date.now() + 5 * 60 * 1000)
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000),
     });
 
     // Gửi Email (tùy chỉnh content)
@@ -506,44 +432,45 @@ router.post('/send-email-otp', async (req, res) => {
         <p style="color: #999; font-size: 12px;">Nếu bạn không yêu cầu mã này, hãy bỏ qua email này.</p>
       </div>
     `;
-    await sendEmail(email, 'Mã xác thực BookWorm', htmlContent);
+    await sendEmail(email, "Mã xác thực BookWorm", htmlContent);
 
-    res.json({ success: true, message: 'OTP đã được gửi đến email' });
+    res.json({ success: true, message: "OTP đã được gửi đến email" });
   } catch (error) {
-    console.error('Send Email OTP Error:', error);
-    res.status(500).json({ success: false, message: 'Không thể gửi OTP' });
+    console.error("Send Email OTP Error:", error);
+    res.status(500).json({ success: false, message: "Không thể gửi OTP" });
   }
 });
 
 // Xác thực OTP (Chỉ cần email + otp)
-router.post('/verify-email-otp', async (req, res) => {
+router.post("/verify-email-otp", async (req, res) => {
   try {
     const { email, otp } = req.body;
 
     if (!email || !otp) {
-      return res.status(400).json({ message: 'Thiếu thông tin bắt buộc' });
+      return res.status(400).json({ message: "Thiếu thông tin bắt buộc" });
     }
 
     // Tìm OTP còn hiệu lực
     const otpRecord = await OTP.findOne({
       email,
       otp,
-      expiresAt: { $gt: new Date() }
+      expiresAt: { $gt: new Date() },
     });
 
     if (!otpRecord) {
-      return res.status(400).json({ success: false, message: 'Mã OTP không đúng hoặc đã hết hạn' });
+      return res
+        .status(400)
+        .json({ success: false, message: "Mã OTP không đúng hoặc đã hết hạn" });
     }
 
     // Xóa OTP sau khi verify thành công
     await OTP.deleteOne({ _id: otpRecord._id });
 
-    res.json({ success: true, message: 'Xác thực thành công' });
+    res.json({ success: true, message: "Xác thực thành công" });
   } catch (error) {
-    console.error('Verify Email OTP Error:', error);
-    res.status(500).json({ success: false, message: 'Không thể xác thực OTP' });
+    console.error("Verify Email OTP Error:", error);
+    res.status(500).json({ success: false, message: "Không thể xác thực OTP" });
   }
 });
-
 
 export default router;
