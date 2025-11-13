@@ -7,6 +7,7 @@ import Review from "../models/Review.js";
 import Booking from "../models/Booking.js";
 import Report from "../models/Report.js";
 import User from "../models/User.js";
+import mongoose from "mongoose";
 
 const router = express.Router();
 
@@ -362,12 +363,51 @@ router.get("/reviews", async (req, res) => {
   try {
     const { status } = req.query;
     const filter = status ? { status } : {};
+
+    // Lấy reviews, không populate trước
     const reviews = await Review.find(filter)
-      .populate("user", "username")
-      .populate("targetId", "name title type")
-      .sort({ createdAt: -1 });
-    res.json(reviews);
+      .sort({ createdAt: -1 })
+      .lean(); // Dùng .lean() để dễ xử lý sau
+
+    // Xử lý populate thủ công theo targetType
+    const populatedReviews = await Promise.all(
+      reviews.map(async (review) => {
+        let target = null;
+
+        if (review.targetType === "TripSchedule") {
+          target = await mongoose.model("TripSchedule").findById(review.targetId)
+            .select("title image startDate endDate province user status")
+            .populate("user", "username avatar")
+            .lean();
+        }
+
+        if (review.targetType === "Place") {
+          target = await mongoose.model("Place").findById(review.targetId)
+            .select("name address images rating")
+            .lean();
+        }
+
+        // Populate user review
+        const user = await mongoose.model("User").findById(review.user)
+          .select("username avatar")
+          .lean();
+
+        return {
+          _id: review._id,
+          rating: review.rating,
+          comment: review.comment,
+          status: review.status,
+          createdAt: review.createdAt,
+          user: user || null,
+          targetType: review.targetType,
+          target: target || null,
+        };
+      })
+    );
+
+    res.json(populatedReviews);
   } catch (error) {
+    console.error("Error fetching admin reviews:", error);
     res.status(500).json({ message: error.message });
   }
 });

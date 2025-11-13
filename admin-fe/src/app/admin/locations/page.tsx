@@ -19,10 +19,10 @@ export default function LocationsPage() {
         title="Địa điểm"
         description="Quản lý các điểm du lịch và địa điểm tham quan"
         breadcrumbs={[{ label: "Trang chủ", href: "/admin" }, { label: "Địa điểm" }]}
-        actions={<Button><Plus className="w-4 h-4 mr-2" />Thêm Địa điểm</Button>}
+        // actions={<Button><Plus className="w-4 h-4 mr-2" />Thêm Địa điểm</Button>}
       />
 
-      <div className="sticky top-16 z-10 flex gap-4 bg-background/70 backdrop-blur supports-[backdrop-filter]:bg-background/50 p-3 rounded-lg border">
+      {/* <div className="sticky top-16 z-10 flex gap-4 bg-background/70 backdrop-blur supports-[backdrop-filter]:bg-background/50 p-3 rounded-lg border">
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
           <Input
@@ -44,7 +44,7 @@ export default function LocationsPage() {
             <SelectItem value="shopping">Mua sắm</SelectItem>
           </SelectContent>
         </Select>
-      </div>
+      </div> */}
 
       <FilterChips
         chips={[
