@@ -106,6 +106,8 @@ export const verifyUser = (req, res, next) => {
   });
 };
 
+// eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGZkZWVmMWM4ZmI3NGI5NTNlZWNiZDUiLCJyb2xlIjoiYWRtaW4iLCJpYXQiOjE3NjI1MzAxNTYsImV4cCI6MTc2MjU0ODE1Nn0.tKCWKSNOxcBl8BA3BAZn2cQpx9Fd8IjjGCR1Q1_qP14
+
 export const verifyAdmin = (req, res, next) => {
   const authHeader = req.headers["authorization"];
   console.log("Authorization Header:", authHeader);
