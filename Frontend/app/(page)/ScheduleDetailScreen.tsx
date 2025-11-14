@@ -56,6 +56,14 @@ const transportIcons = {
   "Xe điện": <Ionicons name="train-outline" size={22} color="#54c4fa" />,
 };
 
+const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+const getAvatarUri = (uri?: string | null) => {
+  if (!uri || typeof uri !== "string" || uri.trim() === "") {
+    return DEFAULT_AVATAR;
+  }
+  return uri.includes("/svg?") ? uri.replace("/svg?", "/png?") : uri;
+};
+
 const ScheduleDetailScreen = () => {
   const { colors } = useTheme();
   const route = useRoute<any>();
@@ -255,12 +263,6 @@ const ScheduleDetailScreen = () => {
 
   const a = data;
 
-  // THÊM 3 DÒNG NÀY ĐỂ DEBUG – QUAN TRỌNG NHẤT!!!
-  console.log("=== DEBUG REVIEW DATA ===");
-  console.log("data.averageRating:", data.averageRating);
-  console.log("data.reviewCount:", data.reviewCount);
-  console.log("data.reviews:", data.reviews);
-  console.log("==========================");
 
   const tripStartDate =
     s.startDate || (Array.isArray(s.days) && s.days[0]?.date) || null;
@@ -363,13 +365,7 @@ const ScheduleDetailScreen = () => {
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             {s.user && (
               <Image
-                source={{
-                  uri:
-                    s.user.profileImage ||
-                    `https://ui-avatars.com/api/?name=${
-                      s.user.username?.charAt(0) ?? "U"
-                    }`,
-                }}
+                source={{ uri: getAvatarUri(s.user.profileImage) }}
                 style={[styles.profileImage, { borderColor: colors.border }]}
               />
             )}
@@ -823,11 +819,7 @@ const ScheduleDetailScreen = () => {
             {data.reviews.slice(0, 3).map((review: any) => (
               <View key={review._id} style={styles.reviewItem}>
                 <Image
-                  source={{
-                    uri:
-                      review.user?.profileImage ||
-                      `https://ui-avatars.com/api/?name=${encodeURIComponent(review.user?.username?.[0] || "U")}&background=random`,
-                  }}
+                  source={{ uri: getAvatarUri(review.user?.profileImage) }}
                   style={styles.reviewAvatar}
                 />
                 <View style={styles.reviewContent}>
