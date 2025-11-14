@@ -40,3 +40,6 @@ Backend/.env*.local
 *.tsbuildinfo
 node_modules
 Backend/.env
+
+# Next.js (admin frontend)
+admin-fe/.next/

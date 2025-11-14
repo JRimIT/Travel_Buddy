@@ -59,6 +59,14 @@ const TravelSchedulePublicScreen = () => {
   const [reportDescription, setReportDescription] = useState("");
   const [reportLoading, setReportLoading] = useState(false);
 
+  // === INTERNAL SHARE MODAL (chia sẻ cho bạn trong app) ===
+  const [shareModalVisible, setShareModalVisible] = useState(false);
+  const [shareTripId, setShareTripId] = useState<string | null>(null);
+  const [shareQuery, setShareQuery] = useState("");
+  const [shareLoading, setShareLoading] = useState(false);
+  const [shareResults, setShareResults] = useState<any[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+
   // === FETCH DATA FUNCTIONS ===
   const fetchSchedules = async () => {
     try {
@@ -136,9 +144,10 @@ const TravelSchedulePublicScreen = () => {
   };
 
   // === ACTIONS ===
-  const handleDetail = (item) => {
-    router.push({ pathname: "/(page)/ScheduleDetailScreen", params: { id: item._id } });
-  };
+  const handleDetail = (item: any) => {
+  console.log("Nhấn vào trip với id:", item._id); // debug
+  router.push({ pathname: "/(page)/ScheduleDetailScreen", params: { id: item._id } });
+};
 
   const handleSaveTrip = async (tripId) => {
   const isCurrentlySaved = savedTrips.includes(tripId);
@@ -148,31 +157,134 @@ const TravelSchedulePublicScreen = () => {
   setSavedTrips(updatedSavedTrips);
   setUser({ ...user, savedTripSchedules: updatedSavedTrips });
 
-  try {
-    const response = await fetch(`${API_URL}/tripSchedule/${tripId}/save`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    const res = await response.json();
-
-    if (!response.ok || !res.success) {
-      throw new Error(res.error || "Unknown error");
+    try {
+      const response = await fetch(`${API_URL}/tripSchedule/${tripId}/save`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const res = await response.json();
+      if (!response.ok || !res.success) {
+        throw new Error(res.error || "Unknown error");
+      }
+    } catch (error) {
+      setSavedTrips(savedTrips);
+      setUser({ ...user, savedTripSchedules: savedTrips });
+      Alert.alert("Lỗi", error.message || "Không thể lưu lịch trình.");
     }
-    // Có thể hiển thị alert/res.message: res.message === "Trip saved" || "Trip unsaved"
-  } catch (error) {
-    setSavedTrips(savedTrips);
-    setUser({ ...user, savedTripSchedules: savedTrips });
-    Alert.alert("Lỗi", error.message || "Không thể lưu lịch trình.");
-  }
-};
+  };
 
+  const handleMarkAsCompleted = async (tripId: string) => {
+    const isCompleted = completedTrips.includes(tripId);
+    const updated = isCompleted
+      ? completedTrips.filter((id) => id !== tripId)
+      : [...completedTrips, tripId];
 
-  const handleShareTrip = async (item) => {
+    setCompletedTrips(updated);
+
+    try {
+      const response = await fetch(`${API_URL}/tripSchedule/${tripId}/complete`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) throw new Error();
+    } catch (error) {
+      setCompletedTrips(completedTrips);
+      Alert.alert("Lỗi", "Không thể đánh dấu đã đi.");
+    }
+  };
+
+  // Chia sẻ ra ngoài (hệ thống share của OS) – giữ lại
+  const handleShareTripExternal = async (item: any) => {
     try {
       await Share.share({
         message: `Thử xem lịch trình này nhé: ${item.title} | Travel Buddy`,
       });
     } catch (_) {}
+  };
+
+  const openShareModal = (tripId: string) => {
+    if (!token) {
+      Alert.alert("Lỗi", "Bạn cần đăng nhập để chia sẻ lịch trình.");
+      return;
+    }
+    setShareTripId(tripId);
+    setShareQuery("");
+    setShareResults([]);
+    setSelectedUserId(null);
+    setShareModalVisible(true);
+  };
+
+  const closeShareModal = () => {
+    setShareModalVisible(false);
+    setShareTripId(null);
+    setShareQuery("");
+    setShareResults([]);
+    setSelectedUserId(null);
+  };
+
+  const searchShareUsers = async (q: string) => {
+    setShareQuery(q);
+    setSelectedUserId(null);
+    if (!token || q.trim().length < 2) {
+      setShareResults([]);
+      return;
+    }
+    try {
+      setShareLoading(true);
+      const res = await fetch(
+        `${API_URL}/profile/search-users?query=${encodeURIComponent(
+          q.trim()
+        )}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const json = await res.json();
+      if (Array.isArray(json)) {
+        setShareResults(json);
+      } else {
+        setShareResults([]);
+      }
+    } catch (e) {
+      console.log("Search users error:", e);
+    } finally {
+      setShareLoading(false);
+    }
+  };
+
+  const handleShareTripInternal = async () => {
+    if (!shareTripId || !selectedUserId) {
+      Alert.alert("Lỗi", "Vui lòng chọn người nhận.");
+      return;
+    }
+    if (!token) {
+      Alert.alert("Lỗi", "Bạn cần đăng nhập để chia sẻ lịch trình.");
+      return;
+    }
+    setShareLoading(true);
+    try {
+      const response = await fetch(
+        `${API_URL}/tripSchedule/${shareTripId}/share`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ toUserId: selectedUserId }),
+        }
+      );
+      const json = await response.json();
+      if (!response.ok) {
+        throw new Error(json.error || "Không thể chia sẻ lịch trình");
+      }
+      Alert.alert("Thành công", "Đã gửi lời mời chia sẻ lịch trình.");
+      closeShareModal();
+    } catch (error: any) {
+      Alert.alert("Lỗi", error.message || "Không thể chia sẻ lịch trình.");
+    } finally {
+      setShareLoading(false);
+    }
   };
 
   // REVIEW
@@ -283,6 +395,28 @@ const TravelSchedulePublicScreen = () => {
   const renderItem = ({ item }) => {
     const isSaved = savedTrips.includes(item._id);
     const tripReviews = item.reviews || [];
+    
+    // Tính lại số đánh giá và trung bình nếu backend chưa cập nhật
+    const computedReviewCount = tripReviews.length;
+    const backendCount =
+      typeof item.reviewCount === "number" ? item.reviewCount : 0;
+    const reviewCount =
+      backendCount > 0 ? backendCount : computedReviewCount;
+
+    const backendAvg =
+      typeof item.averageRating === "number" ? item.averageRating : 0;
+    const computedAvg =
+      computedReviewCount > 0
+        ? tripReviews.reduce(
+            (sum: number, r: any) => sum + (r.rating || 0),
+            0
+          ) / computedReviewCount
+        : 0;
+    const averageRating =
+      backendAvg > 0 ? backendAvg : computedAvg;
+    
+    const isCompleted = completedTrips.includes(item._id);
+    const hasReviewed = tripReviews.some((r: any) => r.user?._id === user?._id);
     return (
       <View style={styles.bookCard}>
         <View style={styles.bookHeader}>
@@ -294,23 +428,45 @@ const TravelSchedulePublicScreen = () => {
             <MenuTrigger>
               <Ionicons name="ellipsis-vertical" size={24} color={colors.text} style={{ padding: 8 }} />
             </MenuTrigger>
-            <MenuOptions customStyles={{ optionsContainer: styles.menuOptionsContainer }}>
+              <MenuOptions customStyles={{ optionsContainer: styles.menuOptionsContainer }}>
               <MenuOption onSelect={() => handleSaveTrip(item._id)}>
                 <View style={styles.menuOption}>
                   <Ionicons name={isSaved ? "bookmark" : "bookmark-outline"} size={22} color={colors.text} />
                   <Text style={styles.menuOptionText}>{isSaved ? "Bỏ lưu" : "Lưu lịch trình"}</Text>
                 </View>
               </MenuOption>
-              <MenuOption onSelect={() => handleShareTrip(item)}>
+
+              {isSaved && (
+                <MenuOption onSelect={() => handleMarkAsCompleted(item._id)}>
+                  <View style={styles.menuOption}>
+                    <Ionicons name={isCompleted ? "checkmark-circle" : "checkmark-circle-outline"} size={22} color={colors.text} />
+                    <Text style={styles.menuOptionText}>
+                      {isCompleted ? "Bỏ đánh dấu đã đi" : "Đánh dấu đã đi"}
+                    </Text>
+                  </View>
+                </MenuOption>
+              )}
+
+              {isCompleted && !hasReviewed && (
+                <MenuOption onSelect={() => openReviewModal(item._id)}>
+                  <View style={styles.menuOption}>
+                    <Ionicons name="star-outline" size={22} color={colors.text} />
+                    <Text style={styles.menuOptionText}>Đánh giá</Text>
+                  </View>
+                </MenuOption>
+              )}
+
+              <MenuOption onSelect={() => handleShareTripExternal(item)}>
                 <View style={styles.menuOption}>
-                  <Ionicons name="paper-plane-outline" size={22} color={colors.text} />
-                  <Text style={styles.menuOptionText}>Chia sẻ</Text>
+                  <Ionicons name="share-social-outline" size={22} color={colors.text} />
+                  <Text style={styles.menuOptionText}>Chia sẻ ra ngoài</Text>
                 </View>
               </MenuOption>
-              <MenuOption onSelect={() => openReviewModal(item._id)}>
+
+              <MenuOption onSelect={() => openShareModal(item._id)}>
                 <View style={styles.menuOption}>
-                  <Ionicons name="star-outline" size={22} color={colors.text} />
-                  <Text style={styles.menuOptionText}>Đánh giá</Text>
+                  <Ionicons name="paper-plane-outline" size={22} color={colors.text} />
+                  <Text style={styles.menuOptionText}>Chia sẻ cho bạn</Text>
                 </View>
               </MenuOption>
               <MenuOption onSelect={() => openReportModal(item._id)}>
@@ -352,11 +508,11 @@ const TravelSchedulePublicScreen = () => {
                     key={star}
                     name="star"
                     size={14}
-                    color={star <= item.averageRating ? "#f59e0b" : "#ddd"}
+                    color={star <= averageRating ? "#f59e0b" : "#ddd"}
                   />
                 ))}
               </View>
-              <Text style={{ color: "#666", marginLeft: 4 }}>({item.reviewCount})</Text>
+              <Text style={{ color: "#666", marginLeft: 4 }}>({reviewCount})</Text>
             </View>
             {tripReviews.slice(0, 2).map((review, idx) => (
               <View key={idx} style={{ marginBottom: 12 }}>
@@ -706,6 +862,185 @@ const TravelSchedulePublicScreen = () => {
                     <ActivityIndicator color="#fff" size="small" />
                   ) : (
                     <Text style={{ color: "#fff", fontWeight: "600" }}>Gửi</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      {/* === INTERNAL SHARE MODAL === */}
+      <Modal
+        visible={shareModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={closeShareModal}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ flex: 1 }}
+        >
+          <View
+            style={{
+              flex: 1,
+              backgroundColor: "rgba(0,0,0,0.5)",
+              justifyContent: "center",
+              alignItems: "center",
+              padding: 20,
+            }}
+          >
+            <View
+              style={{
+                backgroundColor: colors.background,
+                borderRadius: 16,
+                padding: 20,
+                width: "100%",
+                maxWidth: 400,
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 18,
+                  fontWeight: "bold",
+                  color: colors.text,
+                  marginBottom: 12,
+                }}
+              >
+                Chia sẻ cho bạn
+              </Text>
+              <Text style={{ color: colors.textSecondary, marginBottom: 8 }}>
+                Tìm kiếm người nhận:
+              </Text>
+              <TextInput
+                style={{
+                  borderWidth: 1,
+                  borderColor: colors.border || "#ddd",
+                  borderRadius: 8,
+                  padding: 10,
+                  marginBottom: 8,
+                  color: colors.text,
+                }}
+                placeholder="Nhập tên hoặc email..."
+                placeholderTextColor="#999"
+                autoCapitalize="none"
+                value={shareQuery}
+                onChangeText={searchShareUsers}
+              />
+
+              {shareResults.length > 0 && (
+                <View
+                  style={{
+                    maxHeight: 220,
+                    borderWidth: 1,
+                    borderColor: colors.border || "#ddd",
+                    borderRadius: 8,
+                    marginBottom: 12,
+                    overflow: "hidden",
+                  }}
+                >
+                  <FlatList
+                    data={shareResults}
+                    keyExtractor={(u) => u._id}
+                    renderItem={({ item }) => {
+                      const selected = selectedUserId === item._id;
+                      return (
+                        <TouchableOpacity
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            paddingHorizontal: 10,
+                            paddingVertical: 8,
+                            backgroundColor: selected ? "#e3f2ff" : "#fff",
+                          }}
+                          onPress={() =>
+                            setSelectedUserId(
+                              selected ? null : (item._id as string)
+                            )
+                          }
+                        >
+                          <Image
+                            source={{
+                              uri:
+                                item.profileImage ||
+                                "https://cdn-icons-png.flaticon.com/512/847/847969.png",
+                            }}
+                            style={{
+                              width: 32,
+                              height: 32,
+                              borderRadius: 16,
+                              marginRight: 8,
+                            }}
+                          />
+                          <View style={{ flex: 1 }}>
+                            <Text
+                              style={{
+                                color: colors.text,
+                                fontWeight: "500",
+                              }}
+                            >
+                              {item.username}
+                            </Text>
+                            {item.email && (
+                              <Text
+                                style={{
+                                  color: colors.textSecondary,
+                                  fontSize: 12,
+                                }}
+                              >
+                                {item.email}
+                              </Text>
+                            )}
+                          </View>
+                          {selected && (
+                            <Ionicons
+                              name="checkmark-circle"
+                              size={20}
+                              color={colors.primary}
+                            />
+                          )}
+                        </TouchableOpacity>
+                      );
+                    }}
+                  />
+                </View>
+              )}
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "flex-end",
+                  gap: 12,
+                }}
+              >
+                <TouchableOpacity
+                  onPress={closeShareModal}
+                  style={{
+                    paddingVertical: 10,
+                    paddingHorizontal: 20,
+                    borderRadius: 8,
+                    backgroundColor: "#eee",
+                  }}
+                  disabled={shareLoading}
+                >
+                  <Text style={{ color: "#333", fontWeight: "600" }}>Hủy</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={handleShareTripInternal}
+                  disabled={shareLoading || !selectedUserId}
+                  style={{
+                    paddingVertical: 10,
+                    paddingHorizontal: 20,
+                    borderRadius: 8,
+                    backgroundColor: selectedUserId ? colors.primary : "#ccc",
+                    opacity: shareLoading ? 0.7 : 1,
+                  }}
+                >
+                  {shareLoading ? (
+                    <ActivityIndicator color="#fff" size="small" />
+                  ) : (
+                    <Text style={{ color: "#fff", fontWeight: "600" }}>
+                      Gửi
+                    </Text>
                   )}
                 </TouchableOpacity>
               </View>

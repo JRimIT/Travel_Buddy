@@ -55,7 +55,7 @@ router.post("/trip-schedule/:tripId", verifyUser, async (req, res) => {
       targetType: "TripSchedule",
       rating: parseInt(rating),
       comment: comment.trim(),
-      status: "pending"
+      status: "visible"
     });
 
     // Cập nhật lại averageRating và reviewCount cho trip (chỉ tính các review status = "visible")
@@ -67,12 +67,16 @@ router.post("/trip-schedule/:tripId", verifyUser, async (req, res) => {
 
     const reviewCount = reviews.length;
     const averageRating = reviewCount > 0
-      ? reviews.reduce((acc, cur) => acc + cur.rating, 0) / reviewCount
+      ? Math.round((reviews.reduce((acc, cur) => acc + cur.rating, 0) / reviewCount) * 10) / 10
       : 0;
 
-    // Ngay sau khi update
-await TripSchedule.findByIdAndUpdate(tripId, { reviewCount, averageRating });
-console.log(`[REVIEW] Đã cập nhật trip ${tripId} - reviewCount: ${reviewCount}, averageRating: ${averageRating}`);
+    // Cập nhật trip với reviewCount và averageRating
+    await TripSchedule.findByIdAndUpdate(tripId, { 
+      reviewCount, 
+      averageRating 
+    });
+    
+    console.log(`[REVIEW] Đã cập nhật trip ${tripId} - reviewCount: ${reviewCount}, averageRating: ${averageRating}`);
 
 
     res.json({ success: true, review });

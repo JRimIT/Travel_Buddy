@@ -8,6 +8,8 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   Alert,
+  Modal,
+  TextInput,
 } from "react-native";
 import {
   Ionicons,
@@ -62,6 +64,9 @@ const ScheduleDetailScreen = () => {
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [shareModalVisible, setShareModalVisible] = useState(false);
+  const [shareUsername, setShareUsername] = useState("");
+  const [shareLoading, setShareLoading] = useState(false);
 
   useEffect(() => {
     fetchScheduleDetail();
@@ -114,6 +119,92 @@ const ScheduleDetailScreen = () => {
     }
   };
 
+  const handleGoToEditPage = () => {
+    console.log("=== DEBUG: handleGoToEditPage called ===");
+    if (!data || !data._id) {
+      console.log("No data or _id, cannot navigate to edit.", data);
+      return;
+    }
+
+    const s: any = data as any;
+    const tripStartDate =
+      s.startDate || (Array.isArray(s.days) && s.days[0]?.date) || "";
+    const tripEndDate =
+      s.endDate ||
+      (Array.isArray(s.days) && s.days[s.days.length - 1]?.date) ||
+      "";
+
+    const params = {
+      id: s._id,
+      title: s.title || "",
+      description: s.description || "",
+      isPublic: s.isPublic ? "true" : "false",
+      fromLocation: s.fromLocation || "",
+      province: s.province || "",
+      mainTransport: s.mainTransport || "",
+      innerTransport: s.innerTransport || "",
+      budgetHotel:
+        (s.budget && typeof s.budget.hotel !== "undefined"
+          ? String(s.budget.hotel)
+          : "") || "",
+      budgetFlight:
+        (s.budget && typeof s.budget.flight !== "undefined"
+          ? String(s.budget.flight)
+          : "") || "",
+      budgetFun:
+        (s.budget && typeof s.budget.fun !== "undefined"
+          ? String(s.budget.fun)
+          : "") || "",
+      homeName: s.home?.name || "",
+      homeAddress: s.home?.address || "",
+      homePhone: s.home?.phone || "",
+      homeWebsite: s.home?.website || "",
+      startDate: tripStartDate || "",
+      endDate: tripEndDate || "",
+      editMode: "clone", // chỉnh sửa từ trang chi tiết -> lưu thành bài mới
+    };
+
+    console.log("Navigating to /(page)/ScheduleEditScreen with params:", params);
+
+    router.push({
+      pathname: "/(page)/ScheduleEditScreen",
+      params,
+    });
+  };
+
+  const handleShareTrip = async () => {
+    if (!data || !data._id) return;
+    if (!shareUsername.trim()) {
+      Alert.alert("Lỗi", "Vui lòng nhập tên người nhận chia sẻ");
+      return;
+    }
+    if (!token) {
+      Alert.alert("Lỗi", "Bạn cần đăng nhập để chia sẻ lịch trình");
+      return;
+    }
+    setShareLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/tripSchedule/${data._id}/share`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ toUsername: shareUsername.trim() }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json.error || "Không thể chia sẻ lịch trình");
+      }
+      Alert.alert("Thành công", "Đã gửi lời mời chia sẻ lịch trình");
+      setShareModalVisible(false);
+      setShareUsername("");
+    } catch (e: any) {
+      Alert.alert("Lỗi", e.message || "Không thể chia sẻ lịch trình");
+    } finally {
+      setShareLoading(false);
+    }
+  };
   if (loading)
     return (
       <View style={styles.loaderContainer}>
@@ -130,14 +221,37 @@ const ScheduleDetailScreen = () => {
     );
 
   const s = data;
-  const isHome = !!(s.home && s.home.lat && s.home.lon);
-  const baseStay = isHome ? s.home : s.hotelDefault || {};
-  const baseLabel = isHome ? "Nhà riêng / Chỗ ở" : "Khách sạn mặc định";
-  const baseIcon = isHome ? (
-    <Ionicons name="home" size={18} color="#00b49d" />
-  ) : (
-    <Ionicons name="business" size={18} color={colors.primary} />
-  );
+
+  const hasHotelDefault =
+    !!s.hotelDefault &&
+    Object.values(s.hotelDefault).some(
+      (v) => v !== null && v !== undefined && String(v).trim() !== ""
+    );
+
+  const hasHome =
+    !!s.home &&
+    Object.values(s.home).some(
+      (v) => v !== null && v !== undefined && String(v).trim() !== ""
+    );
+
+  let baseStay: any = null;
+  let baseLabel = "";
+
+  // ƯU TIÊN chỗ ở mà bạn chỉnh trong form (home) nếu có dữ liệu
+  if (hasHome) {
+    baseStay = s.home;
+    baseLabel = "Nhà riêng / Chỗ ở";
+  } else if (hasHotelDefault) {
+    // Chỉ khi không có home mới dùng khách sạn mặc định của trip gốc
+    baseStay = s.hotelDefault;
+    baseLabel = "Khách sạn mặc định";
+  }
+  const baseIcon =
+    baseLabel === "Nhà riêng / Chỗ ở" ? (
+      <Ionicons name="home" size={18} color="#00b49d" />
+    ) : (
+      <Ionicons name="business" size={18} color={colors.primary} />
+    );
 
   const a = data;
 
@@ -159,7 +273,65 @@ const ScheduleDetailScreen = () => {
   console.log("fromLocation: ", fromLocationStr);
   console.log("province: ", provinceStr);
   return (
-    <ScrollView
+    <>
+      <Modal
+        visible={shareModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShareModalVisible(false)}
+      >
+        <View style={styles.shareModalOverlay}>
+          <View style={[styles.shareModalContent, { backgroundColor: colors.cardBackground }]}>
+            <Text style={[styles.shareTitle, { color: colors.textPrimary }]}>
+              Chia sẻ lịch trình này
+            </Text>
+            <Text style={{ color: colors.textSecondary, marginBottom: 8 }}>
+              Nhập username của người nhận:
+            </Text>
+            <TextInput
+              value={shareUsername}
+              onChangeText={setShareUsername}
+              placeholder="Ví dụ: friend123"
+              placeholderTextColor={colors.placeholderText}
+              style={[
+                styles.shareInput,
+                { borderColor: colors.border, color: colors.textPrimary },
+              ]}
+              autoCapitalize="none"
+            />
+            <View style={styles.shareActions}>
+              <TouchableOpacity
+                style={styles.shareCancelBtn}
+                onPress={() => {
+                  setShareModalVisible(false);
+                  setShareUsername("");
+                }}
+                disabled={shareLoading}
+              >
+                <Text style={{ color: colors.textSecondary, fontWeight: "500" }}>
+                  Hủy
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.shareConfirmBtn,
+                  { backgroundColor: colors.primary, opacity: shareLoading ? 0.7 : 1 },
+                ]}
+                onPress={handleShareTrip}
+                disabled={shareLoading}
+              >
+                {shareLoading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={{ color: "#fff", fontWeight: "600" }}>Gửi</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <ScrollView
       style={[styles.container, { backgroundColor: colors.background }]}
       showsVerticalScrollIndicator={false}
     >
@@ -184,46 +356,75 @@ const ScheduleDetailScreen = () => {
           style={{
             flexDirection: "row",
             alignItems: "center",
+            justifyContent: "space-between",
             marginBottom: 7,
           }}
         >
-          {s.user && (
-            <Image
-              source={{
-                uri:
-                  s.user.profileImage ||
-                  `https://ui-avatars.com/api/?name=${
-                    s.user.username?.charAt(0) ?? "U"
-                  }`,
-              }}
-              style={[styles.profileImage, { borderColor: colors.border }]}
-            />
-          )}
-          <View>
-            <Text style={[styles.headerTitle, { color: colors.primary }]}>
-              {s.title || "Chuyến đi"}
-            </Text>
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <Ionicons
-                name="person-circle"
-                size={16}
-                color={colors.textSecondary}
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            {s.user && (
+              <Image
+                source={{
+                  uri:
+                    s.user.profileImage ||
+                    `https://ui-avatars.com/api/?name=${
+                      s.user.username?.charAt(0) ?? "U"
+                    }`,
+                }}
+                style={[styles.profileImage, { borderColor: colors.border }]}
               />
-              <Text style={[styles.headerSub, { color: colors.textSecondary }]}>
-                {s.user?.username || "User"}{" "}
-                <Text
-                  style={{
-                    fontWeight: "400",
-                    fontStyle: "italic",
-                    color: colors.placeholderText,
-                    marginLeft: 8,
-                  }}
-                >
-                  {s.isPublic ? "Công khai" : "Riêng tư"}
-                </Text>
+            )}
+            <View>
+              <Text style={[styles.headerTitle, { color: colors.primary }]}>
+                {s.title || "Chuyến đi"}
               </Text>
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <Ionicons
+                  name="person-circle"
+                  size={16}
+                  color={colors.textSecondary}
+                />
+                <Text
+                  style={[styles.headerSub, { color: colors.textSecondary }]}
+                >
+                  {s.user?.username || "User"}{" "}
+                  <Text
+                    style={{
+                      fontWeight: "400",
+                      fontStyle: "italic",
+                      color: colors.placeholderText,
+                      marginLeft: 8,
+                    }}
+                  >
+                    {s.isPublic ? "Công khai" : "Riêng tư"}
+                  </Text>
+                </Text>
+              </View>
             </View>
           </View>
+          {user?.username === s.user?.username && (
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <TouchableOpacity
+                style={[styles.iconCircleBtn, { marginRight: 8 }]}
+                onPress={() => setShareModalVisible(true)}
+              >
+                <Ionicons
+                  name="share-social-outline"
+                  size={18}
+                  color={colors.primary}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.iconCircleBtn}
+                onPress={handleGoToEditPage}
+              >
+                <Ionicons
+                  name="create-outline"
+                  size={18}
+                  color={colors.primary}
+                />
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
         {s.description ? (
           <>
@@ -469,50 +670,77 @@ const ScheduleDetailScreen = () => {
         )}
         {Array.isArray(s.days) &&
           s.days.map((day, idx) => {
-            let dayTitle = `Ngày ${day.day}`;
-            if (day.label && day.label !== "") dayTitle += ` - ${day.label}`;
-            if (day.date && day.date !== "")
-              dayTitle += ` | ${beautifyDate(day.date)}`;
+            const safeDay = day || {};
+            const dayNumber = safeDay.day ?? idx + 1;
+            let dayTitle = `Ngày ${dayNumber}`;
+            if (safeDay.label && safeDay.label !== "")
+              dayTitle += ` - ${safeDay.label}`;
+            if (safeDay.date && safeDay.date !== "")
+              dayTitle += ` | ${beautifyDate(safeDay.date)}`;
+            const activities = Array.isArray(safeDay.activities)
+              ? safeDay.activities
+              : [];
+
             return (
               <View key={idx} style={{ marginBottom: 15, width: "100%" }}>
                 <Text style={styles.dayItemTitle}>{dayTitle}</Text>
-                {Array.isArray(day.activities) && day.activities.length > 0 ? (
-                  day.activities.map((act, i) => (
-                    <View
-                      key={i}
-                      style={[
-                        styles.activityRow,
-                        { backgroundColor: colors.inputBackground },
-                      ]}
-                    >
-                      <MaterialCommunityIcons
-                        name="clock-outline"
-                        size={16}
-                        color={colors.primary}
-                        style={{ marginTop: 1, marginRight: 3 }}
-                      />
-                      <Text style={styles.activityTime}>{act.time} </Text>
-                      <Text style={styles.activityName}>{act.name}</Text>
-                      {act.cost && (
-                        <Text style={styles.activityCost}>
-                          +{act.cost.toLocaleString()}đ
-                        </Text>
-                      )}
-                    </View>
-                  ))
+                {activities.length > 0 ? (
+                  activities.map((act, i) => {
+                    const safeAct = act || {};
+                    const timeText =
+                      typeof safeAct.time === "string"
+                        ? safeAct.time
+                        : safeAct.time != null
+                        ? String(safeAct.time)
+                        : "";
+                    const nameText =
+                      typeof safeAct.name === "string"
+                        ? safeAct.name
+                        : safeAct.name != null
+                        ? String(safeAct.name)
+                        : "";
+                    const hasCost =
+                      typeof safeAct.cost === "number" &&
+                      !isNaN(safeAct.cost);
+
+                    return (
+                      <View
+                        key={i}
+                        style={[
+                          styles.activityRow,
+                          { backgroundColor: colors.inputBackground },
+                        ]}
+                      >
+                        <MaterialCommunityIcons
+                          name="clock-outline"
+                          size={16}
+                          color={colors.primary}
+                          style={{ marginTop: 1, marginRight: 3 }}
+                        />
+                        <Text style={styles.activityTime}>{timeText}</Text>
+                        <Text style={styles.activityName}>{nameText}</Text>
+                        {hasCost && (
+                          <Text style={styles.activityCost}>
+                            {`+${safeAct.cost.toLocaleString()}đ`}
+                          </Text>
+                        )}
+                      </View>
+                    );
+                  })
                 ) : (
                   <Text style={styles.noActivity}>Không có hoạt động</Text>
                 )}
-                {day.hotel && (
+                {safeDay.hotel && (
                   <Text style={styles.hotelInfo}>
                     <Ionicons name="business" size={13} color="#be0272" /> Ở
-                    khách sạn: {day.hotel?.name || day.hotel?.address_line1}
+                    khách sạn:{" "}
+                    {safeDay.hotel?.name || safeDay.hotel?.address_line1}
                   </Text>
                 )}
-                {day.move && (
+                {safeDay.move && (
                   <Text style={styles.moveInfo}>
-                    <Ionicons name="car-outline" size={13} color="#5374e7" />
-                    Đã di chuyển: {day.move.label || ""}
+                    <Ionicons name="car-outline" size={13} color="#5374e7" /> Đã
+                    di chuyển: {safeDay.move.label || ""}
                   </Text>
                 )}
               </View>
@@ -531,28 +759,62 @@ const ScheduleDetailScreen = () => {
             Đánh giá từ cộng đồng
           </Text>
           <View style={styles.ratingSummary}>
-            <Text style={styles.averageRating}>
-              {(data.averageRating || 0).toFixed(1)}
-            </Text>
-            <View style={styles.starsRow}>
-              {[1, 2, 3, 4, 5].map((star) => (
-                <Ionicons
-                  key={star}
-                  name={
-                    star <= Math.round(data.averageRating || 0)
-                      ? "star"
-                      : "star-outline"
-                  }
-                  size={20}
-                  color="#FFB800"
-                />
-              ))}
-            </View>
-            <Text
-              style={[styles.reviewCountText, { color: colors.textSecondary }]}
-            >
-              ({data.reviewCount || 0} đánh giá)
-            </Text>
+            {(() => {
+              const reviewsArray = Array.isArray(data.reviews)
+                ? data.reviews
+                : [];
+              const computedCount = reviewsArray.length;
+              const backendCount =
+                typeof data.reviewCount === "number"
+                  ? data.reviewCount
+                  : 0;
+              const reviewCount =
+                backendCount > 0 ? backendCount : computedCount;
+
+              const backendAvg =
+                typeof data.averageRating === "number"
+                  ? data.averageRating
+                  : 0;
+              const computedAvg =
+                computedCount > 0
+                  ? reviewsArray.reduce(
+                      (sum: number, r: any) => sum + (r.rating || 0),
+                      0
+                    ) / computedCount
+                  : 0;
+              const averageRating =
+                backendAvg > 0 ? backendAvg : computedAvg;
+
+              return (
+                <>
+                  <Text style={styles.averageRating}>
+                    {averageRating.toFixed(1)}
+                  </Text>
+                  <View style={styles.starsRow}>
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Ionicons
+                        key={star}
+                        name={
+                          star <= Math.round(averageRating)
+                            ? "star"
+                            : "star-outline"
+                        }
+                        size={20}
+                        color="#FFB800"
+                      />
+                    ))}
+                  </View>
+                  <Text
+                    style={[
+                      styles.reviewCountText,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
+                    ({reviewCount} đánh giá)
+                  </Text>
+                </>
+              );
+            })()}
           </View>
         </View>
 
@@ -704,6 +966,7 @@ const ScheduleDetailScreen = () => {
         </View>
       )}
     </ScrollView>
+    </>
   );
 };
 
@@ -869,6 +1132,52 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
     fontWeight: "600",
     marginRight: 4,
+  },
+  iconCircleBtn: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
+  },
+  shareModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  shareModalContent: {
+    width: "85%",
+    borderRadius: 16,
+    padding: 18,
+  },
+  shareTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 8,
+  },
+  shareInput: {
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    marginTop: 4,
+    marginBottom: 12,
+  },
+  shareActions: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    marginTop: 4,
+  },
+  shareCancelBtn: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    marginRight: 8,
+  },
+  shareConfirmBtn: {
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+    borderRadius: 10,
   },
 });
 

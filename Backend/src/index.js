@@ -29,7 +29,7 @@ import postRoutes from "./routes/postRoutes.js";
 import conversationRoutes from "./routes/conversationRoutes.js"; // Thêm route conversation
 import reportRoutes from "./routes/reportRoutes.js";
 import reviewRouter from "./routes/reviewRoutes.js";
-import adminReviewRouter from "./models/adminReviews.js";
+import adminReviewRouter from "./routes/adminReviews.js";
 import supporterRoutes from "./routes/supporterRoutes.js";
 
 // Models imports (quan trọng cho Socket.IO)
