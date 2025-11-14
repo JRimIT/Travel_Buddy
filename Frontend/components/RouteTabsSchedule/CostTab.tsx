@@ -66,10 +66,11 @@ console.log("days (Costabs): ", days);
       return;
     }
     const budgets = {
-      flight: Number(budgetFlight?.replace(/\./g, "")) || 0,
-      hotel: Number(budgetHotel?.replace(/\./g, "")) || 0,
-      fun: Number(budgetFun?.replace(/\./g, "")) || 0,
+      flight: Number((budgetFlight ?? "0").toString().replace(/\./g, "")) || 0,
+      hotel: Number((budgetHotel ?? "0").toString().replace(/\./g, "")) || 0,
+      fun: Number((budgetFun ?? "0").toString().replace(/\./g, "")) || 0,
     };
+
     const uriParts = image.split(".");
     const fileType = uriParts[uriParts.length - 1];
     const imageType = fileType ? `image/${fileType.toLowerCase()}` : "image/jpeg";

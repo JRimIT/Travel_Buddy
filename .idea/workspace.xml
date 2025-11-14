@@ -5,8 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8ea227c4-f82a-4fa0-ae6f-a5e748e19fd6" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/Frontend/app/(page)/SelectStartDateScreen.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Frontend/app/(page)/ScheduleDetailScreen.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Frontend/app/(page)/ScheduleDetailScreen.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Frontend/components/RouteTabsSchedule/CostTab.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Frontend/components/RouteTabsSchedule/CostTab.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Frontend/components/RouteTabsSchedule/TransportTab.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/Frontend/components/RouteTabsSchedule/TransportTab.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

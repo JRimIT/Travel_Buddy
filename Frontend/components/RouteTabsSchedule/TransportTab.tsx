@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useRouter } from "expo-router";
 import {
   View,
   Text,
@@ -12,7 +13,7 @@ import { useSelector, useDispatch } from "react-redux";
 import trainData from "../../trains.json";
 import busData from "../../bus.json";
 import { useAuthStore } from '../../store/authStore';
-import { setUserTicket, setUserChosenFlight } from "../../redux/inforUserTravel/inforUserTravelSlice"; // import action mới
+import { setUserTicket, setUserChosenFlight,setUserFlightTicket } from "../../redux/inforUserTravel/inforUserTravelSlice"; // import action mới
 
 const RAPIDAPI_KEY = "YOUR_RAPIDAPI_KEY";
 const RAPIDAPI_HOST = "flights-sky.p.rapidapi.com";
@@ -44,6 +45,7 @@ const searchFlightsEverywhere = async (params: any) => {
 
 const TransportTab = ({ tripId }: { tripId?: string }) => {
   const dispatch = useDispatch();
+  const router = useRouter();
   const userToken = useAuthStore((state) => state.token);
   const mainTransportRaw = useSelector(
     (state: any) => state.inforUserTravel.userTransportMain
@@ -142,7 +144,12 @@ const TransportTab = ({ tripId }: { tripId?: string }) => {
 
   const handleSelectTicket = (item: any, id: string) => {
     setSelectedTicketId(id);
-      dispatch(setUserTicket(item));
+
+    if (transportType === "flight") {
+      dispatch(setUserFlightTicket(item));   // ✈️ Lưu riêng vé máy bay
+    } else {
+      dispatch(setUserTicket(item));         // 🚆🚌 Tàu & xe giữ nguyên
+    }
   };
 
   const renderCard = (item: any, idx: number) => {
@@ -212,10 +219,11 @@ const TransportTab = ({ tripId }: { tripId?: string }) => {
     <View style={styles.page}>
       <View style={styles.header}>
         <Ionicons
-          name="airplane-outline"
+          name="arrow-back-outline"
           size={26}
           color="#fff"
-          style={{ marginRight: 8 }}
+          style={{ marginRight: 12 }}
+          onPress={() => router.push("/TravelTransportScreen")}
         />
         <Text style={styles.title}>
           {transportType === "flight"
@@ -276,4 +284,9 @@ const styles = StyleSheet.create({
   name: { fontWeight: "bold", fontSize: 17, color: "#4175fa" },
   info: { fontSize: 15, color: "#333", marginTop: 2 },
   price: { fontSize: 16, color: "#d91e18", fontWeight: "bold", marginTop: 5 },
+  arrowBack: {
+    marginRight: 12,
+    padding: 4,
+  },
+
 });
