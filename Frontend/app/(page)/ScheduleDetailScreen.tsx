@@ -60,7 +60,6 @@ const ScheduleDetailScreen = () => {
   const { colors } = useTheme();
   const route = useRoute<any>();
   const { user, token } = useAuthStore();
-  const { user, token } = useAuthStore();
   const id = route.params?.id;
 
   const [data, setData] = useState(null);

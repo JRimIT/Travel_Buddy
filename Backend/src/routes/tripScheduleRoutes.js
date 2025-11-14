@@ -138,7 +138,6 @@ router.put("/:id", verifyUser, async (req, res) => {
     ];
 
     allowed.forEach((field) => {
-    allowed.forEach((field) => {
       if (req.body[field] !== undefined) updateFields[field] = req.body[field];
     });
 
@@ -223,17 +222,18 @@ router.post("/:id/complete", verifyUser, async (req, res) => {
       return res.status(403).json({ error: "Bạn cần lưu lịch trình trước" });
     }
 
-    // Cập nhật trạng thái đặt vé
-    schedule.bookingStatus = bookingStatus;
-    await schedule.save();
+    const isCompleted = trip.completedBy?.includes(req.user.userId);
 
-    res.json({
-      success: true,
-      message: "Booking status updated",
-      bookingStatus: schedule.bookingStatus,
-    });
+    if (isCompleted) {
+      trip.completedBy.pull(req.user.userId);
+    } else {
+      trip.completedBy.addToSet(req.user.userId);
+    }
+
+    await trip.save();
+    res.json({ completed: !isCompleted });
   } catch (err) {
-    console.error("Booking update error:", err);
+    console.error(err);
     res.status(500).json({ error: "Server error" });
   }
 });
