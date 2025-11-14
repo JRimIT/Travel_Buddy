@@ -11,7 +11,8 @@ const swaggerDefinition = {
   info: {
     title: "Travel Buddy API",
     version: "1.0.0",
-    description: "API documentation for Travel Buddy - A smart travel planning system",
+    description:
+      "API documentation for Travel Buddy - A smart travel planning system",
   },
   servers: [
     {
@@ -143,6 +144,8 @@ const options = {
   apis: [
     path.join(__dirname, "../routes/adminRoutes.js"),
     path.join(__dirname, "../routes/authRoutes.js"),
+    path.join(__dirname, "../routes/reportRoutes.js"),
+    path.join(__dirname, "../routes/supporterRoutes.js"),
     // apis: [path.join(__dirname, "../routes/*.js")], như này là lấy all
   ],
 };

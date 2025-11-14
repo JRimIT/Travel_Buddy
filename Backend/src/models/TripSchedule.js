@@ -1,7 +1,10 @@
+// models/TripSchedule.js
 import mongoose from "mongoose";
 
 const TripScheduleSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  // Nếu là bản được chia sẻ/clone từ trip khác, lưu id trip gốc
+  sharedFrom: { type: mongoose.Schema.Types.ObjectId, ref: "TripSchedule", default: null },
   title: String,
   description: String,
   budget: {
@@ -19,6 +22,7 @@ const TripScheduleSchema = new mongoose.Schema({
           name: String,
           cost: Number,
           place: Object,
+          completed: { type: Boolean, default: false },
         },
       ],
     },
@@ -63,17 +67,48 @@ const TripScheduleSchema = new mongoose.Schema({
     soGheTrong: Number,
   },
   bookingStatus: {
-        type: String,
-        enum: [
-          "not_booking",
-          "booking_pending",
-          "booking_assigned",
-          "booking_done",
-        ],
-        default: "not_booking",
-      },
-});
+    type: String,
+    enum: [
+      "not_booking",
+      "booking_pending",
+      "booking_assigned",
+      "booking_done",
+    ],
+    default: "not_booking",
+  },
+  savedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  completedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
 
-// Tránh tạo lại model khi hot reload
+  averageRating: { type: Number, default: 0, min: 0, max: 5 },
+  reviewCount: { type: Number, default: 0 },
+
+  supporter: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    default: null,
+  },
+}
+  ,
+  { timestamps: true });
+
+// Index để query nhanh
+TripScheduleSchema.index({ isPublic: 1 });
+TripScheduleSchema.index({ savedBy: 1 });
+TripScheduleSchema.index({ completedBy: 1 });
+TripScheduleSchema.index({ sharedFrom: 1 });
+
+TripScheduleSchema.virtual('reviews', {
+  ref: 'Review',
+  localField: '_id',
+  foreignField: 'targetId',
+  justOne: false,
+  options: {
+    match: { targetType: 'TripSchedule', status: 'visible' },
+    sort: { createdAt: -1 }
+  }
+});
+TripScheduleSchema.set('toObject', { virtuals: true });
+TripScheduleSchema.set('toJSON', { virtuals: true });
+
 export default mongoose.models.TripSchedule ||
   mongoose.model("TripSchedule", TripScheduleSchema);

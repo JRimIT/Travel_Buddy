@@ -136,4 +136,28 @@ router.delete("/delete", protectRoute, async (req, res) => {
   }
 });
 
+// GET /profile/search-users?query=abc - tìm user để share (exclude bản thân)
+router.get("/search-users", protectRoute, async (req, res) => {
+  try {
+    const { query } = req.query;
+    if (!query || !String(query).trim()) {
+      return res.json([]);
+    }
+    const regex = new RegExp(String(query).trim(), "i");
+
+    const users = await User.find({
+      _id: { $ne: req.user._id },
+      $or: [{ username: regex }, { email: regex }],
+    })
+      .select("username email profileImage")
+      .limit(20)
+      .lean();
+
+    res.json(users);
+  } catch (error) {
+    console.error("Error searching users:", error);
+    res.status(500).json({ message: "Không thể tìm kiếm người dùng" });
+  }
+});
+
 export default router;

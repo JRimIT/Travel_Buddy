@@ -26,10 +26,6 @@
     "web": {
       "favicon": "./assets/logo.png"
     },
-    "plugins": [
-      "expo-audio",
-      "expo-router",
-      "expo-web-browser"
-    ]
+    "plugins": ["expo-audio", "expo-router", "expo-web-browser"]
   }
 }

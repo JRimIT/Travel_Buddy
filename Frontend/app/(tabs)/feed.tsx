@@ -36,6 +36,25 @@ function useDebounce(value, delay) {
   return debouncedValue;
 }
 
+// --- Hàm chọn avatar hợp lý ---
+const getAvatarUri = (username?: string, profileImage?: string) => {
+  let uri = profileImage;
+
+  // Nếu chưa có ảnh riêng, dùng Dicebear theo username hoặc fallback
+  if (!uri) {
+    const seed = username || "default";
+    uri = `https://api.dicebear.com/7.x/avataaars/png?seed=${encodeURIComponent(seed)}`;
+  }
+
+  // Dicebear trả về svg => convert sang png cho React Native
+  if (uri.includes("/svg?")) {
+    uri = uri.replace("/svg?", "/png?");
+  }
+
+  return uri;
+};
+
+
 const CommentItem = ({ comment, onReplyPress }) => {
   if (!comment || !comment.user || !comment._id) {
     return null;
@@ -44,7 +63,7 @@ const CommentItem = ({ comment, onReplyPress }) => {
     <View style={styles.commentWrapper}>
       <View style={styles.commentItemContainer}>
         <Image
-          source={{ uri: comment.user.profileImage || 'https://via.placeholder.com/40' }}
+          source={{ uri: getAvatarUri(comment.user.username, comment.user.profileImage) }}
           style={styles.commentAvatar}
         />
         <View style={styles.commentContent}>
@@ -226,7 +245,10 @@ const CommentModal = ({ visible, onClose, postId, onCommentPosted }: {
                       />
                     )}
                     <View style={styles.inputContainer}>
-                        <Image source={{ uri: user?.profileImage || 'https://via.placeholder.com/40' }} style={styles.inputAvatar} />
+                        <Image
+                          source={{ uri: getAvatarUri(user?.username, user?.profileImage) }}
+                          style={styles.inputAvatar}
+                        />
                         <TextInput
                             style={styles.commentInput} // Dùng style đã tối ưu
                             placeholder={replyingTo ? `Trả lời @${replyingTo.user?.username || 'user'}...` : "Viết bình luận..."}

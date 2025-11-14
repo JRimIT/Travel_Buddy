@@ -5,7 +5,7 @@ const userSchema = new mongoose.Schema(
   {
     username: {
       type: String,
-      require: true,
+      required: true,
       unique: true,
     },
     email: {
@@ -18,10 +18,12 @@ const userSchema = new mongoose.Schema(
       require: true,
       minlength: 6,
     },
+    // googleId: { type: String, unique: true, sparse: true },
     profileImage: {
       type: String,
-      default:
-        "https://i.pinimg.com/1200x/dc/6c/b0/dc6cb0521d182f959da46aaee82e742f.jpg",
+      default: function () {
+        return `https://api.dicebear.com/7.x/avataaars/png?seed=${this.username || 'default'}`;
+      },
     },
     favorites: [
       {
@@ -35,21 +37,24 @@ const userSchema = new mongoose.Schema(
     // },
     role: {
       type: String,
-      enum: ['user', 'admin', 'support'],
-      default: 'user'
+      enum: ["user", "admin", "support"],
+      default: "user",
     },
     isLocked: {
       type: Boolean,
       default: false,
     },
-    savedPosts: [{
+    savedPosts: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Post",
+      },
+    ],
+    savedTripSchedules: [{
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Post'
+      ref: 'TripSchedule',
+      default: []
     }],
-    savedTripSchedules: [{ 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'TripSchedule' 
-    }]
   },
   {
     timestamps: true,

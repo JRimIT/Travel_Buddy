@@ -6,7 +6,8 @@ const createSettingStyles = (colors: ThemeType) =>
     container: {
       flex: 1,
       backgroundColor: colors.background,
-      // paddingHorizontal: 20,
+      paddingHorizontal: 20,
+      paddingBottom: 30,
     },
     backButton: {
       marginTop: 40,
