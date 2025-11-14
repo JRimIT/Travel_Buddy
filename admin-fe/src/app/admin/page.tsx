@@ -1,26 +1,31 @@
-"use client"
+"use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card"
-import { DashboardStats } from "../../components/admin/dashboard-stats"
-import { SalesTrendsChart } from "../../components/admin/sales-trends-chart"
-import { UserGrowthChart } from "../../components/admin/user-growth-chart"
-import { TripStatusPie } from "../../components/admin/trip-status-pie"
-import { ReviewRatingChart } from "../../components/admin/review-rating-chart"
-import { TopContributors } from "../../components/admin/top-contributors"
-import { useAuth } from "@/src/lib/auth-context"
-import { SupportDashboard } from "../support/support-dashboard"
-import Unauthorized from "../unauthorized/page"
-import { PageHeader } from "../../components/admin/page-header"
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../../components/ui/card";
+import { DashboardStats } from "../../components/admin/dashboard-stats";
+import { SalesTrendsChart } from "../../components/admin/sales-trends-chart";
+import { UserGrowthChart } from "../../components/admin/user-growth-chart";
+import { TripStatusPie } from "../../components/admin/trip-status-pie";
+import { ReviewRatingChart } from "../../components/admin/review-rating-chart";
+import { TopContributors } from "../../components/admin/top-contributors";
+import { useAuth } from "@/src/lib/auth-context";
+import SupportDashboard from "../support/support-dashboard";
+import Unauthorized from "../unauthorized/page";
+import { PageHeader } from "../../components/admin/page-header";
 
 export default function AdminDashboard() {
-  const { user } = useAuth()
+  const { user } = useAuth();
 
   if (user?.role === "support") {
-    return <SupportDashboard />
+    return <SupportDashboard />;
   }
 
   if (user?.role === "user") {
-    return <Unauthorized />
+    return <Unauthorized />;
   }
 
   return (
@@ -30,7 +35,7 @@ export default function AdminDashboard() {
         description="Theo dõi doanh thu, người dùng, chuyến đi và đánh giá"
         breadcrumbs={[
           { label: "Trang chủ", href: "/admin" },
-          { label: "Bảng điều khiển" }
+          { label: "Bảng điều khiển" },
         ]}
       />
 
@@ -89,5 +94,5 @@ export default function AdminDashboard() {
         </CardContent>
       </Card>
     </main>
-  )
+  );
 }

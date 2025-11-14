@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import { Bell, Search } from "lucide-react"
-import { Button } from "../../components/ui/button"
-import { Input } from "../../components/ui/input"
+import { Bell, Search } from "lucide-react";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,14 +10,18 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "../../components/ui/dropdown-menu"
-import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar"
-import { useAuth } from "../../lib/auth-context"
-import { ThemeToggle } from "../../components/ui/theme-toggle"
-import { CommandMenu } from "./command-menu"
+} from "../../components/ui/dropdown-menu";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "../../components/ui/avatar";
+import { useAuth } from "../../lib/auth-context";
+import { ThemeToggle } from "../../components/ui/theme-toggle";
+import { CommandMenu } from "./command-menu";
 
 export function Header() {
-  const { user, logout } = useAuth()
+  const { user, logout } = useAuth();
 
   return (
     <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-border bg-card/80 px-6 backdrop-blur-sm supports-[backdrop-filter]:bg-card/70 transition-all">
@@ -80,14 +84,20 @@ export function Header() {
             {/* Thông tin người dùng */}
             <DropdownMenuLabel className="p-0">
               <div className="flex flex-col space-y-1.5">
-                <p className="text-base font-semibold text-foreground">{user?.name || "Quản trị viên"}</p>
-                <p className="text-sm text-muted-foreground">{user?.email || "admin@domain.com"}</p>
+                <p className="text-base font-semibold text-foreground">
+                  {user?.name || "Quản trị viên"}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {user?.email || "admin@domain.com"}
+                </p>
                 <div className="flex items-center gap-2 mt-2">
-                  <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                    user?.role === "admin" 
-                      ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200" 
-                      : "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-                  }`}>
+                  <span
+                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                      user?.role === "admin"
+                        ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200"
+                        : "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                    }`}
+                  >
                     {user?.role === "admin" ? "Quản trị viên" : "Nhân viên"}
                   </span>
                 </div>
@@ -117,5 +127,5 @@ export function Header() {
         </DropdownMenu>
       </div>
     </header>
-  )
+  );
 }

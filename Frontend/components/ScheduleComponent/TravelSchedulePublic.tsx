@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   View,
   Text,
@@ -9,10 +9,12 @@ import {
   Image,
   Alert,
   Share,
-  Modal,
+  Animated,
+  Easing,
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  Modal,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -22,7 +24,6 @@ import {
   MenuOption,
   MenuTrigger,
 } from "react-native-popup-menu";
-
 import { API_URL } from "../../constants/api";
 import { useTheme } from "../../contexts/ThemeContext";
 import createHomeStyles from "../../assets/styles/home.styles";
@@ -30,29 +31,30 @@ import { formatPublishDate } from "../../lib/utils";
 import { useAuthStore } from "../../store/authStore";
 import api from "../../utils/apiClient";
 
-
 const TravelSchedulePublicScreen = () => {
   const { colors } = useTheme();
   const styles = createHomeStyles(colors);
   const { token, user, setUser } = useAuthStore();
   const router = useRouter();
-
-  const [data, setData] = useState<any[]>([]);
+  const rawDataRef = useRef([]);
+  const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [savedTrips, setSavedTrips] = useState<string[]>(user?.savedTripSchedules || []);
-  const [completedTrips, setCompletedTrips] = useState<string[]>([]);
-
-  // === REVIEW MODAL ===
+  const [savedTrips, setSavedTrips] = useState(user?.savedTripSchedules || []);
+  const [completedTrips, setCompletedTrips] = useState([]);
+  // --- SEARCH/FILTER/SORT ---
+  const [searchText, setSearchText] = useState("");
+  const [sortBy, setSortBy] = useState("newest");
+  const [destinationFilter, setDestinationFilter] = useState("");
+  const [showSearchBar, setShowSearchBar] = useState(false);
+  const searchAnim = useRef(new Animated.Value(0)).current;
+  // --- MODAL STATE ---
   const [reviewModalVisible, setReviewModalVisible] = useState(false);
-  const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
   const [rating, setRating] = useState(0);
   const [reviewText, setReviewText] = useState("");
   const [reviewLoading, setReviewLoading] = useState(false);
-
-  // === REPORT MODAL ===
+  const [selectedTripId, setSelectedTripId] = useState(null);
   const [reportModalVisible, setReportModalVisible] = useState(false);
-  const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
   const [reportReason, setReportReason] = useState("");
   const [reportDescription, setReportDescription] = useState("");
   const [reportLoading, setReportLoading] = useState(false);
@@ -65,17 +67,15 @@ const TravelSchedulePublicScreen = () => {
   const [shareResults, setShareResults] = useState<any[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
-  // === FETCH DATA ===
+  // === FETCH DATA FUNCTIONS ===
   const fetchSchedules = async () => {
     try {
       const response = await api.get(`/tripSchedule/public`);
-      const res = await response.data;      
-      if (response.status === 200) {
-        setData(res);
-      } else {
-        throw new Error(res.error || "Không thể lấy dữ liệu.");
-      }
-    } catch (e: any) {
+      const res = await response.data;
+      // save rawData to ref for filter/sort usage
+      rawDataRef.current = res || [];
+      setData(res || []);
+    } catch (e) {
       Alert.alert("Lỗi", "Không thể lấy dữ liệu lịch trình public.\n" + e.message);
     }
   };
@@ -89,46 +89,18 @@ const TravelSchedulePublicScreen = () => {
         const savedTripIds = res.map(trip => trip._id);
         setSavedTrips(savedTripIds);
         setUser({ ...user, savedTripSchedules: savedTripIds });
-      } else {
-        throw new Error(res.error || "Không thể lấy dữ liệu.");
       }
-      
     } catch (error) {
       console.error("Failed to fetch saved trips:", error);
     }
   };
 
-  const fetchCompletedTrips = async () => {
-  if (!token) {
-    console.log("No token, skip completed trips");
-    return;
-  }
-
-  try {
-    const response = await fetch(`${API_URL}/tripSchedule/completed/my`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    const text = await response.text();
-    console.log("Raw response from completed/my:", text); // Debug
-
-    if (!response.ok) {
-      console.error("HTTP Error:", response.status);
-      return;
-    }
-
-    const data = JSON.parse(text);
-    const ids = data.map((t: any) => t._id);
-    console.log("Completed trip IDs:", ids);
-    setCompletedTrips(ids);
-  } catch (error) {
-    console.error("Fetch error:", error);
-  }
-};
+  // Nếu muốn hỗ trợ completedTrips, thêm phần này:
+  // const fetchCompletedTrips = async () => { ... }
 
   const loadAllData = async () => {
     setLoading(true);
-    await Promise.all([fetchSchedules(), fetchSavedTrips(), fetchCompletedTrips()]);
+    await Promise.all([fetchSchedules(), fetchSavedTrips()]);
     setLoading(false);
     setRefreshing(false);
   };
@@ -136,6 +108,35 @@ const TravelSchedulePublicScreen = () => {
   useEffect(() => {
     loadAllData();
   }, [token]);
+
+  // SEARCH/FILTER/SORT logic
+  useEffect(() => {
+    let filtered = rawDataRef.current;
+    // Search multi-field
+    if (searchText.trim()) {
+      const query = searchText.trim().toLowerCase();
+      filtered = filtered.filter(item =>
+        (item.title?.toLowerCase().includes(query)
+        || item.description?.toLowerCase().includes(query)
+        || item.user?.username?.toLowerCase().includes(query)
+        || item.destination?.toLowerCase().includes(query)
+        || item.province?.toLowerCase().includes(query))
+      );
+    }
+    // Filter by destination
+    if (destinationFilter) {
+      filtered = filtered.filter(item =>
+        item.destination?.toLowerCase().includes(destinationFilter.toLowerCase())
+      );
+    }
+    // Sort
+    filtered = filtered.slice().sort((a, b) => {
+      const da = new Date(a.createdAt).getTime();
+      const db = new Date(b.createdAt).getTime();
+      return sortBy === "newest" ? db - da : da - db;
+    });
+    setData(filtered);
+  }, [searchText, sortBy, destinationFilter]);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -148,26 +149,27 @@ const TravelSchedulePublicScreen = () => {
   router.push({ pathname: "/(page)/ScheduleDetailScreen", params: { id: item._id } });
 };
 
-
-  const handleSaveTrip = async (tripId: string) => {
-    const isSaved = savedTrips.includes(tripId);
-    const updated = isSaved
-      ? savedTrips.filter((id) => id !== tripId)
-      : [...savedTrips, tripId];
-
-    setSavedTrips(updated);
-    setUser({ ...user, savedTripSchedules: updated });
+  const handleSaveTrip = async (tripId) => {
+  const isCurrentlySaved = savedTrips.includes(tripId);
+  const updatedSavedTrips = isCurrentlySaved
+    ? savedTrips.filter(id => id !== tripId)
+    : [...savedTrips, tripId];
+  setSavedTrips(updatedSavedTrips);
+  setUser({ ...user, savedTripSchedules: updatedSavedTrips });
 
     try {
       const response = await fetch(`${API_URL}/tripSchedule/${tripId}/save`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!response.ok) throw new Error();
+      const res = await response.json();
+      if (!response.ok || !res.success) {
+        throw new Error(res.error || "Unknown error");
+      }
     } catch (error) {
       setSavedTrips(savedTrips);
       setUser({ ...user, savedTripSchedules: savedTrips });
-      Alert.alert("Lỗi", "Không thể lưu lịch trình.");
+      Alert.alert("Lỗi", error.message || "Không thể lưu lịch trình.");
     }
   };
 
@@ -197,8 +199,91 @@ const TravelSchedulePublicScreen = () => {
       await Share.share({
         message: `Thử xem lịch trình này nhé: ${item.title} | Travel Buddy`,
       });
-    } catch (error) {
-      console.log("Share Error:", error);
+    } catch (_) {}
+  };
+
+  const openShareModal = (tripId: string) => {
+    if (!token) {
+      Alert.alert("Lỗi", "Bạn cần đăng nhập để chia sẻ lịch trình.");
+      return;
+    }
+    setShareTripId(tripId);
+    setShareQuery("");
+    setShareResults([]);
+    setSelectedUserId(null);
+    setShareModalVisible(true);
+  };
+
+  const closeShareModal = () => {
+    setShareModalVisible(false);
+    setShareTripId(null);
+    setShareQuery("");
+    setShareResults([]);
+    setSelectedUserId(null);
+  };
+
+  const searchShareUsers = async (q: string) => {
+    setShareQuery(q);
+    setSelectedUserId(null);
+    if (!token || q.trim().length < 2) {
+      setShareResults([]);
+      return;
+    }
+    try {
+      setShareLoading(true);
+      const res = await fetch(
+        `${API_URL}/profile/search-users?query=${encodeURIComponent(
+          q.trim()
+        )}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const json = await res.json();
+      if (Array.isArray(json)) {
+        setShareResults(json);
+      } else {
+        setShareResults([]);
+      }
+    } catch (e) {
+      console.log("Search users error:", e);
+    } finally {
+      setShareLoading(false);
+    }
+  };
+
+  const handleShareTripInternal = async () => {
+    if (!shareTripId || !selectedUserId) {
+      Alert.alert("Lỗi", "Vui lòng chọn người nhận.");
+      return;
+    }
+    if (!token) {
+      Alert.alert("Lỗi", "Bạn cần đăng nhập để chia sẻ lịch trình.");
+      return;
+    }
+    setShareLoading(true);
+    try {
+      const response = await fetch(
+        `${API_URL}/tripSchedule/${shareTripId}/share`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ toUserId: selectedUserId }),
+        }
+      );
+      const json = await response.json();
+      if (!response.ok) {
+        throw new Error(json.error || "Không thể chia sẻ lịch trình");
+      }
+      Alert.alert("Thành công", "Đã gửi lời mời chia sẻ lịch trình.");
+      closeShareModal();
+    } catch (error: any) {
+      Alert.alert("Lỗi", error.message || "Không thể chia sẻ lịch trình.");
+    } finally {
+      setShareLoading(false);
     }
   };
 
@@ -287,91 +372,68 @@ const TravelSchedulePublicScreen = () => {
     }
   };
 
-  // === REVIEW ===
-  const openReviewModal = (tripId: string) => {
+  // REVIEW
+  const openReviewModal = (tripId) => {
     setSelectedTripId(tripId);
     setReviewModalVisible(true);
   };
-
   const closeReviewModal = () => {
     setReviewModalVisible(false);
     setRating(0);
     setReviewText("");
     setSelectedTripId(null);
   };
-
-const handleSubmitReview = async () => {
-  if (rating === 0 || !reviewText.trim()) {
-    Alert.alert("Lỗi", "Vui lòng chọn số sao và nhập nhận xét.");
-    return;
-  }
-
-  setReviewLoading(true);
-  try {
-    const url = `${API_URL}/reviews/trip-schedule/${selectedTripId}`;
-    console.log("Gửi review đến:", url); // DEBUG
-
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        rating,
-        comment: reviewText.trim(),
-      }),
-    });
-
-    // IN RA RESPONSE ĐỂ XEM
-    const text = await response.text();
-    console.log("Raw response:", text.substring(0, 300)); // In 300 ký tự đầu
-
-    if (!response.ok) {
-      console.error("HTTP Error:", response.status);
-      Alert.alert("Lỗi", `Mã lỗi: ${response.status}`);
+  const handleSubmitReview = async () => {
+    if (rating === 0 || !reviewText.trim()) {
+      Alert.alert("Lỗi", "Vui lòng chọn số sao và nhập nhận xét.");
       return;
     }
-
-    let data;
+    setReviewLoading(true);
     try {
-      data = JSON.parse(text);
-    } catch (e) {
-      console.error("Không phải JSON:", text);
-      Alert.alert("Lỗi", "Server trả về dữ liệu không hợp lệ");
-      return;
+      const url = `${API_URL}/reviews/trip-schedule/${selectedTripId}`;
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          rating,
+          comment: reviewText.trim(),
+        }),
+      });
+      const text = await response.text();
+      if (!response.ok) {
+        Alert.alert("Lỗi", `Mã lỗi: ${response.status}`);
+        return;
+      }
+      Alert.alert("Thành công", "Đánh giá đã được gửi. Cảm ơn bạn!");
+      closeReviewModal();
+      onRefresh();
+    } catch (error) {
+      Alert.alert("Lỗi", "Không thể kết nối đến server");
+    } finally {
+      setReviewLoading(false);
     }
+  };
 
-    Alert.alert("Thành công", "Đánh giá đã được gửi. Cảm ơn bạn!");
-    closeReviewModal();
-    onRefresh();
-  } catch (error) {
-    console.error("Fetch error:", error);
-    Alert.alert("Lỗi", "Không thể kết nối đến server");
-  } finally {
-    setReviewLoading(false);
-  }
-};
-
-  // === REPORT ===
-  const openReportModal = (tripId: string) => {
+  // REPORT
+  const [selectedReportId, setSelectedReportId] = useState(null);
+  const openReportModal = (tripId) => {
     setSelectedReportId(tripId);
     setReportModalVisible(true);
   };
-
   const closeReportModal = () => {
     setReportModalVisible(false);
     setReportReason("");
     setReportDescription("");
     setSelectedReportId(null);
   };
-
   const handleReport = async () => {
     if (!selectedReportId || !reportReason.trim()) {
       Alert.alert("Lỗi", "Vui lòng nhập lý do báo cáo.");
       return;
     }
-
     setReportLoading(true);
     try {
       const response = await fetch(`${API_URL}/reports/trip-schedule`, {
@@ -386,7 +448,6 @@ const handleSubmitReview = async () => {
           description: reportDescription.trim() || undefined,
         }),
       });
-
       if (response.ok) {
         Alert.alert("Thành công", "Báo cáo đã được gửi. Cảm ơn bạn!");
         closeReportModal();
@@ -401,13 +462,25 @@ const handleSubmitReview = async () => {
     }
   };
 
-  // === RENDER ITEM ===
-  const renderItem = ({ item }: any) => {
-    const isSaved = savedTrips.includes(item._id);
-    const isCompleted = completedTrips.includes(item._id);
-    const tripReviews = item.reviews || [];
-    const hasReviewed = tripReviews.some((r: any) => r.user._id === user?._id);
+ const toggleSearchBar = () => {
+    setShowSearchBar(val => {
+      Animated.timing(searchAnim, {
+        toValue: !val ? 1 : 0,
+        duration: 350,
+        useNativeDriver: true,
+        easing: Easing.out(Easing.ease)
+      }).start();
+      return !val;
+    });
+  };
 
+  // --- UI & RENDERING ---
+  const destinationList = [...new Set(rawDataRef.current.map(item => item.destination).filter(Boolean))];
+
+  const renderItem = ({ item }) => {
+    const isSaved = savedTrips.includes(item._id);
+    const tripReviews = item.reviews || [];
+    
     // Tính lại số đánh giá và trung bình nếu backend chưa cập nhật
     const computedReviewCount = tripReviews.length;
     const backendCount =
@@ -426,23 +499,16 @@ const handleSubmitReview = async () => {
         : 0;
     const averageRating =
       backendAvg > 0 ? backendAvg : computedAvg;
-
+    
+    const isCompleted = completedTrips.includes(item._id);
+    const hasReviewed = tripReviews.some((r: any) => r.user?._id === user?._id);
     return (
       <View style={styles.bookCard}>
-        {/* Header */}
         <View style={styles.bookHeader}>
           <TouchableOpacity onPress={() => handleDetail(item)} style={styles.userInfo}>
-            <Image
-              source={{
-                uri: item.user?.profileImage?.includes("dicebear.com")
-                  ? item.user.profileImage.replace("/svg?", "/png?")
-                  : item.user?.profileImage || "https://cdn-icons-png.flaticon.com/512/847/847969.png",
-              }}
-              style={styles.avatar}
-            />
-            <Text style={styles.username}>{item.user?.username || "Người dùng"}</Text>
+            <Image source={{ uri: item.user?.profileImage }} style={styles.avatar} />
+            <Text style={styles.username}>{item.user?.username || "Unknown"}</Text>
           </TouchableOpacity>
-
           <Menu>
             <MenuTrigger>
               <Ionicons name="ellipsis-vertical" size={24} color={colors.text} style={{ padding: 8 }} />
@@ -488,7 +554,12 @@ const handleSubmitReview = async () => {
                   <Text style={styles.menuOptionText}>Chia sẻ cho bạn</Text>
                 </View>
               </MenuOption>
-
+              <MenuOption onSelect={() => openReviewModal(item._id)}>
+                <View style={styles.menuOption}>
+                  <Ionicons name="star-outline" size={22} color={colors.text} />
+                  <Text style={styles.menuOptionText}>Đánh giá</Text>
+                </View>
+              </MenuOption>
               <MenuOption onSelect={() => openReportModal(item._id)}>
                 <View style={styles.menuOption}>
                   <Ionicons name="flag-outline" size={22} color={colors.text} />
@@ -498,30 +569,32 @@ const handleSubmitReview = async () => {
             </MenuOptions>
           </Menu>
         </View>
-
-        {/* Body */}
         <TouchableOpacity activeOpacity={0.9} onPress={() => handleDetail(item)}>
           <View style={styles.bookImageContainer}>
             <Image source={{ uri: item.image }} style={styles.bookImage} />
           </View>
           <View style={styles.bookDetails}>
-            <Text style={styles.bookTitle} numberOfLines={2}>{item.title}</Text>
+            <Text style={styles.bookTitle} numberOfLines={2}>
+              {item.title}
+            </Text>
             {item.description ? (
               <Text style={styles.caption} numberOfLines={2}>{item.description}</Text>
             ) : null}
             <Text style={styles.date}>
               Public {item.createdAt ? formatPublishDate(item.createdAt) : ""}
             </Text>
+            <Text style={{ color: colors.primary, fontSize: 13, marginTop: 3 }}>
+              {item.destination ? `Địa điểm: ${item.destination}` : ""}
+            </Text>
           </View>
         </TouchableOpacity>
-
-        {/* Reviews Section */}
+        {/* Quick reviews */}
         {tripReviews.length > 0 && (
           <View style={{ paddingHorizontal: 16, paddingVertical: 8, borderTopWidth: 1, borderTopColor: colors.border }}>
             <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 8 }}>
               <Text style={{ fontWeight: "bold", color: colors.text, marginRight: 8 }}>Đánh giá</Text>
               <View style={{ flexDirection: "row" }}>
-                {[1, 2, 3, 4, 5].map((star) => (
+                {[1, 2, 3, 4, 5].map(star => (
                   <Ionicons
                     key={star}
                     name="star"
@@ -532,18 +605,17 @@ const handleSubmitReview = async () => {
               </View>
               <Text style={{ color: "#666", marginLeft: 4 }}>({reviewCount})</Text>
             </View>
-
-            {tripReviews.slice(0, 2).map((review: any, idx: number) => (
+            {tripReviews.slice(0, 2).map((review, idx) => (
               <View key={idx} style={{ marginBottom: 12 }}>
                 <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
                   <Image
-                    source={{ uri: review.user.profileImage || "https://cdn-icons-png.flaticon.com/512/847/847969.png" }}
+                    source={{ uri: review.user.profileImage }}
                     style={{ width: 24, height: 24, borderRadius: 12, marginRight: 8 }}
                   />
                   <Text style={{ fontWeight: "500", color: colors.text }}>{review.user.username}</Text>
                 </View>
                 <View style={{ flexDirection: "row", marginBottom: 4 }}>
-                  {[1, 2, 3, 4, 5].map((star) => (
+                  {[1, 2, 3, 4, 5].map(star => (
                     <Ionicons
                       key={star}
                       name="star"
@@ -557,7 +629,6 @@ const handleSubmitReview = async () => {
                 </Text>
               </View>
             ))}
-
             {tripReviews.length > 2 && (
               <TouchableOpacity onPress={() => handleDetail(item)}>
                 <Text style={{ color: colors.primary, fontSize: 13, fontWeight: "500" }}>
@@ -571,7 +642,6 @@ const handleSubmitReview = async () => {
     );
   };
 
-  // === LOADING ===
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -582,9 +652,119 @@ const handleSubmitReview = async () => {
 
   return (
     <View style={styles.container}>
+      {/* Heading */}
       <Text style={{ fontSize: 21, fontWeight: "bold", color: colors.primary, margin: 16, marginBottom: 0 }}>
         Lịch trình cộng đồng
       </Text>
+
+      {/* --- SEARCH/FILTER/SORT UI --- */}
+      {!showSearchBar && (
+        <TouchableOpacity
+          style={{
+            position: "absolute",
+            top: 18,
+            right: 22,
+            zIndex: 99,
+            backgroundColor: colors.primary,
+            borderRadius: 24,
+            padding: 7,
+            shadowColor: "#000",
+            shadowOpacity: 0.12,
+            elevation: 4,
+          }}
+          activeOpacity={0.92}
+          onPress={() => {
+            setShowSearchBar(true);
+            Animated.timing(searchAnim, {
+              toValue: 1,
+              duration: 350,
+              useNativeDriver: true,
+              easing: Easing.out(Easing.ease),
+            }).start();
+          }}
+        >
+          <Ionicons name="search-outline" size={28} color="#fff" />
+        </TouchableOpacity>
+      )}
+
+      {/* Search filter bar (animated) */}
+      <Animated.View
+        style={{
+          opacity: searchAnim,
+          transform: [{
+            translateY: searchAnim.interpolate({ inputRange: [0, 1], outputRange: [-56, 0] })
+          }],
+          marginTop: 14,
+        }}
+        pointerEvents={showSearchBar ? "auto" : "none"}
+      >
+        {showSearchBar && (
+          <View style={{
+            backgroundColor: "#fff",
+            borderRadius: 14,
+            padding: 14,
+            marginHorizontal: 14,
+            shadowColor: "#000",
+            shadowOpacity: 0.08,
+            elevation: 4,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 8,
+          }}>
+            <TextInput
+              style={{
+                flex: 1,
+                paddingVertical: 3,
+                paddingHorizontal: 13,
+                borderRadius: 8,
+                borderColor: colors.border,
+                borderWidth: 1,
+              }}
+              value={searchText}
+              placeholder="Tìm theo tên, mô tả, người đăng..."
+              placeholderTextColor={colors.placeholderText}
+              onChangeText={setSearchText}
+              autoFocus
+            />
+            {/* Xóa lọc
+
+
+            {/* Destination filter */}
+            <TouchableOpacity onPress={() => setDestinationFilter("")}>
+              <Ionicons name={destinationFilter ? "close-circle" : "location-outline"} size={23} color={colors.primary}/>
+            </TouchableOpacity>
+            {destinationList.length > 0 &&
+              <TouchableOpacity
+                style={{ paddingHorizontal: 1 }}
+                onPress={() => {
+                  Alert.alert(
+                    "Lọc nơi đến",
+                    "Chọn nơi đến để lọc:",
+                    destinationList.map(dest => ({
+                      text: dest,
+                      onPress: () => setDestinationFilter(dest)
+                    })),
+                    {
+                      cancelable: true
+                    }
+                  );
+                }}>
+                <Ionicons name="filter" size={20} color={destinationFilter ? colors.primary : "#888"} />
+              </TouchableOpacity>
+            }
+
+            {/* Sort button */}
+            <TouchableOpacity onPress={() => setSortBy(s => s === "newest" ? "oldest" : "newest")}>
+              <Ionicons name={sortBy === "newest" ? "arrow-up" : "arrow-down"} size={23} color={colors.primary}/>
+            </TouchableOpacity>
+
+            {/* Đóng search bar */}
+            <TouchableOpacity onPress={toggleSearchBar}>
+              <Ionicons name="close" size={26} color="#666"/>
+            </TouchableOpacity>
+          </View>
+        )}
+      </Animated.View>
 
       <FlatList
         data={data}
@@ -606,6 +786,7 @@ const handleSubmitReview = async () => {
           </Text>
         }
       />
+      {/* nút "+" mặc định */}
 
       {/* FAB */}
       <TouchableOpacity

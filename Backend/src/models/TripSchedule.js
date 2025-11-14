@@ -50,38 +50,45 @@ const TripScheduleSchema = new mongoose.Schema({
   reviewedAt: Date,
   rejectReason: String,
 
-  // Vé tàu/xe
-  ticket: {
-    gaDi: String,
-    gaDen: String,
-    chuyenTau: String,
-    nhaXe: String,
-    diemDi: String,
-    diemDen: String,
-    soXe: String,
-    loaiXe: String,
-    ngayDi: String,
-    gioDi: String,
-    gioDen: String,
-    soGheTrong: Number,
-  },
-  bookingStatus: {
-    type: String,
-    enum: ["not_booking", "booking_pending", "booking_assigned", "booking_done"],
-    default: "not_booking",
-  },
+    // ✅ Chỉ cần lưu 1 vé duy nhất (tàu hoặc xe)
+    ticket: {
+      gaDi: String,
+      gaDen: String,
+      chuyenTau: String,
+      nhaXe: String,
+      diemDi: String,
+      diemDen: String,
+      soXe: String,
+      loaiXe: String,
+      ngayDi: String,
+      gioDi: String,
+      gioDen: String,
+      soGheTrong: Number,
+    },
+    bookingStatus: {
+      type: String,
+      enum: [
+        "not_booking",
+        "booking_pending",
+        "booking_assigned",
+        "booking_done",
+      ],
+      default: "not_booking",
+    },
+    savedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    completedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
 
-  // THÊM CHO REVIEW
-  savedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-  completedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    averageRating: { type: Number, default: 0, min: 0, max: 5 },
+    reviewCount: { type: Number, default: 0 },
 
-  averageRating: { type: Number, default: 0, min: 0, max: 5 },
-  reviewCount: { type: Number, default: 0 }, // ← DẤU PHẦY ĐÃ ĐƯỢC THÊM!
-  // reviews: [{
-  //   type: mongoose.Schema.Types.ObjectId,
-  //   ref: "Review"
-  // }],
-});
+    supporter: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+  }
+  ,
+  { timestamps: true });
 
 // Index để query nhanh
 TripScheduleSchema.index({ isPublic: 1 });
