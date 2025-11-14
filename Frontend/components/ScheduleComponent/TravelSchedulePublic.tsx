@@ -31,6 +31,8 @@ import { formatPublishDate } from "../../lib/utils";
 import { useAuthStore } from "../../store/authStore";
 import api from "../../utils/apiClient";
 
+const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+
 const TravelSchedulePublicScreen = () => {
   const { colors } = useTheme();
   const styles = createHomeStyles(colors);
@@ -58,6 +60,13 @@ const TravelSchedulePublicScreen = () => {
   const [reportReason, setReportReason] = useState("");
   const [reportDescription, setReportDescription] = useState("");
   const [reportLoading, setReportLoading] = useState(false);
+
+  const getAvatarUri = (uri?: string | null) => {
+    if (!uri || typeof uri !== "string" || uri.trim() === "") {
+      return DEFAULT_AVATAR;
+    }
+    return uri.includes("/svg?") ? uri.replace("/svg?", "/png?") : uri;
+  };
 
   // === INTERNAL SHARE MODAL (chia sẻ cho bạn trong app) ===
   const [shareModalVisible, setShareModalVisible] = useState(false);
@@ -421,7 +430,7 @@ const TravelSchedulePublicScreen = () => {
       <View style={styles.bookCard}>
         <View style={styles.bookHeader}>
           <TouchableOpacity onPress={() => handleDetail(item)} style={styles.userInfo}>
-            <Image source={{ uri: item.user?.profileImage }} style={styles.avatar} />
+            <Image source={{ uri: getAvatarUri(item.user?.profileImage) }} style={styles.avatar} />
             <Text style={styles.username}>{item.user?.username || "Unknown"}</Text>
           </TouchableOpacity>
           <Menu>
@@ -514,30 +523,6 @@ const TravelSchedulePublicScreen = () => {
               </View>
               <Text style={{ color: "#666", marginLeft: 4 }}>({reviewCount})</Text>
             </View>
-            {tripReviews.slice(0, 2).map((review, idx) => (
-              <View key={idx} style={{ marginBottom: 12 }}>
-                <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 4 }}>
-                  <Image
-                    source={{ uri: review.user.profileImage }}
-                    style={{ width: 24, height: 24, borderRadius: 12, marginRight: 8 }}
-                  />
-                  <Text style={{ fontWeight: "500", color: colors.text }}>{review.user.username}</Text>
-                </View>
-                <View style={{ flexDirection: "row", marginBottom: 4 }}>
-                  {[1, 2, 3, 4, 5].map(star => (
-                    <Ionicons
-                      key={star}
-                      name="star"
-                      size={14}
-                      color={star <= review.rating ? "#f59e0b" : "#ddd"}
-                    />
-                  ))}
-                </View>
-                <Text style={{ color: "#555", fontSize: 13 }} numberOfLines={2}>
-                  {review.comment}
-                </Text>
-              </View>
-            ))}
             {tripReviews.length > 2 && (
               <TouchableOpacity onPress={() => handleDetail(item)}>
                 <Text style={{ color: colors.primary, fontSize: 13, fontWeight: "500" }}>
@@ -961,9 +946,7 @@ const TravelSchedulePublicScreen = () => {
                         >
                           <Image
                             source={{
-                              uri:
-                                item.profileImage ||
-                                "https://cdn-icons-png.flaticon.com/512/847/847969.png",
+                              uri: getAvatarUri(item.profileImage),
                             }}
                             style={{
                               width: 32,

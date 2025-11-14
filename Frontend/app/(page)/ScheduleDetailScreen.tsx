@@ -58,6 +58,14 @@ const transportIcons = {
   "Xe điện": <Ionicons name="train-outline" size={22} color="#54c4fa" />,
 };
 
+const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+const getAvatarUri = (uri?: string | null) => {
+  if (!uri || typeof uri !== "string" || uri.trim() === "") {
+    return DEFAULT_AVATAR;
+  }
+  return uri.includes("/svg?") ? uri.replace("/svg?", "/png?") : uri;
+};
+
 const ScheduleDetailScreen = () => {
   const { colors } = useTheme();
   const route = useRoute<any>();
@@ -513,12 +521,6 @@ const ScheduleDetailScreen = () => {
 
   const a = data;
 
-  // THÊM 3 DÒNG NÀY ĐỂ DEBUG – QUAN TRỌNG NHẤT!!!
-  console.log("=== DEBUG REVIEW DATA ===");
-  console.log("data.averageRating:", data.averageRating);
-  console.log("data.reviewCount:", data.reviewCount);
-  console.log("data.reviews:", data.reviews);
-  console.log("==========================");
 
   const tripStartDate =
     s.startDate || (Array.isArray(s.days) && s.days[0]?.date) || null;
@@ -616,134 +618,128 @@ const ScheduleDetailScreen = () => {
           />
         )}
 
-        {/* Thông tin chung + nơi xuất phát + tỉnh thành */}
+      {/* Thông tin chung + nơi xuất phát + tỉnh thành */}
+      <View
+        style={[styles.infoCard, { backgroundColor: colors.cardBackground }]}
+      >
         <View
-          style={[styles.infoCard, { backgroundColor: colors.cardBackground }]}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: 7,
+          }}
         >
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: 7,
-            }}
-          >
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-              {s.user && (
-                <Image
-                  source={{
-                    uri:
-                      s.user.profileImage ||
-                      `https://ui-avatars.com/api/?name=${
-                        s.user.username?.charAt(0) ?? "U"
-                      }`,
-                  }}
-                  style={[styles.profileImage, { borderColor: colors.border }]}
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            {s.user && (
+              <Image
+                 source={{ uri: getAvatarUri(s.user.profileImage) }}
+                style={[styles.profileImage, { borderColor: colors.border }]}
+              />
+            )}
+            <View>
+              <Text style={[styles.headerTitle, { color: colors.primary }]}>
+                {s.title || "Chuyến đi"}
+              </Text>
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <Ionicons
+                  name="person-circle"
+                  size={16}
+                  color={colors.textSecondary}
                 />
-              )}
-              <View>
-                <Text style={[styles.headerTitle, { color: colors.primary }]}>
-                  {s.title || "Chuyến đi"}
-                </Text>
-                <View style={{ flexDirection: "row", alignItems: "center" }}>
-                  <Ionicons
-                    name="person-circle"
-                    size={16}
-                    color={colors.textSecondary}
-                  />
+                <Text
+                  style={[styles.headerSub, { color: colors.textSecondary }]}
+                >
+                  {s.user?.username || "User"}{" "}
                   <Text
-                    style={[styles.headerSub, { color: colors.textSecondary }]}
+                    style={{
+                      fontWeight: "400",
+                      fontStyle: "italic",
+                      color: colors.placeholderText,
+                      marginLeft: 8,
+                    }}
                   >
-                    {s.user?.username || "User"}{" "}
-                    <Text
-                      style={{
-                        fontWeight: "400",
-                        fontStyle: "italic",
-                        color: colors.placeholderText,
-                        marginLeft: 8,
-                      }}
-                    >
-                      {s.isPublic ? "Công khai" : "Riêng tư"}
-                    </Text>
+                    {s.isPublic ? "Công khai" : "Riêng tư"}
                   </Text>
-                </View>
+                </Text>
               </View>
             </View>
-            {user?.username === s.user?.username && (
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <TouchableOpacity
-                  style={[styles.iconCircleBtn, { marginRight: 8 }]}
-                  onPress={() => setShareModalVisible(true)}
-                >
-                  <Ionicons
-                    name="share-social-outline"
-                    size={18}
-                    color={colors.primary}
-                  />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.iconCircleBtn}
-                  onPress={handleGoToEditPage}
-                >
-                  <Ionicons
-                    name="create-outline"
-                    size={18}
-                    color={colors.primary}
-                  />
-                </TouchableOpacity>
-              </View>
-            )}
           </View>
-          {s.description ? (
-            <>
-              <MaterialCommunityIcons
-                name="notebook-outline"
-                size={18}
-                color={colors.textSecondary}
-                style={{ marginBottom: 2 }}
-              />
-              <Text style={[styles.caption, { color: colors.textDark }]}>
-                {s.description}
-              </Text>
-            </>
-          ) : null}
-          <Text style={[styles.date, { color: colors.textSecondary }]}>
-            {s.createdAt ? formatPublishDate(s.createdAt) : ""}
+          {user?.username === s.user?.username && (
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <TouchableOpacity
+                style={[styles.iconCircleBtn, { marginRight: 8 }]}
+                onPress={() => setShareModalVisible(true)}
+              >
+                <Ionicons
+                  name="share-social-outline"
+                  size={18}
+                  color={colors.primary}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.iconCircleBtn}
+                onPress={handleGoToEditPage}
+              >
+                <Ionicons
+                  name="create-outline"
+                  size={18}
+                  color={colors.primary}
+                />
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+        {s.description ? (
+          <>
+            <MaterialCommunityIcons
+              name="notebook-outline"
+              size={18}
+              color={colors.textSecondary}
+              style={{ marginBottom: 2 }}
+            />
+            <Text style={[styles.caption, { color: colors.textDark }]}>
+              {s.description}
+            </Text>
+          </>
+        ) : null}
+        <Text style={[styles.date, { color: colors.textSecondary }]}>
+          {s.createdAt ? formatPublishDate(s.createdAt) : ""}
+        </Text>
+        {(tripStartDate || tripEndDate) && (
+          <Text style={styles.dateRange}>
+            Thời gian:{" "}
+            <Text style={{ color: colors.primary }}>
+              {tripStartDate ? beautifyDate(tripStartDate) : "..."}
+            </Text>
+            {" - "}
+            <Text style={{ color: colors.primary }}>
+              {tripEndDate ? beautifyDate(tripEndDate) : "..."}
+            </Text>
           </Text>
-          {(tripStartDate || tripEndDate) && (
-            <Text style={styles.dateRange}>
-              Thời gian:{" "}
-              <Text style={{ color: colors.primary }}>
-                {tripStartDate ? beautifyDate(tripStartDate) : "..."}
-              </Text>
-              {" - "}
-              <Text style={{ color: colors.primary }}>
-                {tripEndDate ? beautifyDate(tripEndDate) : "..."}
-              </Text>
+        )}
+        <View style={styles.locationInfo}>
+          {!!fromLocationStr && (
+            <Text
+              style={[
+                styles.currentLocationText,
+                { color: colors.textPrimary },
+              ]}
+            >
+              <Ionicons name="navigate" size={17} color={colors.primary} /> Xuất
+              phát: {fromLocationStr}
             </Text>
           )}
-          <View style={styles.locationInfo}>
-            {!!fromLocationStr && (
-              <Text
-                style={[
-                  styles.currentLocationText,
-                  { color: colors.textPrimary },
-                ]}
-              >
-                <Ionicons name="navigate" size={17} color={colors.primary} />{" "}
-                Xuất phát: {fromLocationStr}
-              </Text>
-            )}
-            {!!provinceStr && (
-              <Text
-                style={[styles.provinceText, { color: colors.textSecondary }]}
-              >
-                <Ionicons name="location" size={15} color={colors.primary} />{" "}
-                Tỉnh/Thành: {provinceStr}
-              </Text>
-            )}
-          </View>
+          {!!provinceStr && (
+            <Text
+              style={[styles.provinceText, { color: colors.textSecondary }]}
+            >
+              <Ionicons name="location" size={15} color={colors.primary} />{" "}
+              Tỉnh/Thành: {provinceStr}
+            </Text>
+          )}
         </View>
+      </View>
 
         {/* Quỹ tiền và phương tiện tổng quát */}
         <View
@@ -1216,59 +1212,52 @@ const ScheduleDetailScreen = () => {
             </View>
           </View>
 
-          {data.reviews && data.reviews.length > 0 ? (
-            <>
-              {data.reviews.slice(0, 3).map((review: any) => (
-                <View key={review._id} style={styles.reviewItem}>
-                  <Image
-                    source={{
-                      uri:
-                        review.user?.profileImage ||
-                        `https://ui-avatars.com/api/?name=${encodeURIComponent(review.user?.username?.[0] || "U")}&background=random`,
-                    }}
-                    style={styles.reviewAvatar}
-                  />
-                  <View style={styles.reviewContent}>
-                    <View style={styles.reviewTop}>
-                      <Text
-                        style={[
-                          styles.reviewUsername,
-                          { color: colors.textPrimary },
-                        ]}
-                      >
-                        {review.user?.username || "Người dùng"}
-                      </Text>
-                      <View style={styles.reviewStars}>
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <Ionicons
-                            key={star}
-                            name={
-                              star <= (review.rating || 0)
-                                ? "star"
-                                : "star-outline"
-                            }
-                            size={14}
-                            color="#FFB800"
-                          />
-                        ))}
-                      </View>
-                    </View>
-                    <Text
-                      style={[styles.reviewComment, { color: colors.textDark }]}
-                    >
-                      {review.comment || "Không có bình luận"}
-                    </Text>
+        {data.reviews && data.reviews.length > 0 ? (
+          <>
+            {data.reviews.slice(0, 3).map((review: any) => (
+              <View key={review._id} style={styles.reviewItem}>
+                <Image
+                  source={{ uri: getAvatarUri(review.user?.profileImage) }}
+                  style={styles.reviewAvatar}
+                />
+                <View style={styles.reviewContent}>
+                  <View style={styles.reviewTop}>
                     <Text
                       style={[
-                        styles.reviewDate,
-                        { color: colors.textSecondary },
+                        styles.reviewUsername,
+                        { color: colors.textPrimary },
                       ]}
                     >
-                      {formatPublishDate(review.createdAt)}
+                      {review.user?.username || "Người dùng"}
                     </Text>
+                    <View style={styles.reviewStars}>
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Ionicons
+                          key={star}
+                          name={
+                            star <= (review.rating || 0)
+                              ? "star"
+                              : "star-outline"
+                          }
+                          size={14}
+                          color="#FFB800"
+                        />
+                      ))}
+                    </View>
                   </View>
+                  <Text
+                    style={[styles.reviewComment, { color: colors.textDark }]}
+                  >
+                    {review.comment || "Không có bình luận"}
+                  </Text>
+                  <Text
+                    style={[styles.reviewDate, { color: colors.textSecondary }]}
+                  >
+                    {formatPublishDate(review.createdAt)}
+                  </Text>
                 </View>
-              ))}
+              </View>
+            ))}
 
               {data.reviewCount > 3 && (
                 <TouchableOpacity
