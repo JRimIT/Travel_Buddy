@@ -22,8 +22,8 @@ function formatDate(dateStr: string) {
   return format(parsed, "dd/MM/yyyy");
 }
 function formatVND(amount?: number) {
-  if (!amount || isNaN(amount)) return "0₫";
-  return amount.toLocaleString("vi-VN") + "₫";
+  if (!amount || isNaN(amount)) return "VNĐ";
+  return amount.toLocaleString("vi-VN") + "VNĐ";
 }
 //
 interface Activity {

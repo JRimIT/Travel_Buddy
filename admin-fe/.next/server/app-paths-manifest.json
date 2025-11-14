@@ -1,7 +1,6 @@
 {
-  "/support/pending/page": "app/support/pending/page.js",
-  "/support/history/page": "app/support/history/page.js",
+  "/page": "app/page.js",
+  "/admin/login/page": "app/admin/login/page.js",
   "/admin/page": "app/admin/page.js",
-  "/admin/support-chat/page": "app/admin/support-chat/page.js",
-  "/support/assigned/page": "app/support/assigned/page.js"
+  "/support/pending/page": "app/support/pending/page.js"
 }
