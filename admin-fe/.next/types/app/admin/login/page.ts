@@ -1,4 +1,4 @@
-// File: D:\Jrim\Travel_Buddy\admin-fe\src\app\admin\login\page.tsx
+// File: D:\COde\TravelBuddy\Travel_Buddy\admin-fe\src\app\admin\login\page.tsx
 import * as entry from '../../../../../src/app/admin/login/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

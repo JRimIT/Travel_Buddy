@@ -469,12 +469,6 @@ const TravelSchedulePublicScreen = () => {
                   <Text style={styles.menuOptionText}>Chia sẻ cho bạn</Text>
                 </View>
               </MenuOption>
-              <MenuOption onSelect={() => openReviewModal(item._id)}>
-                <View style={styles.menuOption}>
-                  <Ionicons name="star-outline" size={22} color={colors.text} />
-                  <Text style={styles.menuOptionText}>Đánh giá</Text>
-                </View>
-              </MenuOption>
               <MenuOption onSelect={() => openReportModal(item._id)}>
                 <View style={styles.menuOption}>
                   <Ionicons name="flag-outline" size={22} color={colors.text} />

@@ -1,6 +1,7 @@
 import express from "express";
 import TripSchedule from "../models/TripSchedule.js";
 import TripShare from "../models/TripShare.js";
+import Review from "../models/Review.js";
 import { verifyUser } from "../config/jwtConfig.js";
 import cloudinary from "../lib/cloudinary.js";
 import User from "../models/User.js";
@@ -84,7 +85,43 @@ router.get("/public", verifyUser, async (req, res) => {
     const schedules = await TripSchedule.find({ isPublic: true })
       .populate("user", "username email profileImage")
       .sort({ createdAt: -1 });
-    res.json(schedules);
+    
+    // Query reviews trực tiếp cho tất cả trips
+    const tripIds = schedules.map(trip => trip._id);
+    const allReviews = await Review.find({
+      targetId: { $in: tripIds },
+      targetType: "TripSchedule",
+      status: "visible"
+    })
+      .populate("user", "username profileImage")
+      .sort({ createdAt: -1 });
+    
+    // Gắn reviews vào mỗi trip
+    const schedulesWithReviews = schedules.map(trip => {
+      const tripReviews = allReviews
+        .filter(review => review.targetId.toString() === trip._id.toString())
+        .slice(0, 10); // Giới hạn 10 reviews mới nhất
+      
+      // Tính lại reviewCount và averageRating từ reviews thực tế
+      const actualReviewCount = allReviews.filter(
+        review => review.targetId.toString() === trip._id.toString()
+      ).length;
+      
+      const actualAverageRating = actualReviewCount > 0
+        ? Math.round((allReviews
+            .filter(review => review.targetId.toString() === trip._id.toString())
+            .reduce((acc, cur) => acc + cur.rating, 0) / actualReviewCount) * 10) / 10
+        : 0;
+      
+      return {
+        ...trip.toObject(),
+        reviews: tripReviews,
+        reviewCount: actualReviewCount,
+        averageRating: actualAverageRating
+      };
+    });
+    
+    res.json(schedulesWithReviews);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

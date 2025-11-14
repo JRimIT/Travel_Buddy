@@ -26,20 +26,15 @@
       "static/chunks/main-app.js",
       "static/chunks/app/admin/page.js"
     ],
-    "/support/layout": [
+    "/admin/reviews/loading": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/support/layout.js"
+      "static/chunks/app/admin/reviews/loading.js"
     ],
-    "/support/pending/loading": [
+    "/admin/reviews/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/support/pending/loading.js"
-    ],
-    "/support/pending/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/support/pending/page.js"
+      "static/chunks/app/admin/reviews/page.js"
     ]
   }
 }
