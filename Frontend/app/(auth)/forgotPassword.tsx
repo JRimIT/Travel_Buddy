@@ -8,13 +8,13 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useTheme } from "../../contexts/ThemeContext";
-import createLoginStyles from "../../assets/styles/login.styles";
+import createForgotPasswordStyles from "../../assets/styles/forgotPassword.styles";
 import { useRouter } from "expo-router";
 import { API_URL } from "../../constants/api";
 
 const ForgotPassword = () => {
   const { colors } = useTheme();
-  const styles = createLoginStyles(colors);
+  const styles = createForgotPasswordStyles(colors);
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);

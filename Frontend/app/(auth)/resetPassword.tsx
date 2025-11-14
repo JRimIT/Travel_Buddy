@@ -9,13 +9,13 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useTheme } from "../../contexts/ThemeContext";
-import createLoginStyles from "../../assets/styles/login.styles";
+import createResetPasswordStyles from "../../assets/styles/resetPassword.styles";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { API_URL } from "../../constants/api";
 
 const ResetPassword = () => {
   const { colors } = useTheme();
-  const styles = createLoginStyles(colors);
+  const styles = createResetPasswordStyles(colors);
   const router = useRouter();
   const params = useLocalSearchParams<{ email: string }>(); // <-- dùng hook mới
   const email = params.email || "";
