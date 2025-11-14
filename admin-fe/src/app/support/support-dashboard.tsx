@@ -18,7 +18,13 @@ import {
   ToastTitle,
   ToastViewport,
 } from "../../components/ui/toast";
-
+import { parse, isValid, format } from "date-fns";
+//Format
+function formatDate(dateStr: string) {
+  const parsed = parse(dateStr, "dd/MM/yyyy", new Date());
+  if (!isValid(parsed)) return null;
+  return format(parsed, "dd/MM/yyyy");
+}
 interface Trip {
   _id: string;
   title: string;
@@ -208,8 +214,8 @@ export default function SupportDashboard() {
                     <div>
                       <CardTitle className="text-lg">{trip.title}</CardTitle>
                       <p className="text-sm text-muted-foreground">
-                        {new Date(trip.startDate).toLocaleDateString()} -{" "}
-                        {new Date(trip.endDate).toLocaleDateString()}
+                        {formatDate(trip.startDate)} -{" "}
+                        {formatDate(trip.endDate)}
                       </p>
                     </div>
                     <Badge variant="outline">{trip.user.username}</Badge>

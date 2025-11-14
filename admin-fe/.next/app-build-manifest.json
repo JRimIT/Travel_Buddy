@@ -51,17 +51,6 @@
       "static/chunks/main-app.js",
       "static/chunks/app/support/assigned/page.js"
     ],
-    "/admin/support-chat/loading": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/admin/support-chat/loading.js"
-    ],
-    "/admin/support-chat/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/css/app/admin/support-chat/page.css",
-      "static/chunks/app/admin/support-chat/page.js"
-    ],
     "/support/history/loading": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -72,10 +61,16 @@
       "static/chunks/main-app.js",
       "static/chunks/app/support/history/page.js"
     ],
-    "/_not-found/page": [
+    "/admin/support-chat/loading": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/_not-found/page.js"
+      "static/chunks/app/admin/support-chat/loading.js"
+    ],
+    "/admin/support-chat/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/admin/support-chat/page.css",
+      "static/chunks/app/admin/support-chat/page.js"
     ]
   }
 }

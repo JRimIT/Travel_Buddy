@@ -15,12 +15,17 @@ import { useToast } from "../../components/ui/use-toast";
 import { parse, isValid, format } from "date-fns";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
+//Format
 function formatDate(dateStr: string) {
   const parsed = parse(dateStr, "dd/MM/yyyy", new Date());
   if (!isValid(parsed)) return null;
   return format(parsed, "dd/MM/yyyy");
 }
-
+function formatVND(amount?: number) {
+  if (!amount || isNaN(amount)) return "0₫";
+  return amount.toLocaleString("vi-VN") + "₫";
+}
+//
 interface Activity {
   time: string;
   name: string;
@@ -312,9 +317,9 @@ export function TripGrid({ type, title, description }: TripGridProps) {
                 <div>
                   <p>💰 Budget:</p>
                   <ul className="ml-4 list-disc">
-                    <li>Flight: {trip.budget?.flight || 0}$</li>
-                    <li>Hotel: {trip.budget?.hotel || 0}$</li>
-                    <li>Fun: {trip.budget?.fun || 0}$</li>
+                    <li>Flight: {formatVND(trip.budget?.flight)}</li>
+                    <li>Hotel: {formatVND(trip.budget?.hotel)}</li>
+                    <li>Fun: {formatVND(trip.budget?.fun)}</li>
                   </ul>
                 </div>
 

@@ -282,8 +282,6 @@
     --color-yellow-400: oklch(85.2% 0.199 91.936);
     --color-yellow-500: oklch(79.5% 0.184 86.047);
     --color-yellow-600: oklch(68.1% 0.162 75.834);
-    --color-green-50: oklch(98.2% 0.018 155.826);
-    --color-green-100: oklch(96.2% 0.044 156.743);
     --color-green-500: oklch(72.3% 0.219 149.579);
     --color-green-600: oklch(62.7% 0.194 149.214);
     --color-green-700: oklch(52.7% 0.154 150.069);
@@ -1020,6 +1018,9 @@
   .w-5 {
     width: calc(var(--spacing) * 5);
   }
+  .w-6 {
+    width: calc(var(--spacing) * 6);
+  }
   .w-8 {
     width: calc(var(--spacing) * 8);
   }
@@ -1028,6 +1029,9 @@
   }
   .w-10 {
     width: calc(var(--spacing) * 10);
+  }
+  .w-12 {
+    width: calc(var(--spacing) * 12);
   }
   .w-20 {
     width: calc(var(--spacing) * 20);
@@ -1137,8 +1141,8 @@
   .min-w-\[260px\] {
     min-width: 260px;
   }
-  .min-w-\[280px\] {
-    min-width: 280px;
+  .min-w-\[300px\] {
+    min-width: 300px;
   }
   .min-w-\[var\(--radix-select-trigger-width\)\] {
     min-width: var(--radix-select-trigger-width);
@@ -1685,9 +1689,6 @@
   }
   .bg-foreground {
     background-color: var(--foreground);
-  }
-  .bg-green-50 {
-    background-color: var(--color-green-50);
   }
   .bg-green-500\/10 {
     background-color: color-mix(in srgb, oklch(72.3% 0.219 149.579) 10%, transparent);
@@ -2266,6 +2267,9 @@
   }
   .text-yellow-600 {
     color: var(--color-yellow-600);
+  }
+  .italic {
+    font-style: italic;
   }
   .tabular-nums {
     --tw-numeric-spacing: tabular-nums;
@@ -3046,13 +3050,6 @@
     &:hover {
       @media (hover: hover) {
         background-color: var(--color-emerald-100);
-      }
-    }
-  }
-  .hover\:bg-green-100 {
-    &:hover {
-      @media (hover: hover) {
-        background-color: var(--color-green-100);
       }
     }
   }
