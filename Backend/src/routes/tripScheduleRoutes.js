@@ -85,7 +85,7 @@ router.get("/public", verifyUser, async (req, res) => {
     const schedules = await TripSchedule.find({ isPublic: true })
       .populate("user", "username email profileImage")
       .sort({ createdAt: -1 });
-    
+
     // Query reviews trực tiếp cho tất cả trips
     const tripIds = schedules.map(trip => trip._id);
     const allReviews = await Review.find({
@@ -95,24 +95,24 @@ router.get("/public", verifyUser, async (req, res) => {
     })
       .populate("user", "username profileImage")
       .sort({ createdAt: -1 });
-    
+
     // Gắn reviews vào mỗi trip
     const schedulesWithReviews = schedules.map(trip => {
       const tripReviews = allReviews
         .filter(review => review.targetId.toString() === trip._id.toString())
         .slice(0, 10); // Giới hạn 10 reviews mới nhất
-      
+
       // Tính lại reviewCount và averageRating từ reviews thực tế
       const actualReviewCount = allReviews.filter(
         review => review.targetId.toString() === trip._id.toString()
       ).length;
-      
+
       const actualAverageRating = actualReviewCount > 0
         ? Math.round((allReviews
-            .filter(review => review.targetId.toString() === trip._id.toString())
-            .reduce((acc, cur) => acc + cur.rating, 0) / actualReviewCount) * 10) / 10
+          .filter(review => review.targetId.toString() === trip._id.toString())
+          .reduce((acc, cur) => acc + cur.rating, 0) / actualReviewCount) * 10) / 10
         : 0;
-      
+
       return {
         ...trip.toObject(),
         reviews: tripReviews,
@@ -120,7 +120,7 @@ router.get("/public", verifyUser, async (req, res) => {
         averageRating: actualAverageRating
       };
     });
-    
+
     res.json(schedulesWithReviews);
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -559,6 +559,378 @@ router.post("/:id/clone", verifyUser, async (req, res) => {
   } catch (error) {
     console.error("Error cloning trip:", error);
     res.status(500).json({ error: "Không thể nhân bản lịch trình" });
+  }
+});
+
+router.patch("/:id/booking", verifyUser, async (req, res) => {
+  try {
+    const { bookingStatus } = req.body;
+
+    if (!bookingStatus) {
+      return res.status(400).json({ error: "Missing bookingStatus" });
+    }
+
+    const schedule = await TripSchedule.findById(req.params.id);
+    if (!schedule) {
+      return res.status(404).json({ error: "TripSchedule not found" });
+    }
+    console.log("update booking: ", schedule);
+
+    // Cập nhật trạng thái đặt vé
+    schedule.bookingStatus = bookingStatus;
+    await schedule.save();
+
+
+    res.json({
+      success: true,
+      message: "Booking status updated",
+      bookingStatus: schedule.bookingStatus,
+    });
+  } catch (err) {
+    console.error("Booking update error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+
+
+// ⭐ PATCH: Cập nhật activities của một ngày cụ thể hoặc toàn bộ days
+router.patch("/:id/activities", verifyUser, async (req, res) => {
+  try {
+    const tripId = req.params.id;
+    const { days, dayIndex, activityIndex, activity } = req.body;
+
+    console.log("=== [PATCH /activities] ===");
+    console.log("tripId:", tripId);
+    console.log("userId:", req.user.userId);
+    console.log("Request body:", req.body);
+
+    // Tìm trip
+    const trip = await TripSchedule.findById(tripId);
+    if (!trip) {
+      return res.status(404).json({
+        success: false,
+        error: "Lịch trình không tồn tại"
+      });
+    }
+
+    // Kiểm tra quyền sở hữu
+    if (String(trip.user) !== String(req.user.userId)) {
+      return res.status(403).json({
+        success: false,
+        error: "Bạn không có quyền chỉnh sửa lịch trình này"
+      });
+    }
+
+    // TH1: Cập nhật toàn bộ days (khi thêm/xóa/sửa nhiều hoạt động)
+    if (days && Array.isArray(days)) {
+      trip.days = days;
+      await trip.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "Cập nhật lịch trình thành công",
+        trip,
+      });
+    }
+
+    // TH2: Cập nhật một activity cụ thể (khi toggle completed hoặc edit 1 activity)
+    if (
+      typeof dayIndex === "number" &&
+      typeof activityIndex === "number" &&
+      activity
+    ) {
+      if (!trip.days[dayIndex]) {
+        return res.status(400).json({
+          success: false,
+          error: "Ngày không tồn tại"
+        });
+      }
+
+      if (!trip.days[dayIndex].activities[activityIndex]) {
+        return res.status(400).json({
+          success: false,
+          error: "Hoạt động không tồn tại"
+        });
+      }
+
+      // Cập nhật activity
+      trip.days[dayIndex].activities[activityIndex] = {
+        ...trip.days[dayIndex].activities[activityIndex],
+        ...activity,
+      };
+
+      await trip.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "Cập nhật hoạt động thành công",
+        trip,
+      });
+    }
+
+    // TH3: Toggle completed cho 1 activity
+    if (
+      typeof dayIndex === "number" &&
+      typeof activityIndex === "number" &&
+      req.body.completed !== undefined
+    ) {
+      if (!trip.days[dayIndex]) {
+        return res.status(400).json({
+          success: false,
+          error: "Ngày không tồn tại"
+        });
+      }
+
+      if (!trip.days[dayIndex].activities[activityIndex]) {
+        return res.status(400).json({
+          success: false,
+          error: "Hoạt động không tồn tại"
+        });
+      }
+
+      trip.days[dayIndex].activities[activityIndex].completed = req.body.completed;
+      await trip.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "Cập nhật trạng thái hoàn thành",
+        trip,
+      });
+    }
+
+    // Nếu không khớp trường hợp nào
+    return res.status(400).json({
+      success: false,
+      error: "Dữ liệu không hợp lệ"
+    });
+
+  } catch (error) {
+    console.error("Error updating activities:", error);
+    return res.status(500).json({
+      success: false,
+      error: "Lỗi server",
+      detail: error.message
+    });
+  }
+});
+
+// ⭐ DELETE: Xóa một activity cụ thể
+router.delete("/:id/activities/:dayIndex/:activityIndex", verifyUser, async (req, res) => {
+  try {
+    const tripId = req.params.id;
+    const dayIndex = parseInt(req.params.dayIndex);
+    const activityIndex = parseInt(req.params.activityIndex);
+
+    console.log("=== [DELETE /activities] ===");
+    console.log("tripId:", tripId);
+    console.log("dayIndex:", dayIndex);
+    console.log("activityIndex:", activityIndex);
+
+    const trip = await TripSchedule.findById(tripId);
+    if (!trip) {
+      return res.status(404).json({
+        success: false,
+        error: "Lịch trình không tồn tại"
+      });
+    }
+
+    // Kiểm tra quyền sở hữu
+    if (String(trip.user) !== String(req.user.userId)) {
+      return res.status(403).json({
+        success: false,
+        error: "Bạn không có quyền chỉnh sửa lịch trình này"
+      });
+    }
+
+    // Kiểm tra tồn tại
+    if (!trip.days[dayIndex]) {
+      return res.status(400).json({
+        success: false,
+        error: "Ngày không tồn tại"
+      });
+    }
+
+    if (!trip.days[dayIndex].activities[activityIndex]) {
+      return res.status(400).json({
+        success: false,
+        error: "Hoạt động không tồn tại"
+      });
+    }
+
+    // Xóa activity
+    trip.days[dayIndex].activities.splice(activityIndex, 1);
+    await trip.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Xóa hoạt động thành công",
+      trip,
+    });
+
+  } catch (error) {
+    console.error("Error deleting activity:", error);
+    return res.status(500).json({
+      success: false,
+      error: "Lỗi server",
+      detail: error.message
+    });
+  }
+});
+
+// ⭐ POST: Thêm activity mới vào một ngày
+router.post("/:id/activities/:dayIndex", verifyUser, async (req, res) => {
+  try {
+    const tripId = req.params.id;
+    const dayIndex = parseInt(req.params.dayIndex);
+    const { time, name, cost, place } = req.body;
+
+    if (!name || !name.trim()) {
+      return res.status(400).json({
+        success: false,
+        error: "Tên hoạt động không được để trống"
+      });
+    }
+
+    const trip = await TripSchedule.findById(tripId);
+    if (!trip) {
+      return res.status(404).json({
+        success: false,
+        error: "Lịch trình không tồn tại"
+      });
+    }
+
+    if (String(trip.user) !== String(req.user.userId)) {
+      return res.status(403).json({
+        success: false,
+        error: "Bạn không có quyền chỉnh sửa lịch trình này"
+      });
+    }
+
+    if (!trip.days[dayIndex]) {
+      return res.status(400).json({
+        success: false,
+        error: "Ngày không tồn tại"
+      });
+    }
+
+    const newActivity = {
+      time: time?.trim() || "",
+      name: name.trim(),
+      cost: cost ? parseFloat(cost) : 0,
+      place: place || null,
+      completed: false,
+    };
+
+    if (!Array.isArray(trip.days[dayIndex].activities)) {
+      trip.days[dayIndex].activities = [];
+    }
+
+    trip.days[dayIndex].activities.push(newActivity);
+
+    // ⭐⭐⭐ SẮP XẾP THEO THỜI GIAN ⭐⭐⭐
+    trip.days[dayIndex].activities.sort((a, b) => {
+      const timeA = a.time || "23:59";
+      const timeB = b.time || "23:59";
+      return timeA.localeCompare(timeB);
+    });
+
+    await trip.save();
+
+    return res.status(201).json({
+      success: true,
+      message: "Thêm hoạt động thành công",
+      trip,
+    });
+
+  } catch (error) {
+    console.error("Error adding activity:", error);
+    return res.status(500).json({
+      success: false,
+      error: "Lỗi server",
+      detail: error.message
+    });
+  }
+});
+
+
+// ⭐ PUT: Sửa một activity cụ thể
+router.put("/:id/activities/:dayIndex/:activityIndex", verifyUser, async (req, res) => {
+  try {
+    const tripId = req.params.id;
+    const dayIndex = parseInt(req.params.dayIndex);
+    const activityIndex = parseInt(req.params.activityIndex);
+    const { time, name, cost, place } = req.body;
+
+    console.log("=== [PUT /activities] ===");
+    console.log("tripId:", tripId);
+    console.log("dayIndex:", dayIndex);
+    console.log("activityIndex:", activityIndex);
+    console.log("Updated activity:", req.body);
+
+    if (!name || !name.trim()) {
+      return res.status(400).json({
+        success: false,
+        error: "Tên hoạt động không được để trống"
+      });
+    }
+
+    const trip = await TripSchedule.findById(tripId);
+    if (!trip) {
+      return res.status(404).json({
+        success: false,
+        error: "Lịch trình không tồn tại"
+      });
+    }
+
+    // Kiểm tra quyền sở hữu
+    if (String(trip.user) !== String(req.user.userId)) {
+      return res.status(403).json({
+        success: false,
+        error: "Bạn không có quyền chỉnh sửa lịch trình này"
+      });
+    }
+
+    // Kiểm tra tồn tại
+    if (!trip.days[dayIndex]) {
+      return res.status(400).json({
+        success: false,
+        error: "Ngày không tồn tại"
+      });
+    }
+
+    if (!trip.days[dayIndex].activities[activityIndex]) {
+      return res.status(400).json({
+        success: false,
+        error: "Hoạt động không tồn tại"
+      });
+    }
+
+    // Cập nhật activity
+    const existingActivity = trip.days[dayIndex].activities[activityIndex];
+    trip.days[dayIndex].activities[activityIndex] = {
+      ...existingActivity,
+      time: time?.trim() || existingActivity.time || "",
+      name: name.trim(),
+      cost: cost !== undefined ? parseFloat(cost) : existingActivity.cost || 0,
+      place: place !== undefined ? place : existingActivity.place,
+    };
+
+    await trip.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Cập nhật hoạt động thành công",
+      trip,
+    });
+
+  } catch (error) {
+    console.error("Error updating activity:", error);
+    return res.status(500).json({
+      success: false,
+      error: "Lỗi server",
+      detail: error.message
+    });
   }
 });
 

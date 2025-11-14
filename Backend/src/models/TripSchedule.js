@@ -22,6 +22,7 @@ const TripScheduleSchema = new mongoose.Schema({
           name: String,
           cost: Number,
           place: Object,
+          completed: { type: Boolean, default: false },
         },
       ],
     },
@@ -50,43 +51,43 @@ const TripScheduleSchema = new mongoose.Schema({
   reviewedAt: Date,
   rejectReason: String,
 
-    // ✅ Chỉ cần lưu 1 vé duy nhất (tàu hoặc xe)
-    ticket: {
-      gaDi: String,
-      gaDen: String,
-      chuyenTau: String,
-      nhaXe: String,
-      diemDi: String,
-      diemDen: String,
-      soXe: String,
-      loaiXe: String,
-      ngayDi: String,
-      gioDi: String,
-      gioDen: String,
-      soGheTrong: Number,
-    },
-    bookingStatus: {
-      type: String,
-      enum: [
-        "not_booking",
-        "booking_pending",
-        "booking_assigned",
-        "booking_done",
-      ],
-      default: "not_booking",
-    },
-    savedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-    completedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  // ✅ Chỉ cần lưu 1 vé duy nhất (tàu hoặc xe)
+  ticket: {
+    gaDi: String,
+    gaDen: String,
+    chuyenTau: String,
+    nhaXe: String,
+    diemDi: String,
+    diemDen: String,
+    soXe: String,
+    loaiXe: String,
+    ngayDi: String,
+    gioDi: String,
+    gioDen: String,
+    soGheTrong: Number,
+  },
+  bookingStatus: {
+    type: String,
+    enum: [
+      "not_booking",
+      "booking_pending",
+      "booking_assigned",
+      "booking_done",
+    ],
+    default: "not_booking",
+  },
+  savedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  completedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
 
-    averageRating: { type: Number, default: 0, min: 0, max: 5 },
-    reviewCount: { type: Number, default: 0 },
+  averageRating: { type: Number, default: 0, min: 0, max: 5 },
+  reviewCount: { type: Number, default: 0 },
 
-    supporter: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      default: null,
-    },
-  }
+  supporter: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    default: null,
+  },
+}
   ,
   { timestamps: true });
 
