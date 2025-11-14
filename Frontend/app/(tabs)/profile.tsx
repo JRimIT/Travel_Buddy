@@ -19,7 +19,7 @@ import { useAuthStore } from "../../store/authStore";
 import { useTheme } from "../../contexts/ThemeContext";
 import createProfileStyles from "../../assets/styles/profile.styles";
 import LogoutButton from "../../components/LogoutButton";
-import { useRouter, useFocusEffect } from "expo-router";
+import { useRouter, useFocusEffect, useLocalSearchParams } from "expo-router";
 
 const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
 
@@ -35,7 +35,10 @@ const Profile = () => {
   const styles = createProfileStyles(colors);
   const router = useRouter();
   const [savedTrips, setSavedTrips] = useState([]);
-  const [tab, setTab] = useState("created"); // 'created' hoặc 'saved'
+  const [sharedTrips, setSharedTrips] = useState([]);
+  const [pendingShares, setPendingShares] = useState([]);
+  const [showPendingShares, setShowPendingShares] = useState(true);
+  const [tab, setTab] = useState("created"); // 'created' | 'saved' | 'shared'
   const [createdTrips, setCreatedTrips] = useState([]);
 
   // Search bar state
@@ -58,6 +61,7 @@ const Profile = () => {
     private: 0,
     latestTitle: "",
   });
+  const params = useLocalSearchParams();
 
 // --- 2️⃣ useEffect khi userInfo thay đổi ---
 React.useEffect(() => {
@@ -74,16 +78,31 @@ React.useEffect(() => {
   }
 }, [userInfo]);
 
+  // Nếu được mở với initialTab=shared từ EditTripScreen
+  React.useEffect(() => {
+    const initialTabParam = params.initialTab;
+    const initial =
+      Array.isArray(initialTabParam) ? initialTabParam[0] : initialTabParam;
+    if (initial === "shared") {
+      setTab("shared");
+    }
+  }, [params.initialTab]);
+
 
   useFocusEffect(
     React.useCallback(() => { fetchAllData(); }, [])
   );
 
   const fetchAllData = async () => {
-  setLoading(true);
-  await Promise.all([fetchUserInfo(), fetchUserTrips(), fetchSavedTrips()]);
-  setLoading(false);
-};
+    setLoading(true);
+    await Promise.all([
+      fetchUserInfo(),
+      fetchUserTrips(),
+      fetchSavedTrips(),
+      fetchSharedData(),
+    ]);
+    setLoading(false);
+  };
 
 // --- 1️⃣ Sau khi fetch user info ---
 const fetchUserInfo = async () => {
@@ -118,6 +137,7 @@ const fetchUserInfo = async () => {
       const data = await response.json();
       const arr = Array.isArray(data) ? data : data.trips || [];
       setTrips(arr);
+      setCreatedTrips(arr);
       calculateStats(arr);
     } catch (error) {
       Alert.alert("Lỗi", error instanceof Error ? error.message : "Lấy danh sách lịch trình lỗi");
@@ -231,6 +251,30 @@ const fetchSavedTrips = async () => {
   }
 };
 
+// Lấy chuyến đi được chia sẻ & lời mời pending
+const fetchSharedData = async () => {
+  try {
+    // Trip đã được chia sẻ & mình đã accept (clone thành trip của mình)
+    const sharedRes = await fetch(`${API_URL}/tripSchedule/shared/my`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const sharedJson = await sharedRes.json();
+    setSharedTrips(Array.isArray(sharedJson) ? sharedJson : []);
+
+    // Lời mời chia sẻ tới mình đang pending
+    const pendingRes = await fetch(
+      `${API_URL}/tripSchedule/shares/incoming?status=pending`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+    const pendingJson = await pendingRes.json();
+    setPendingShares(Array.isArray(pendingJson) ? pendingJson : []);
+  } catch (error) {
+    console.log("Error fetchSharedData:", error);
+  }
+};
+
   // Search bar animation
   const openSearch = () => {
     setSearchOpen(true);
@@ -253,10 +297,21 @@ const fetchSavedTrips = async () => {
     });
   };
   const displayedTrips = searchText.trim()
-  ? (tab === "created" ? createdTrips : savedTrips).filter(t =>
-      t.title?.toLowerCase().includes(searchText.trim().toLowerCase())
-    )
-  : (tab === "created" ? createdTrips : savedTrips);
+    ? (tab === "created" ? createdTrips : savedTrips).filter((t) =>
+        t.title?.toLowerCase().includes(searchText.trim().toLowerCase())
+      )
+    : tab === "created"
+    ? createdTrips
+    : savedTrips;
+
+  const displayedSharedTrips =
+    tab === "shared"
+      ? (searchText.trim()
+          ? sharedTrips.filter((t) =>
+              t.title?.toLowerCase().includes(searchText.trim().toLowerCase())
+            )
+          : sharedTrips)
+      : [];
 
   const handleSaveTrip = async (trip) => {
     try {
@@ -305,6 +360,9 @@ const fetchSavedTrips = async () => {
 const renderTripItem = ({ item }) => {
   // Xác định trạng thái đã lưu
   const isSaved = savedTrips.some(t => t._id === item._id);
+  const isOwner =
+    item.user?._id === userInfo?._id ||
+    item.user === userInfo?._id;
 
   return (
     <TouchableOpacity
@@ -331,16 +389,19 @@ const renderTripItem = ({ item }) => {
         }
       </View>
       <View style={{ marginLeft: 12, alignItems: "center", justifyContent: "center" }}>
-        {/* Nút edit */}
-        <TouchableOpacity onPress={() => {
-          setEditTrip(item);
-          setEditTitle(item.title);
-          setEditDesc(item.description || "");
-          setEditPublic(!!item.isPublic);
-          setEditModalVisible(true);
-        }}>
+      {/* Nút edit – chỉ hiện nếu là chủ lịch trình */}
+      {isOwner && (
+        <TouchableOpacity
+          onPress={() => {
+            console.log("Nhấn nút edit trong profile, trip id:", item._id);
+            router.push({
+              pathname: "/(page)/ScheduleEditScreen",
+              params: { id: item._id },
+            });
+          }}>
           <Ionicons name="pencil-outline" size={21} color={colors.primary} />
         </TouchableOpacity>
+      )}
         {/* Nút đã lưu/huỷ lưu */}
         <TouchableOpacity
           style={{ marginTop: 10 }}
@@ -483,12 +544,19 @@ const renderTripItem = ({ item }) => {
             flex: 1,
             padding: 10,
             borderBottomWidth: 2,
-            borderBottomColor: tab === "created" ? colors.primary : "transparent",
+            borderBottomColor:
+              tab === "created" ? colors.primary : "transparent",
             alignItems: "center",
           }}
           onPress={() => setTab("created")}
         >
-          <Text style={{ color: tab === "created" ? colors.primary : colors.textSecondary, fontWeight: "bold" }}>
+          <Text
+            style={{
+              color:
+                tab === "created" ? colors.primary : colors.textSecondary,
+              fontWeight: "bold",
+            }}
+          >
             Chuyến đi của tôi
           </Text>
         </TouchableOpacity>
@@ -502,14 +570,162 @@ const renderTripItem = ({ item }) => {
           }}
           onPress={() => setTab("saved")}
         >
-          <Text style={{ color: tab === "saved" ? colors.primary : colors.textSecondary, fontWeight: "bold" }}>
+          <Text
+            style={{
+              color: tab === "saved" ? colors.primary : colors.textSecondary,
+              fontWeight: "bold",
+            }}
+          >
             Chuyến đi đã lưu
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={{
+            flex: 1,
+            padding: 10,
+            borderBottomWidth: 2,
+            borderBottomColor:
+              tab === "shared" ? colors.primary : "transparent",
+            alignItems: "center",
+          }}
+          onPress={() => setTab("shared")}
+        >
+          <Text
+            style={{
+              color: tab === "shared" ? colors.primary : colors.textSecondary,
+              fontWeight: "bold",
+            }}
+          >
+            Chuyến đi được chia sẻ
           </Text>
         </TouchableOpacity>
       </View>
 
+      {tab === "shared" && pendingShares.length > 0 && (
+        <View style={{ marginHorizontal: 12, marginBottom: 10 }}>
+          <TouchableOpacity
+            onPress={() => setShowPendingShares((prev) => !prev)}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: showPendingShares ? 6 : 0,
+            }}
+          >
+            <Text
+              style={{
+                fontWeight: "bold",
+                color: colors.textPrimary,
+              }}
+            >
+              Chờ bạn chấp nhận ({pendingShares.length})
+            </Text>
+            <Ionicons
+              name={showPendingShares ? "chevron-up" : "chevron-down"}
+              size={18}
+              color={colors.textSecondary}
+            />
+          </TouchableOpacity>
+
+          {showPendingShares &&
+            [...pendingShares]
+              .sort(
+                (a, b) =>
+                  new Date(b.createdAt).getTime() -
+                  new Date(a.createdAt).getTime()
+              )
+              .map((share) => (
+                <View
+                  key={share._id}
+                  style={{
+                    padding: 10,
+                    borderRadius: 10,
+                    backgroundColor: "#f2f7ff",
+                    marginBottom: 6,
+                  }}
+                >
+                  <Text
+                    style={{ fontWeight: "600", color: colors.textPrimary }}
+                  >
+                    {share.trip?.title || "Chuyến đi"}
+                  </Text>
+                  <Text style={{ color: colors.textSecondary, marginTop: 2 }}>
+                    Được chia sẻ bởi: {share.from?.username || "Người dùng"}
+                  </Text>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      marginTop: 8,
+                      justifyContent: "flex-end",
+                    }}
+                  >
+                    <TouchableOpacity
+                      style={{
+                        paddingVertical: 6,
+                        paddingHorizontal: 12,
+                        borderRadius: 8,
+                        borderWidth: 1,
+                        borderColor: "#ccc",
+                        marginRight: 8,
+                      }}
+                      onPress={async () => {
+                        try {
+                          await fetch(
+                            `${API_URL}/tripSchedule/shares/${share._id}/reject`,
+                            {
+                              method: "POST",
+                              headers: { Authorization: `Bearer ${token}` },
+                            }
+                          );
+                          fetchSharedData();
+                        } catch (e) {
+                          Alert.alert("Lỗi", "Không thể từ chối chia sẻ");
+                        }
+                      }}
+                    >
+                      <Text style={{ color: "#777", fontWeight: "500" }}>
+                        Từ chối
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={{
+                        paddingVertical: 6,
+                        paddingHorizontal: 12,
+                        borderRadius: 8,
+                        backgroundColor: colors.primary,
+                      }}
+                      onPress={async () => {
+                        try {
+                          await fetch(
+                            `${API_URL}/tripSchedule/shares/${share._id}/accept`,
+                            {
+                              method: "POST",
+                              headers: { Authorization: `Bearer ${token}` },
+                            }
+                          );
+                          fetchAllData();
+                        } catch (e) {
+                          Alert.alert("Lỗi", "Không thể chấp nhận chia sẻ");
+                        }
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color: "#fff",
+                          fontWeight: "600",
+                        }}
+                      >
+                        Chấp nhận
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ))}
+        </View>
+      )}
+
       <FlatList
-        data={displayedTrips}
+        data={tab === "shared" ? displayedSharedTrips : displayedTrips}
         keyExtractor={(item) => item._id}
         renderItem={renderTripItem}
         contentContainerStyle={styles.tripsList}
@@ -524,15 +740,25 @@ const renderTripItem = ({ item }) => {
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Ionicons name="earth-outline" size={50} color={colors.textSecondary} />
-            <Text style={styles.emptyText}>Bạn chưa có chuyến đi nào</Text>
-            <TouchableOpacity
-              style={styles.addButton}
-              onPress={() => router.push("/CreateScheduleScreen")}
-            >
-              <Ionicons name="add" size={24} color={colors.white} />
-              <Text style={styles.addButtonText}>Tạo chuyến đi mới</Text>
-            </TouchableOpacity>
+            <Ionicons
+              name="earth-outline"
+              size={50}
+              color={colors.textSecondary}
+            />
+            <Text style={styles.emptyText}>
+              {tab === "shared"
+                ? "Bạn chưa có chuyến đi được chia sẻ nào"
+                : "Bạn chưa có chuyến đi nào"}
+            </Text>
+            {tab === "created" && (
+              <TouchableOpacity
+                style={styles.addButton}
+                onPress={() => router.push("/CreateScheduleScreen")}
+              >
+                <Ionicons name="add" size={24} color={colors.white} />
+                <Text style={styles.addButtonText}>Tạo chuyến đi mới</Text>
+              </TouchableOpacity>
+            )}
           </View>
         }
       />

@@ -3,6 +3,8 @@ import mongoose from "mongoose";
 
 const TripScheduleSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  // Nếu là bản được chia sẻ/clone từ trip khác, lưu id trip gốc
+  sharedFrom: { type: mongoose.Schema.Types.ObjectId, ref: "TripSchedule", default: null },
   title: String,
   description: String,
   budget: {
@@ -85,6 +87,7 @@ const TripScheduleSchema = new mongoose.Schema({
 TripScheduleSchema.index({ isPublic: 1 });
 TripScheduleSchema.index({ savedBy: 1 });
 TripScheduleSchema.index({ completedBy: 1 });
+TripScheduleSchema.index({ sharedFrom: 1 });
 
 TripScheduleSchema.virtual('reviews', {
   ref: 'Review',

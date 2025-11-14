@@ -1,8 +1,8 @@
 // routes/admin/reviews.js
 import express from "express";
-import TripSchedule from "../models/TripSchedule.js"; // SỬA ĐƯỜNG DẪN
+import TripSchedule from "../models/TripSchedule.js";
 import authMiddleware from "../middleware/auth.middleware.js";
-import Review from "../models/Review.js"; // SỬA ĐƯỜNG DẪN
+import Review from "../models/Review.js";
 
 const router = express.Router();
 
@@ -32,7 +32,12 @@ router.get("/", authMiddleware, async (req, res) => {
       })
     );
 
-    res.json({ reviews: result, total, page: +page, pages: Math.ceil(total / limit) });
+    res.json({
+      reviews: result,
+      total,
+      page: +page,
+      pages: Math.ceil(total / limit),
+    });
   } catch (error) {
     console.error("Get reviews error:", error);
     res.status(500).json({ error: "Lỗi server" });
@@ -48,7 +53,9 @@ router.patch("/:id", authMiddleware, async (req, res) => {
     }
 
     const review = await Review.findById(req.params.id);
-    if (!review) return res.status(404).json({ error: "Không tìm thấy review" });
+    if (!review) {
+      return res.status(404).json({ error: "Không tìm thấy review" });
+    }
 
     review.status = status;
     if (adminNote) review.adminNote = adminNote;
@@ -68,12 +75,17 @@ router.patch("/:id", authMiddleware, async (req, res) => {
 
       await TripSchedule.updateOne(
         { _id: review.targetId },
-        { averageRating: Math.round(avg * 10) / 10, reviewCount: visible.length }
+        {
+          averageRating: Math.round(avg * 10) / 10,
+          reviewCount: visible.length,
+        }
       );
     }
 
-    const updated = await Review.findById(review._id)
-      .populate("user", "username profileImage");
+    const updated = await Review.findById(review._id).populate(
+      "user",
+      "username profileImage"
+    );
 
     res.json(updated);
   } catch (error) {
@@ -83,3 +95,5 @@ router.patch("/:id", authMiddleware, async (req, res) => {
 });
 
 export default router;
+
+
