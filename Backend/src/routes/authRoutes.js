@@ -424,7 +424,7 @@ router.post("/send-email-otp", async (req, res) => {
     // Gửi Email (tùy chỉnh content)
     const htmlContent = `
       <div style="font-family: Arial, sans-serif; padding: 20px;">
-        <h2 style="color: #3488fa;">Mã xác thực BookWorm</h2>
+        <h2 style="color: #3488fa;">Mã xác thực từ TravelBuddy</h2>
         <p>Xin chào,</p>
         <p>Mã OTP của bạn là:</p>
         <h1 style="color: #ec407a; font-size: 36px; letter-spacing: 5px;">${otp}</h1>
@@ -470,6 +470,33 @@ router.post("/verify-email-otp", async (req, res) => {
   } catch (error) {
     console.error("Verify Email OTP Error:", error);
     res.status(500).json({ success: false, message: "Không thể xác thực OTP" });
+  }
+});
+
+// POST /api/auth/reset-password
+router.post("/reset-password", async (req, res) => {
+  try {
+    const { email, newPassword } = req.body;
+    if (!email || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Email and new password are required",
+      });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user)
+      return res
+        .status(400)
+        .json({ success: false, message: "User not found" });
+
+    user.password = newPassword;
+    await user.save();
+
+    res.json({ success: true, message: "Password updated successfully" });
+  } catch (error) {
+    console.error("Reset Password Error:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
 });
 

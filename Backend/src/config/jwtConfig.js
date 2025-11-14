@@ -30,7 +30,6 @@ export const generateJWT = (user) => {
   return jwt.sign(
     {
       userId: user._id,
-      facebookId: user.facebookId,
       username: user.username,
       role: user.role,
     },
