@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
 import {
   View,
   Text,
@@ -21,6 +22,31 @@ import { useRoute } from "@react-navigation/native";
 import { useAuthStore } from "../../store/authStore";
 import { router } from "expo-router";
 import COLORS from "../../constants/colors";
+import {
+  setUserProvince,
+  setUserHomeType,
+  setUserStartDate,
+  setUserEndDate,
+  setUserTransportMain,
+  setUserTransportType,
+  setUserSchedule,
+  setUserInforHotel,
+  setUserFlightTicket,
+  setUserTicket,
+  setUserActivities,
+  setUserCurrentLocation,
+  setUserDistrict,
+  setUserFlightBudget,
+  setUserFunBudget,
+  setUserHotelBudget,
+  setUserTransportBudget,
+  setUserPlaygrounds,
+  setUserHomeAddress,
+  setUserChosenFlight,
+  setUserStartingPoint,
+  setUserTravelDays,
+
+} from "../../redux/inforUserTravel/inforUserTravelSlice";
 
 // Helper định dạng ngày tiếng Việt
 function beautifyDate(dateStr) {
@@ -54,7 +80,8 @@ const transportIcons = {
   "Xe điện": <Ionicons name="train-outline" size={22} color="#54c4fa" />,
 };
 
-const ScheduleDetailScreen = () => {
+  const ScheduleDetailScreen = () => {
+  const dispatch = useDispatch();
   const { colors } = useTheme();
   const route = useRoute<any>();
   const { user} = useAuthStore();
@@ -87,6 +114,58 @@ const ScheduleDetailScreen = () => {
       params: { user, scheduleId, fromLocation, province },
     });
   };
+  const handleDuplicateTrip = () => {
+    try {
+      if (!data) {
+        Alert.alert("Lỗi", "Không có dữ liệu để sao chép");
+        return;
+      }
+
+      // 1. Thông tin cơ bản
+      dispatch(setUserProvince(data.province || {}));
+      dispatch(setUserCurrentLocation(data.currentLocation || ""));
+      dispatch(setUserStartingPoint(data.fromLocation || ""));
+      dispatch(setUserDistrict(data.district || ""));
+      dispatch(setUserHomeType(data.baseStayType || ""));
+      dispatch(setUserHomeAddress(data.home?.address || null));
+
+      // 2. Thời gian
+      dispatch(setUserStartDate(data.startDate || ""));
+      dispatch(setUserEndDate(data.endDate || ""));
+      dispatch(setUserTravelDays(data.days?.length || 0));
+
+      // 3. Ngân sách
+      dispatch(setUserHotelBudget(data.budget?.hotel || ""));
+      dispatch(setUserFlightBudget(data.budget?.flight || ""));
+      dispatch(setUserFunBudget(data.budget?.fun || ""));
+      dispatch(setUserTransportBudget(data.budget?.transport || ""));
+
+      // 4. Phương tiện
+      dispatch(setUserTransportMain(data.mainTransport || ""));
+      dispatch(setUserTransportType(data.innerTransport || ""));
+
+      // 5. Lịch trình, hoạt động, vé
+      dispatch(setUserSchedule(data.days || []));
+      dispatch(setUserActivities(data.activities || []));
+      dispatch(setUserInforHotel(data.hotelDefault || []));
+      dispatch(setUserFlightTicket(data.flightTicket || []));
+      dispatch(setUserTicket(data.ticket || null));
+      dispatch(setUserChosenFlight(data.chosenFlight || []));
+
+      // 6. Khu vui chơi nếu có
+      dispatch(setUserPlaygrounds(data.playgrounds || []));
+
+      // Điều hướng sang màn hình tạo/chỉnh sửa
+      router.push({
+        pathname: "/SelectStartDateScreen",
+        params: { isDuplicated: true },
+      });
+    } catch (error) {
+      console.error("Duplicate trip error:", error);
+      Alert.alert("Lỗi", "Không thể sao chép lịch trình");
+    }
+  };
+
 
   if (loading)
     return (
@@ -520,6 +599,20 @@ console.log("fromLocation: ", fromLocationStr);
           )}
         </View>
       )}
+  <View style={styles.bookingButtonWrap}>
+    <TouchableOpacity
+      style={[
+        styles.bookingButton,
+        { backgroundColor: "#9c27b0", shadowColor: "#9c27b0" },
+      ]}
+      onPress={handleDuplicateTrip}
+    >
+      <Ionicons name="copy-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
+      <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>
+        Tạo bản sao & chỉnh sửa
+      </Text>
+    </TouchableOpacity>
+  </View>
     </ScrollView>
   );
 };
