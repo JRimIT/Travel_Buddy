@@ -7,6 +7,7 @@ import Review from "../models/Review.js";
 import Booking from "../models/Booking.js";
 import Report from "../models/Report.js";
 import User from "../models/User.js";
+import mongoose from "mongoose";
 
 const router = express.Router();
 
@@ -237,7 +238,7 @@ router.get("/trips/:id", async (req, res) => {
     res.json(trip)
   } catch (error) {
     console.error("Get trip detail error:", error)
-
+    
     if (error.name === "CastError") {
       return res.status(400).json({
         message: "Invalid ID format",
@@ -362,12 +363,51 @@ router.get("/reviews", async (req, res) => {
   try {
     const { status } = req.query;
     const filter = status ? { status } : {};
+
+    // Lấy reviews, không populate trước
     const reviews = await Review.find(filter)
-      .populate("user", "username")
-      .populate("targetId", "name title type")
-      .sort({ createdAt: -1 });
-    res.json(reviews);
+      .sort({ createdAt: -1 })
+      .lean(); // Dùng .lean() để dễ xử lý sau
+
+    // Xử lý populate thủ công theo targetType
+    const populatedReviews = await Promise.all(
+      reviews.map(async (review) => {
+        let target = null;
+
+        if (review.targetType === "TripSchedule") {
+          target = await mongoose.model("TripSchedule").findById(review.targetId)
+            .select("title image startDate endDate province user status")
+            .populate("user", "username avatar")
+            .lean();
+        }
+
+        if (review.targetType === "Place") {
+          target = await mongoose.model("Place").findById(review.targetId)
+            .select("name address images rating")
+            .lean();
+        }
+
+        // Populate user review
+        const user = await mongoose.model("User").findById(review.user)
+          .select("username avatar")
+          .lean();
+
+        return {
+          _id: review._id,
+          rating: review.rating,
+          comment: review.comment,
+          status: review.status,
+          createdAt: review.createdAt,
+          user: user || null,
+          targetType: review.targetType,
+          target: target || null,
+        };
+      })
+    );
+
+    res.json(populatedReviews);
   } catch (error) {
+    console.error("Error fetching admin reviews:", error);
     res.status(500).json({ message: error.message });
   }
 });
@@ -433,13 +473,11 @@ router.get("/sales/trends", async (req, res) => {
 
     const trends = await Booking.aggregate([
       { $match: match },
-      {
-        $group: {
-          _id: groupId,
-          totalRevenue: { $sum: "$amount" },
-          bookingCount: { $sum: 1 }
-        }
-      },
+      { $group: {
+        _id: groupId,
+        totalRevenue: { $sum: "$amount" },
+        bookingCount: { $sum: 1 }
+      }},
       { $sort: { _id: 1 } },
       { $project: { period: "$_id", totalRevenue: 1, bookingCount: 1, _id: 0 } }
     ]);
@@ -530,13 +568,11 @@ router.get("/users/stats", async (req, res) => {
     const topUsers = await User.aggregate([
       { $lookup: { from: "tripschedules", localField: "_id", foreignField: "user", as: "trips" } },
       { $lookup: { from: "bookings", localField: "_id", foreignField: "user", as: "bookings" } },
-      {
-        $project: {
-          username: 1,
-          tripCount: { $size: "$trips" },
-          bookingCount: { $size: "$bookings" }
-        }
-      },
+      { $project: {
+        username: 1,
+        tripCount: { $size: "$trips" },
+        bookingCount: { $size: "$bookings" }
+      }},
       { $sort: { bookingCount: -1 } },
       { $limit: 10 }
     ]);
@@ -690,13 +726,11 @@ router.get("/reviews/stats", async (req, res) => {
       ]),
       Review.aggregate([
         { $match: match },
-        {
-          $group: {
-            _id: { $dateToString: { format: "%Y-%m", date: "$createdAt" } },
-            count: { $sum: 1 },
-            avgRating: { $avg: "$rating" }
-          }
-        },
+        { $group: {
+          _id: { $dateToString: { format: "%Y-%m", date: "$createdAt" } },
+          count: { $sum: 1 },
+          avgRating: { $avg: "$rating" }
+        }},
         { $sort: { _id: 1 } },
         { $project: { period: "$_id", count: 1, avgRating: 1, _id: 0 } }
       ]),
@@ -779,14 +813,60 @@ router.get("/places/top", async (req, res) => {
 router.get("/reports", async (req, res) => {
   try {
     const { status } = req.query;
-    const filter = status ? { status } : {};
+
+    // CHỈ LẤY BÁO CÁO VỀ TRIPSCHEDULE
+    const filter = { targetType: "TripSchedule" };
+    if (status) filter.status = status;
+
     const reports = await Report.find(filter)
-      .populate("reporter", "username")
-      .populate("targetId")
+      .populate("reporter", "username profileImage")
       .sort({ createdAt: -1 });
-    res.json(reports);
+
+    // Populate chi tiết TripSchedule
+    const populatedReports = await Promise.all(
+      reports.map(async (report) => {
+        let target = null;
+
+        if (report.targetId) {
+          target = await TripSchedule.findById(report.targetId)
+            .select("title image isPublic user")
+            .populate("user", "username profileImage");
+        }
+
+        return {
+          _id: report._id,
+          reason: report.reason,
+          description: report.description,
+          status: report.status,
+          createdAt: report.createdAt,
+          reporter: {
+            _id: report.reporter._id,
+            username: report.reporter.username,
+            profileImage: report.reporter.profileImage,
+          },
+          target: target
+            ? {
+                _id: target._id,
+                title: target.title,
+                image: target.image,
+                isPublic: target.isPublic,
+                owner: target.user
+                  ? {
+                      _id: target.user._id,
+                      username: target.user.username,
+                      profileImage: target.user.profileImage,
+                    }
+                  : null,
+              }
+            : null,
+        };
+      })
+    );
+
+    res.json(populatedReports);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Error fetching trip reports:", error);
+    res.status(500).json({ message: "Lỗi server" });
   }
 });
 
@@ -927,8 +1007,8 @@ router.post("/trips/:id/approve", async (req, res) => {
     if (!trip) return res.status(404).json({ message: "Trip not found" });
 
     // KIỂM TRA ĐIỀU KIỆN HỢP LỆ
-    const isPending =
-      trip.status === "pending_review" ||
+    const isPending = 
+      trip.status === "pending_review" || 
       (!trip.status && trip.isPublic === false);
 
     if (!isPending) {
@@ -1000,8 +1080,8 @@ router.post("/trips/:id/reject", async (req, res) => {
     if (!trip) return res.status(404).json({ message: "Trip not found" });
 
     // KIỂM TRA ĐIỀU KIỆN HỢP LỆ
-    const isPending =
-      trip.status === "pending_review" ||
+    const isPending = 
+      trip.status === "pending_review" || 
       (!trip.status && trip.isPublic === false);
 
     if (!isPending) {

@@ -96,8 +96,8 @@ export function TripsTable({ filters = {} }: TripsTableProps) {
         ...detail,
         status:
           detail.status === "pending_review" ||
-          detail.status === "approved" ||
-          detail.status === "rejected"
+            detail.status === "approved" ||
+            detail.status === "rejected"
             ? detail.status
             : undefined,
       } as TripDetail
@@ -208,13 +208,13 @@ export function TripsTable({ filters = {} }: TripsTableProps) {
                       <Badge
                         variant={
                           trip.status === "approved" ? "default" :
-                          trip.status === "rejected" ? "destructive" :
-                          "outline"
+                            trip.status === "rejected" ? "destructive" :
+                              "outline"
                         }
                       >
                         {trip.status === "pending_review" ? "Chờ duyệt" :
-                         trip.status === "approved" ? "Đã duyệt" :
-                         trip.status === "rejected" ? "Bị từ chối" : "N/A"}
+                          trip.status === "approved" ? "Đã duyệt" :
+                            trip.status === "rejected" ? "Bị từ chối" : "N/A"}
                       </Badge>
                     </TableCell>
                   </TableRow>
@@ -264,9 +264,12 @@ export function TripsTable({ filters = {} }: TripsTableProps) {
             <div className="space-y-6">
               {selectedTrip.image && (
                 <img
-                  src={selectedTrip.image}
+                  src={selectedTrip.image || 'https://static.vecteezy.com/system/resources/previews/000/209/171/non_2x/road-trip-scene-vector.jpg'}
                   alt={selectedTrip.title}
-                  className="w-full h-64 object-cover rounded-lg"
+                  className="w-full h-auto max-h-64 object-contain rounded-lg"
+                  onError={(e) => {
+                    e.currentTarget.src = 'https://static.vecteezy.com/system/resources/previews/000/209/171/non_2x/road-trip-scene-vector.jpg';
+                  }}
                 />
               )}
 
