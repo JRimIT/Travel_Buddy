@@ -33,6 +33,23 @@ yarn-error.*
 Frontend/.env*.local
 Backend/.env*.local
 
+# Ignore node_modules và .env cho các subfolder mong muốn
+
+Frondend/node_modules/
+Frondend/.env
+admin-fe/node_modules/
+admin-fe/.env
+Backend/node_modules/
+Backend/.env
+
+# Các phần ignore khác cho dự án, bổ sung nếu cần
+.DS_Store
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+*.tsbuildinfo
+
+
 # Ignore all .env files globally
 **/.env
 
@@ -43,3 +60,6 @@ Backend/.env
 
 # Next.js (admin frontend)
 admin-fe/.next/
+Backend/.env
+
+Backend/.env
