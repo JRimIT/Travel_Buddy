@@ -5,17 +5,22 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import Book from "../models/Book.js";
 import protectRoute from "../middleware/auth.middleware.js";
+import passport from "passport";
+import { OAuth2Client } from "google-auth-library";
+import { generateJWT } from "../config/jwtConfig.js";
 import OTP from "../models/OTP.js";
 import sendEmail from "../services/emailService.js";
 
-
 dotenv.config();
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const router = express.Router();
 
 // Hàm tạo token với role
 const generateToken = (userId, role) => {
-  return jwt.sign({ userId, role }, process.env.JWT_SECRET, { expiresIn: "5h" });
+  return jwt.sign({ userId, role }, process.env.JWT_SECRET, {
+    expiresIn: "5h",
+  });
 };
 
 /**
@@ -46,7 +51,7 @@ const generateToken = (userId, role) => {
  *           description: URL to the user's profile image
  *         role:
  *           type: string
- *           enum: [user, admin]
+ *           enum: [user, admin,support]
  *           description: The user's role
  *         createdAt:
  *           type: string
@@ -159,11 +164,15 @@ router.post("/register", async (req, res) => {
     }
 
     if (password.length < 6) {
-      return res.status(400).json({ message: "Password must be at least 6 characters long" });
+      return res
+        .status(400)
+        .json({ message: "Password must be at least 6 characters long" });
     }
 
     if (username.length < 3) {
-      return res.status(400).json({ message: "Username must be at least 3 characters long" });
+      return res
+        .status(400)
+        .json({ message: "Username must be at least 3 characters long" });
     }
 
     const existingEmail = await User.findOne({ email });
@@ -283,7 +292,9 @@ router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
-      return res.status(400).json({ message: "Email and password are required" });
+      return res
+        .status(400)
+        .json({ message: "Email and password are required" });
     }
     const user = await User.findOne({ email });
     if (!user) {
@@ -312,7 +323,6 @@ router.post("/login", async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 });
-
 
 // //  API: Gửi OTP qua Email
 // router.post('/send-email-otp', async (req, res) => {
@@ -389,15 +399,13 @@ router.post("/login", async (req, res) => {
 //   }
 // });
 
-
-
 // Gửi OTP qua Email (Chỉ cần email)
-router.post('/send-email-otp', async (req, res) => {
+router.post("/send-email-otp", async (req, res) => {
   try {
     const { email } = req.body;
 
     if (!email) {
-      return res.status(400).json({ message: 'Thiếu email' });
+      return res.status(400).json({ message: "Thiếu email" });
     }
 
     // Tạo OTP 6 số
@@ -410,13 +418,13 @@ router.post('/send-email-otp', async (req, res) => {
     await OTP.create({
       email,
       otp,
-      expiresAt: new Date(Date.now() + 5 * 60 * 1000)
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000),
     });
 
     // Gửi Email (tùy chỉnh content)
     const htmlContent = `
       <div style="font-family: Arial, sans-serif; padding: 20px;">
-        <h2 style="color: #3488fa;">Mã xác thực BookWorm</h2>
+        <h2 style="color: #3488fa;">Mã xác thực từ TravelBuddy</h2>
         <p>Xin chào,</p>
         <p>Mã OTP của bạn là:</p>
         <h1 style="color: #ec407a; font-size: 36px; letter-spacing: 5px;">${otp}</h1>
@@ -424,44 +432,72 @@ router.post('/send-email-otp', async (req, res) => {
         <p style="color: #999; font-size: 12px;">Nếu bạn không yêu cầu mã này, hãy bỏ qua email này.</p>
       </div>
     `;
-    await sendEmail(email, 'Mã xác thực BookWorm', htmlContent);
+    await sendEmail(email, "Mã xác thực BookWorm", htmlContent);
 
-    res.json({ success: true, message: 'OTP đã được gửi đến email' });
+    res.json({ success: true, message: "OTP đã được gửi đến email" });
   } catch (error) {
-    console.error('Send Email OTP Error:', error);
-    res.status(500).json({ success: false, message: 'Không thể gửi OTP' });
+    console.error("Send Email OTP Error:", error);
+    res.status(500).json({ success: false, message: "Không thể gửi OTP" });
   }
 });
 
 // Xác thực OTP (Chỉ cần email + otp)
-router.post('/verify-email-otp', async (req, res) => {
+router.post("/verify-email-otp", async (req, res) => {
   try {
     const { email, otp } = req.body;
 
     if (!email || !otp) {
-      return res.status(400).json({ message: 'Thiếu thông tin bắt buộc' });
+      return res.status(400).json({ message: "Thiếu thông tin bắt buộc" });
     }
 
     // Tìm OTP còn hiệu lực
     const otpRecord = await OTP.findOne({
       email,
       otp,
-      expiresAt: { $gt: new Date() }
+      expiresAt: { $gt: new Date() },
     });
 
     if (!otpRecord) {
-      return res.status(400).json({ success: false, message: 'Mã OTP không đúng hoặc đã hết hạn' });
+      return res
+        .status(400)
+        .json({ success: false, message: "Mã OTP không đúng hoặc đã hết hạn" });
     }
 
     // Xóa OTP sau khi verify thành công
     await OTP.deleteOne({ _id: otpRecord._id });
 
-    res.json({ success: true, message: 'Xác thực thành công' });
+    res.json({ success: true, message: "Xác thực thành công" });
   } catch (error) {
-    console.error('Verify Email OTP Error:', error);
-    res.status(500).json({ success: false, message: 'Không thể xác thực OTP' });
+    console.error("Verify Email OTP Error:", error);
+    res.status(500).json({ success: false, message: "Không thể xác thực OTP" });
   }
 });
 
+// POST /api/auth/reset-password
+router.post("/reset-password", async (req, res) => {
+  try {
+    const { email, newPassword } = req.body;
+    if (!email || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Email and new password are required",
+      });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user)
+      return res
+        .status(400)
+        .json({ success: false, message: "User not found" });
+
+    user.password = newPassword;
+    await user.save();
+
+    res.json({ success: true, message: "Password updated successfully" });
+  } catch (error) {
+    console.error("Reset Password Error:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+});
 
 export default router;

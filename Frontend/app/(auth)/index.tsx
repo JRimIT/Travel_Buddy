@@ -103,6 +103,15 @@ const Login = () => {
                 />
               </View>
             </View>
+            {/* Button Forgot Password */}
+            <View style={[styles.footer, { marginTop: 10 }]}>
+              <Text style={styles.footerText}>Forgot your password? </Text>
+              <Link href="/forgotPassword" asChild>
+                <TouchableOpacity>
+                  <Text style={styles.link}>Reset Password</Text>
+                </TouchableOpacity>
+              </Link>
+            </View>
 
             <TouchableOpacity
               style={styles.button}

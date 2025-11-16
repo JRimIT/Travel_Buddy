@@ -44,12 +44,6 @@ export function DashboardStats() {
       bg: "bg-purple-50 hover:bg-purple-100",
     },
     {
-      title: "Hoạt Động (30 ngày)",
-      value: userStats?.summary.activeUsers ?? "-",
-      icon: <UserCheck className="w-5 h-5 text-green-600" />,
-      bg: "bg-green-50 hover:bg-green-100",
-    },
-    {
       title: "Bị Khóa",
       value: userStats?.summary.lockedUsers ?? "-",
       icon: <AlertCircle className="w-5 h-5 text-red-600" />,
@@ -59,15 +53,15 @@ export function DashboardStats() {
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-3">
-        {stats.slice(0, 3).map((stat, i) => (
+      <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2">
+        {stats.slice(0, 2).map((stat, i) => (
           <StatCard key={i} stat={stat} />
         ))}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-3">
-        {stats.slice(3, 6).map((stat, i) => (
-          <StatCard key={i + 3} stat={stat} />
+        {stats.slice(2).map((stat, i) => ( 
+          <StatCard key={i + 2} stat={stat} />
         ))}
       </div>
     </div>

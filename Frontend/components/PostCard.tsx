@@ -1,15 +1,13 @@
-// components/PostCard.tsx
-
 import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, Alert, Share } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import ParsedText from 'react-native-parsed-text';
-// Interface cho props, giúp code rõ ràng hơn
+
 interface PostCardProps {
   post: {
     _id: string;
-    title: string; // Đảm bảo title là string
+    title: string;
     user: {
       _id?: string;
       username: string;
@@ -25,33 +23,57 @@ interface PostCardProps {
   onCommentPress: (postId: string) => void;
   onDelete: (postId: string) => void;
   currentUserId?: string;
-  userSavedPosts: string[]; 
+  userSavedPosts: string[];
   onSave: (postId: string) => void;
 }
 
-const PostCard: React.FC<PostCardProps> = ({ post, onLike, onCommentPress, onDelete, currentUserId,userSavedPosts,onSave }) => {
+// ✅ Hàm tiện ích xử lý avatar
+const getAvatarUri = (username?: string, profileImage?: string) => {
+  let uri = profileImage;
+
+  // Nếu chưa có ảnh riêng, dùng DiceBear theo username hoặc mặc định
+  if (!uri) {
+    const seed = username || "default";
+    uri = `https://api.dicebear.com/7.x/avataaars/png?seed=${encodeURIComponent(seed)}`;
+  }
+
+  // DiceBear SVG → PNG cho React Native
+  if (uri.includes("/svg?")) {
+    uri = uri.replace("/svg?", "/png?");
+  }
+
+  return uri;
+};
+
+const PostCard: React.FC<PostCardProps> = ({
+  post,
+  onLike,
+  onCommentPress,
+  onDelete,
+  currentUserId,
+  userSavedPosts,
+  onSave
+}) => {
   const router = useRouter();
   const isLiked = currentUserId ? post.likes.includes(currentUserId) : false;
   const isOwner = currentUserId === post.user?._id;
+
   const handleHashtagPress = (hashtag: string) => {
-    // Bỏ dấu # ở đầu trước khi tìm kiếm
-    const query = hashtag.substring(1); 
-    // Điều hướng đến một trang tìm kiếm riêng hoặc xử lý tại trang feed
-    // Ở đây ta giả sử có một trang /search để xử lý query
+    const query = hashtag.substring(1);
     router.push({ pathname: '/search', params: { query } });
   };
+
   const handleDelete = () => {
-    // Hỏi lại lần nữa để chắc chắn
     Alert.alert(
       'Xác nhận xóa',
       'Bạn có chắc chắn muốn xóa bài viết này không? Hành động này không thể hoàn tác.',
       [
         { text: 'Hủy', style: 'cancel' },
-        { 
-          text: 'Xóa', 
-          style: 'destructive', 
-          onPress: () => onDelete(post._id) // Gọi hàm được truyền từ component cha
-        },  
+        {
+          text: 'Xóa',
+          style: 'destructive',
+          onPress: () => onDelete(post._id),
+        },
       ]
     );
   };
@@ -66,10 +88,10 @@ const PostCard: React.FC<PostCardProps> = ({ post, onLike, onCommentPress, onDel
           onPress: () => {
             router.push({
               pathname: '/edit-post',
-              params: { 
-                postId: post._id, 
-                title: post.title, 
-                content: post.content 
+              params: {
+                postId: post._id,
+                title: post.title,
+                content: post.content,
               },
             });
           },
@@ -87,13 +109,13 @@ const PostCard: React.FC<PostCardProps> = ({ post, onLike, onCommentPress, onDel
       { cancelable: true }
     );
   };
-  
+
   const handleShare = async () => {
     try {
       await Share.share({
-        message: `Hãy xem bài viết này từ ${post.user.username}: ${post.title}\n\n${post.content}`, 
+        message: `Hãy xem bài viết này từ ${post.user.username}: ${post.title}\n\n${post.content}`,
       });
-    } catch (error) {
+    } catch (error: any) {
       Alert.alert(error.message);
     }
   };
@@ -102,14 +124,14 @@ const PostCard: React.FC<PostCardProps> = ({ post, onLike, onCommentPress, onDel
 
   return (
     <View style={styles.card}>
+      {/* Header: Avatar + Username + Tùy chọn */}
       <View style={styles.header}>
-        <Image 
-          source={{ uri: post.user?.profileImage || 'https://via.placeholder.com/50' }} 
-          style={styles.avatar} 
+        <Image
+          source={{ uri: getAvatarUri(post.user?.username, post.user?.profileImage) }}
+          style={styles.avatar}
         />
         <Text style={styles.username}>{post.user?.username}</Text>
 
-        {/* Nút Tùy chọn (3 chấm) chỉ hiển thị cho chủ bài viết */}
         {isOwner && (
           <TouchableOpacity onPress={showOptions} style={styles.optionsButton}>
             <Ionicons name="ellipsis-horizontal" size={24} color="#555" />
@@ -117,13 +139,13 @@ const PostCard: React.FC<PostCardProps> = ({ post, onLike, onCommentPress, onDel
         )}
       </View>
 
-      {/* Tiêu đề và nội dung bài đăng */}
+      {/* Tiêu đề + nội dung */}
       <Text style={styles.title}>{post.title}</Text>
       <ParsedText
         style={styles.content}
         parse={[
           {
-            pattern: /#(\w+)/, // Regex để tìm hashtag
+            pattern: /#(\w+)/,
             style: styles.hashtag,
             onPress: handleHashtagPress,
           },
@@ -132,22 +154,28 @@ const PostCard: React.FC<PostCardProps> = ({ post, onLike, onCommentPress, onDel
         {post.content}
       </ParsedText>
 
-      {/* Ảnh của bài đăng */}
+      {/* Ảnh trong bài đăng */}
       {post.imageUrl && (
         <Image source={{ uri: post.imageUrl }} style={styles.postImage} />
       )}
 
-      {/* Các nút hành động */}
+      {/* Hành động: like, comment, share, save */}
       <View style={styles.actionsContainer}>
         <View style={styles.leftActions}>
           <TouchableOpacity style={styles.actionButton} onPress={() => onLike(post._id)}>
-            <Ionicons name={isLiked ? 'heart' : 'heart-outline'} size={24} color={isLiked ? '#e91e63' : '#555'} />
+            <Ionicons
+              name={isLiked ? 'heart' : 'heart-outline'}
+              size={24}
+              color={isLiked ? '#e91e63' : '#555'}
+            />
             <Text style={styles.actionText}>{post.likes.length}</Text>
           </TouchableOpacity>
-          
+
           <TouchableOpacity style={styles.actionButton} onPress={() => onCommentPress(post._id)}>
             <Ionicons name="chatbubble-outline" size={24} color="#555" />
-            <Text style={styles.actionText}>{post.commentCount ?? post.comments?.length ?? 0}</Text>
+            <Text style={styles.actionText}>
+              {post.commentCount ?? post.comments?.length ?? 0}
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.actionButton} onPress={handleShare}>
@@ -155,8 +183,8 @@ const PostCard: React.FC<PostCardProps> = ({ post, onLike, onCommentPress, onDel
           </TouchableOpacity>
         </View>
 
-         <TouchableOpacity style={{ marginLeft: 'auto' }} onPress={() => onSave(post._id)}>
-          <Ionicons name={isSaved ? "bookmark" : "bookmark-outline"} size={24} color="#555" />
+        <TouchableOpacity style={{ marginLeft: 'auto' }} onPress={() => onSave(post._id)}>
+          <Ionicons name={isSaved ? 'bookmark' : 'bookmark-outline'} size={24} color="#555" />
         </TouchableOpacity>
       </View>
     </View>
@@ -191,11 +219,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
   },
-  // --- THÊM STYLE CHO NÚT 3 CHẤM ---
   optionsButton: {
-    marginLeft: 'auto', // Đẩy nút về phía cuối
+    marginLeft: 'auto',
   },
-  // --- THÊM STYLE CHO TIÊU ĐỀ ---
   title: {
     fontSize: 18,
     fontWeight: 'bold',
@@ -209,7 +235,7 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   hashtag: {
-    color: '#007AFF', // Màu xanh dương cho hashtag
+    color: '#007AFF',
     fontWeight: '500',
   },
   postImage: {
@@ -220,7 +246,7 @@ const styles = StyleSheet.create({
   },
   actionsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between', // Quan trọng nhất: đẩy 2 nhóm ra 2 bên
+    justifyContent: 'space-between',
     alignItems: 'center',
     paddingTop: 8,
   },
@@ -231,7 +257,7 @@ const styles = StyleSheet.create({
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 20, // Tăng khoảng cách giữa các nút
+    marginRight: 20,
   },
   actionText: {
     marginLeft: 6,
