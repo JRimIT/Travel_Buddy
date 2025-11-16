@@ -120,8 +120,8 @@ const Signup = () => {
       <View style={styles.container}>
         <View style={styles.card}>
           <View style={styles.header}>
-            <Text style={styles.title}>BookWorm</Text>
-            <Text style={styles.subtitle}>Share your favorite reads</Text>
+            <Text style={styles.title}>Travel Buddy</Text>
+            <Text style={styles.subtitle}>Share your favorite Trips</Text>
           </View>
           <View style={styles.formContainer}>
             {/* Username */}
