@@ -28,6 +28,11 @@ const postSchema = new mongoose.Schema({
   }],
   hashtags: [{ type: String, trim: true }],
   commentCount: { type: Number, default: 0 },
+  status: {
+    type: String,
+    enum: ['public', 'private'],
+    default: 'public',
+  },
 }, { timestamps: true });
 
 postSchema.index({ title: 'text', content: 'text', hashtags: 'text' });

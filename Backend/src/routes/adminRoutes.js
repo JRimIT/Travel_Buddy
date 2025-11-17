@@ -1171,19 +1171,75 @@ router.put("/reviews/:id/show", async (req, res) => {
  *         name: id
  *         required: true
  *         schema: { type: string }
+ *         description: Report ID
  *     responses:
- *       200: { description: Report resolved }
+ *       200:
+ *         description: Report resolved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 action:
+ *                   type: string
+ *                   description: Additional action taken (e.g., trip hidden)
  */
 router.put("/reports/:id/resolve", async (req, res) => {
   try {
-    await Report.findByIdAndUpdate(req.params.id, {
-      status: "resolved",
-      reviewedBy: req.user._id,
-      reviewedAt: new Date(),
+    const reportId = req.params.id;
+
+    const report = await Report.findById(reportId);
+
+    if (!report) {
+      return res.status(404).json({ message: "Report not found" });
+    }
+
+    if (report.status === "resolved") {
+      return res.json({ message: "Report already resolved" });
+    }
+
+    let additionalAction = null;
+
+    if (report.targetType === "TripSchedule") {
+      const tripId = report.targetId;
+
+      const updateResult = await TripSchedule.findByIdAndUpdate(
+        tripId,
+        { 
+          isPublic: false,
+          hiddenBy: req.user._id,
+          hiddenAt: new Date(),
+          hiddenReason: `Hidden due to report #${reportId} being resolved`
+        },
+        { new: true }
+      );
+
+      if (updateResult) {
+        additionalAction = "Trip has been hidden (isPublic = false)";
+      } else {
+        additionalAction = "Trip not found or could not be hidden";
+      }
+    }
+
+    await Report.findByIdAndUpdate(
+      reportId,
+      {
+        status: "resolved",
+        reviewedBy: req.user._id,
+        reviewedAt: new Date(),
+        resolutionNote: additionalAction || "Marked as resolved"
+      }
+    );
+
+    res.json({
+      message: "Report resolved successfully",
+      action: additionalAction
     });
-    res.json({ message: "Report resolved" });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Error resolving report:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 });
 

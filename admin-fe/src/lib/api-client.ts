@@ -118,29 +118,29 @@ class ApiClient {
   }
 
   // Trip approval endpoints
-  async getTripApprovals() {
-    return this.request<
-      Array<{
-        _id: string;
-        tripSchedule: {
-          _id: string;
-          title: string;
-          startDate: string;
-          endDate: string;
-          user: { _id: string; username: string; email: string };
-        };
-        status: "pending" | "approved" | "rejected";
-        createdAt: string;
-      }>
-    >("/admin/trip-approvals");
-  }
+  // async getTripApprovals() {
+  //   return this.request<
+  //     Array<{
+  //       _id: string;
+  //       tripSchedule: {
+  //         _id: string;
+  //         title: string;
+  //         startDate: string;
+  //         endDate: string;
+  //         user: { _id: string; username: string; email: string };
+  //       };
+  //       status: "pending" | "approved" | "rejected";
+  //       createdAt: string;
+  //     }>
+  //   >("/admin/trip-approvals");
+  // }
 
-  async approveTripApproval(id: string, reason?: string) {
-    return this.request(`/admin/trip-approvals/${id}/approve`, {
-      method: "POST",
-      body: JSON.stringify({ reason }),
-    });
-  }
+  // async approveTripApproval(id: string, reason?: string) {
+  //   return this.request(`/admin/trip-approvals/${id}/approve`, {
+  //     method: "POST",
+  //     body: JSON.stringify({ reason }),
+  //   });
+  // }
   // Trip approval endpoints
   async getTripApprovals() {
     return this.request<{
@@ -201,12 +201,12 @@ class ApiClient {
     });
   }
 
-  async rejectTripApproval(id: string, reason?: string) {
-    return this.request(`/admin/trip-approvals/${id}/reject`, {
-      method: "POST",
-      body: JSON.stringify({ reason }),
-    });
-  }
+  // async rejectTripApproval(id: string, reason?: string) {
+  //   return this.request(`/admin/trip-approvals/${id}/reject`, {
+  //     method: "POST",
+  //     body: JSON.stringify({ reason }),
+  //   });
+  // }
   async rejectTripApproval(id: string, reason: string) {
     return this.request(`/admin/trips/${id}/reject`, {
       method: "POST",

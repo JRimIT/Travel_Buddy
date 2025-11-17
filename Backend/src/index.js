@@ -43,12 +43,12 @@ const server = http.createServer(app);
 
 // Middleware
 app.use(express.static("public"));
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false, limit: '50mb' }));
+app.use(bodyParser.json({ limit: '50mb' }));
 app.use(methodOverride("_method"));
 app.use(session(sessionConfig));
 app.use(jwtPassport.initialize());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
 app.use(cors());
 
 // Swagger UI

@@ -178,7 +178,7 @@ export function TripsTable({ filters = {} }: TripsTableProps) {
                 <TableHead className="min-w-[140px]">Ngày bắt đầu</TableHead>
                 <TableHead className="min-w-[140px]">Ngày kết thúc</TableHead>
                 <TableHead className="min-w-[120px]">Hiển thị</TableHead>
-                <TableHead className="min-w-[120px]">Trạng thái</TableHead>
+                {/* <TableHead className="min-w-[120px]">Trạng thái</TableHead> */}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -204,7 +204,7 @@ export function TripsTable({ filters = {} }: TripsTableProps) {
                         {trip.isPublic ? "Công khai" : "Riêng tư"}
                       </Badge>
                     </TableCell>
-                    <TableCell>
+                    {/* <TableCell>
                       <Badge
                         variant={
                           trip.status === "approved" ? "default" :
@@ -216,7 +216,7 @@ export function TripsTable({ filters = {} }: TripsTableProps) {
                           trip.status === "approved" ? "Đã duyệt" :
                             trip.status === "rejected" ? "Bị từ chối" : "N/A"}
                       </Badge>
-                    </TableCell>
+                    </TableCell> */}
                   </TableRow>
                 ))
               )}

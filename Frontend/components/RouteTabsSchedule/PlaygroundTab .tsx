@@ -149,7 +149,7 @@ const PlaygroundTab = () => {
 
   // ✅ Lọc theo tìm kiếm
   const filteredPlaygrounds = playgrounds.filter(item => 
-    item.properties.name.toLowerCase().includes(searchText.toLowerCase())
+    item.properties.name?.toLowerCase().includes(searchText?.toLowerCase())
   );
 
   const renderCard = ({ item }) => {

@@ -50,6 +50,12 @@ const userSchema = new mongoose.Schema(
         ref: "Post",
       },
     ],
+    sharedPosts: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Post",
+      },
+    ],
     savedTripSchedules: [{
       type: mongoose.Schema.Types.ObjectId,
       ref: 'TripSchedule',

@@ -1,7 +1,7 @@
 "use client"
 
 import { useSalesWeekly } from "../../hooks/use-admin-data"
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart, defs, linearGradient, stop } from "recharts"
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from "recharts"
 
 export function AnalyticsChart() {
   const { data, isLoading } = useSalesWeekly()
