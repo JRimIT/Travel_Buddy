@@ -377,9 +377,11 @@ const PostCard: React.FC<PostCardProps> = ({
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={{ marginLeft: 'auto' }} onPress={() => onSave(post._id)}>
-          <Ionicons name={isSaved ? 'bookmark' : 'bookmark-outline'} size={24} color="#555" />
-        </TouchableOpacity>
+        {!isOwner && (
+          <TouchableOpacity style={{ marginLeft: 'auto' }} onPress={() => onSave(post._id)}>
+            <Ionicons name={isSaved ? 'bookmark' : 'bookmark-outline'} size={24} color="#555" />
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Share Modal */}

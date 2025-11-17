@@ -273,6 +273,8 @@ export default function FeedScreen() {
   const params = useLocalSearchParams();
   const router = useRouter();
   const [posts, setPosts] = useState<any[]>([]);
+  const [myPosts, setMyPosts] = useState<any[]>([]);
+  const [feedTab, setFeedTab] = useState("all"); // 'all' | 'my'
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -309,26 +311,43 @@ export default function FeedScreen() {
     }
   };
 
+  const fetchMyPosts = async () => {
+    try {
+      const response = await fetch(`${API_URL}/posts/me`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Failed to fetch my posts');
+      setMyPosts(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Error fetching my posts:', error);
+      setMyPosts([]);
+    }
+  };
+
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     fetchPosts();
+    fetchMyPosts();
   }, []);
 
   const handleLike = async (postId: string) => {
-    setPosts(prevPosts =>
+    const updatePosts = (prevPosts: any[]) =>
       prevPosts.map(p => {
         if (p._id === postId) {
           const isLiked = p.likes.includes(user?._id);
           return { ...p, likes: isLiked ? p.likes.filter((id: string) => id !== user?._id) : [...p.likes, user?._id] };
         }
         return p;
-      })
-    );
+      });
+    
+    setPosts(updatePosts);
+    setMyPosts(updatePosts);
+    
     try {
       await fetch(`${API_URL}/posts/${postId}/like`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } });
     } catch (error) {
       console.error('Failed to update like status:', error);
-      fetchPosts(); 
+      fetchPosts();
+      fetchMyPosts();
     }
   };
   
@@ -358,6 +377,13 @@ export default function FeedScreen() {
     }
   }, [debouncedSearchQuery]);
 
+  // Tính toán displayedPosts trước khi sử dụng trong useEffect
+  const displayedPosts = searchQuery.trim().length > 0 
+    ? searchResults 
+    : feedTab === "my" 
+      ? myPosts 
+      : posts;
+
   // Fetch post cụ thể nếu có postId trong params nhưng chưa có trong danh sách
   useEffect(() => {
     const currentPostId = Array.isArray(params.postId) ? params.postId[0] : params.postId;
@@ -372,19 +398,23 @@ export default function FeedScreen() {
           .then(data => {
             if (data && data._id) {
               // Thêm post vào đầu danh sách
-              setPosts(prevPosts => {
-                // Kiểm tra xem post đã có chưa
+              const addPostToList = (prevPosts: any[]) => {
                 if (!prevPosts.find(p => p._id === data._id)) {
                   return [data, ...prevPosts];
                 }
                 return prevPosts;
-              });
+              };
+              setPosts(addPostToList);
+              // Nếu là post của user, thêm vào myPosts
+              if (data.user?._id === user?._id) {
+                setMyPosts(addPostToList);
+              }
             }
           })
           .catch(err => console.error('Failed to fetch post:', err));
       }
     }
-  }, [displayedPosts, params.postId, token]);
+  }, [displayedPosts, params.postId, token, user?._id]);
 
   // Scroll đến post khi có postId trong params
   useEffect(() => {
@@ -470,24 +500,25 @@ export default function FeedScreen() {
   };
 
     const onCommentPosted = (postId: string, newComment: any, parentId: string | null) => {
-    setPosts(prevPosts => 
+      const updatePostComments = (prevPosts: any[]) =>
         prevPosts.map(post => {
-        if (post._id === postId) {
+          if (post._id === postId) {
             const existingComments = post.comments ? [...post.comments] : [];
             const updatedComments = parentId
-            ? addReplyRecursively(existingComments, parentId, newComment)
-            : [newComment, ...existingComments];
+              ? addReplyRecursively(existingComments, parentId, newComment)
+              : [newComment, ...existingComments];
 
             return {
-            ...post,
-            comments: updatedComments,
-            commentCount: (post.commentCount || 0) + 1, // 🔼 tăng count
+              ...post,
+              comments: updatedComments,
+              commentCount: (post.commentCount || 0) + 1, // 🔼 tăng count
             };
-            
-        }
-        return post;
-        })
-    );
+          }
+          return post;
+        });
+      
+      setPosts(updatePostComments);
+      setMyPosts(updatePostComments);
     };
 
   const handleDeletePost = async (postId: string) => {
@@ -514,6 +545,7 @@ export default function FeedScreen() {
                             throw new Error("Không thể xóa bài viết. Vui lòng thử lại");
                         }
                         setPosts(prevPosts => prevPosts.filter(p => p._id !== postId));
+                        setMyPosts(prevPosts => prevPosts.filter(p => p._id !== postId));
                         setSearchResults(prevResults => prevResults.filter(p => p._id !== postId));
 
                     } catch (error) {
@@ -525,7 +557,6 @@ export default function FeedScreen() {
     );
 };
   
-  const displayedPosts = searchQuery.trim().length > 0 ? searchResults : posts;
   const showNoResults = searchQuery.trim().length > 0 && !isSearching && displayedPosts.length === 0;
   const handleSavePost = async (postId: string) => {
     if (!user) {
@@ -562,6 +593,56 @@ export default function FeedScreen() {
             <TextInput style={styles.searchInput} placeholder="Tìm kiếm..." value={searchQuery} onChangeText={setSearchQuery} />
             {isSearching && <ActivityIndicator size="small" />}
         </View>
+        
+        {/* Tabs: Tất cả và Của tôi */}
+        {!searchQuery.trim() && (
+          <View style={{
+            flexDirection: "row",
+            marginHorizontal: 12,
+            marginTop: 8,
+            marginBottom: 8,
+            borderBottomWidth: 1,
+            borderBottomColor: "#eee",
+          }}>
+            <TouchableOpacity
+              style={{
+                flex: 1,
+                paddingVertical: 12,
+                borderBottomWidth: 2,
+                borderBottomColor: feedTab === "all" ? "#2188ea" : "transparent",
+                alignItems: "center",
+              }}
+              onPress={() => setFeedTab("all")}
+            >
+              <Text style={{
+                color: feedTab === "all" ? "#2188ea" : "#888",
+                fontWeight: "600",
+                fontSize: 16,
+              }}>
+                Tất cả
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{
+                flex: 1,
+                paddingVertical: 12,
+                borderBottomWidth: 2,
+                borderBottomColor: feedTab === "my" ? "#2188ea" : "transparent",
+                alignItems: "center",
+              }}
+              onPress={() => setFeedTab("my")}
+            >
+              <Text style={{
+                color: feedTab === "my" ? "#2188ea" : "#888",
+                fontWeight: "600",
+                fontSize: 16,
+              }}>
+                Của tôi
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {showNoResults ? <Text style={styles.emptyText}>Không tìm thấy kết quả nào.</Text> : (
             <FlatList
                 ref={flatListRef}
@@ -579,9 +660,10 @@ export default function FeedScreen() {
                         onSave={handleSavePost}
                         currentUserId={user?._id}
                         onStatusChange={(postId, newStatus) => {
-                          setPosts(prevPosts =>
-                            prevPosts.map(p => p._id === postId ? { ...p, status: newStatus } : p)
-                          );
+                          const updateStatus = (prevPosts: any[]) =>
+                            prevPosts.map(p => p._id === postId ? { ...p, status: newStatus } : p);
+                          setPosts(updateStatus);
+                          setMyPosts(updateStatus);
                         }}
                     />
                 )}

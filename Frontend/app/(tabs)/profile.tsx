@@ -385,12 +385,10 @@ const fetchSharedData = async () => {
     });
   };
   const displayedTrips = searchText.trim()
-    ? (tab === "created" ? createdTrips : savedTrips).filter((t) =>
+    ? createdTrips.filter((t) =>
         t.title?.toLowerCase().includes(searchText.trim().toLowerCase())
       )
-    : tab === "created"
-    ? createdTrips
-    : savedTrips;
+    : createdTrips;
 
   const displayedSharedTrips =
     tab === "shared"
@@ -750,25 +748,6 @@ const renderTripItem = ({ item }) => {
             flex: 1,
             padding: 10,
             borderBottomWidth: 2,
-            borderBottomColor: tab === "saved" ? colors.primary : "transparent",
-            alignItems: "center",
-          }}
-          onPress={() => setTab("saved")}
-        >
-          <Text
-            style={{
-              color: tab === "saved" ? colors.primary : colors.textSecondary,
-              fontWeight: "bold",
-            }}
-          >
-            Chuyến đi đã lưu
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={{
-            flex: 1,
-            padding: 10,
-            borderBottomWidth: 2,
             borderBottomColor:
               tab === "shared" ? colors.primary : "transparent",
             alignItems: "center",
@@ -782,26 +761,6 @@ const renderTripItem = ({ item }) => {
             }}
           >
             Chuyến đi được chia sẻ
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={{
-            flex: 1,
-            padding: 10,
-            borderBottomWidth: 2,
-            borderBottomColor:
-              tab === "posts" ? colors.primary : "transparent",
-            alignItems: "center",
-          }}
-          onPress={() => setTab("posts")}
-        >
-          <Text
-            style={{
-              color: tab === "posts" ? colors.primary : colors.textSecondary,
-              fontWeight: "bold",
-            }}
-          >
-            Feed
           </Text>
         </TouchableOpacity>
       </View>
@@ -1065,114 +1024,31 @@ const renderTripItem = ({ item }) => {
         </View>
       )}
 
-      {tab === "posts" ? (
-        <FlatList
-          data={userPosts}
-          keyExtractor={(item) => item._id}
-          renderItem={({ item }) => (
-            <PostCard
-              post={item}
-              onLike={async (postId) => {
-                try {
-                  const response = await fetch(`${API_URL}/posts/${postId}/like`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                  });
-                  if (response.ok) {
-                    fetchUserPosts();
-                  }
-                } catch (error) {
-                  console.error('Failed to like post:', error);
-                }
-              }}
-              onCommentPress={(postId) => {
-                router.push({
-                  pathname: "/(tabs)/feed",
-                  params: { postId, openComments: 'true' }
-                });
-              }}
-              onDelete={async (postId) => {
-                try {
-                  const response = await fetch(`${API_URL}/posts/${postId}`, {
-                    method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                  });
-                  if (response.ok) {
-                    fetchUserPosts();
-                  }
-                } catch (error) {
-                  Alert.alert("Lỗi", "Không thể xóa bài viết");
-                }
-              }}
-              currentUserId={userInfo?._id}
-              userSavedPosts={userInfo?.savedPosts || []}
-              onSave={async (postId) => {
-                try {
-                  await fetch(`${API_URL}/posts/${postId}/save`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                  });
-                  fetchUserInfo();
-                } catch (error) {
-                  console.error('Failed to save post:', error);
-                }
-              }}
-              onStatusChange={(postId, newStatus) => {
-                setUserPosts(prevPosts =>
-                  prevPosts.map(p => p._id === postId ? { ...p, status: newStatus } : p)
-                );
-              }}
+      <FlatList
+        data={tab === "shared" ? displayedSharedTrips : displayedTrips}
+        keyExtractor={(item) => item._id}
+        renderItem={renderTripItem}
+        contentContainerStyle={styles.tripsList}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={[colors.primary]}
+            tintColor={colors.primary}
+          />
+        }
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Ionicons
+              name="earth-outline"
+              size={50}
+              color={colors.textSecondary}
             />
-          )}
-          contentContainerStyle={{ padding: 12 }}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={handleRefresh}
-              colors={[colors.primary]}
-              tintColor={colors.primary}
-            />
-          }
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Ionicons
-                name="document-text-outline"
-                size={50}
-                color={colors.textSecondary}
-              />
-              <Text style={styles.emptyText}>
-                Bạn chưa có bài viết nào
-              </Text>
-            </View>
-          }
-        />
-      ) : (
-        <FlatList
-          data={tab === "shared" ? displayedSharedTrips : displayedTrips}
-          keyExtractor={(item) => item._id}
-          renderItem={renderTripItem}
-          contentContainerStyle={styles.tripsList}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={handleRefresh}
-              colors={[colors.primary]}
-              tintColor={colors.primary}
-            />
-          }
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Ionicons
-                name="earth-outline"
-                size={50}
-                color={colors.textSecondary}
-              />
-              <Text style={styles.emptyText}>
-                {tab === "shared"
-                ? "Bạn chưa có chuyến đi được chia sẻ nào"
-                : "Bạn chưa có chuyến đi nào"}
+            <Text style={styles.emptyText}>
+              {tab === "shared"
+              ? "Bạn chưa có chuyến đi được chia sẻ nào"
+              : "Bạn chưa có chuyến đi nào"}
             </Text>
             {tab === "created" && (
               <TouchableOpacity
@@ -1186,7 +1062,6 @@ const renderTripItem = ({ item }) => {
           </View>
         }
       />
-      )}
 
       {/* Notification Modal */}
       <Modal
