@@ -1,0 +1,152 @@
+[
+  {
+    "nhaXe": "Tân Kim Chi",
+    "diemDi": "Đà Nẵng",
+    "diemDen": "Hà Nội",
+    "ngayDi": "2025-11-12",
+    "soXe": "TKC01",
+    "loaiXe": "Giường nằm 40 chỗ",
+    "soGheTrong": 12,
+    "gioDi": "07:30"
+  },
+  {
+    "nhaXe": "Tân Kim Chi",
+    "diemDi": "Đà Nẵng",
+    "diemDen": "Hà Nội",
+    "ngayDi": "2025-11-12",
+    "soXe": "TKC02",
+    "loaiXe": "Giường nằm 40 chỗ",
+    "soGheTrong": 8,
+    "gioDi": "09:00"
+  },
+  {
+    "nhaXe": "Tân Kim Chi",
+    "diemDi": "Đà Nẵng",
+    "diemDen": "Hà Nội",
+    "ngayDi": "2025-11-12",
+    "soXe": "TKC03",
+    "loaiXe": "Giường nằm 40 chỗ",
+    "soGheTrong": 15,
+    "gioDi": "10:30"
+  },
+  {
+    "nhaXe": "Tân Kim Chi",
+    "diemDi": "Đà Nẵng",
+    "diemDen": "Hà Nội",
+    "ngayDi": "2025-11-12",
+    "soXe": "TKC04",
+    "loaiXe": "Giường nằm 40 chỗ",
+    "soGheTrong": 6,
+    "gioDi": "13:00"
+  },
+  {
+    "nhaXe": "Tân Kim Chi",
+    "diemDi": "Đà Nẵng",
+    "diemDen": "Hà Nội",
+    "ngayDi": "2025-11-12",
+    "soXe": "TKC05",
+    "loaiXe": "Giường nằm 40 chỗ",
+    "soGheTrong": 20,
+    "gioDi": "18:00"
+  },
+  {
+    "nhaXe": "Hạnh Luyến",
+    "diemDi": "Đà Nẵng",
+    "diemDen": "Quảng Bình",
+    "ngayDi": "2025-11-12",
+    "soXe": "HL01",
+    "loaiXe": "Giường nằm 40 chỗ",
+    "soGheTrong": 10,
+    "gioDi": "07:00"
+  },
+  {
+    "nhaXe": "Hạnh Luyến",
+    "diemDi": "Đà Nẵng",
+    "diemDen": "Quảng Bình",
+    "ngayDi": "2025-11-12",
+    "soXe": "HL02",
+    "loaiXe": "Giường nằm 40 chỗ",
+    "soGheTrong": 6,
+    "gioDi": "09:30"
+  },
+  {
+    "nhaXe": "Hạnh Luyến",
+    "diemDi": "Đà Nẵng",
+    "diemDen": "Quảng Bình",
+    "ngayDi": "2025-11-12",
+    "soXe": "HL03",
+    "loaiXe": "Limousine 32 giường VIP",
+    "soGheTrong": 12,
+    "gioDi": "12:00"
+  },
+  {
+    "nhaXe": "Hạnh Luyến",
+    "diemDi": "Đà Nẵng",
+    "diemDen": "Quảng Bình",
+    "ngayDi": "2025-11-12",
+    "soXe": "HL04",
+    "loaiXe": "Giường nằm 40 chỗ",
+    "soGheTrong": 4,
+    "gioDi": "18:00"
+  },
+  {
+    "nhaXe": "Hạnh Luyến",
+    "diemDi": "Đà Nẵng",
+    "diemDen": "Quảng Bình",
+    "ngayDi": "2025-11-12",
+    "soXe": "HL05",
+    "loaiXe": "Limousine 32 giường VIP",
+    "soGheTrong": 15,
+    "gioDi": "21:00"
+  },
+  {
+    "nhaXe": "Phương Trang",
+    "diemDi": "Đà Nẵng",
+    "diemDen": "Sài Gòn",
+    "ngayDi": "2025-11-08",
+    "soXe": "PT01",
+    "loaiXe": "Giường nằm cao cấp",
+    "soGheTrong": 43,
+    "gioDi": "07:00"
+  },
+  {
+    "nhaXe": "Phương Trang",
+    "diemDi": "Đà Nẵng",
+    "diemDen": "Sài Gòn",
+    "ngayDi": "2025-11-08",
+    "soXe": "PT02",
+    "loaiXe": "Giường nằm cao cấp",
+    "soGheTrong": 56,
+    "gioDi": "10:30"
+  },
+  {
+    "nhaXe": "Phương Trang",
+    "diemDi": "Đà Nẵng",
+    "diemDen": "Sài Gòn",
+    "ngayDi": "2025-11-08",
+    "soXe": "PT03",
+    "loaiXe": "Giường nằm cao cấp",
+    "soGheTrong": 27,
+    "gioDi": "14:00"
+  },
+  {
+    "nhaXe": "Phương Trang",
+    "diemDi": "Đà Nẵng",
+    "diemDen": "Sài Gòn",
+    "ngayDi": "2025-11-08",
+    "soXe": "PT04",
+    "loaiXe": "Giường nằm cao cấp",
+    "soGheTrong": 5,
+    "gioDi": "17:30"
+  },
+  {
+    "nhaXe": "Phương Trang",
+    "diemDi": "Đà Nẵng",
+    "diemDen": "Sài Gòn",
+    "ngayDi": "2025-11-08",
+    "soXe": "PT05",
+    "loaiXe": "Giường nằm cao cấp",
+    "soGheTrong": 82,
+    "gioDi": "20:00"
+  }
+]

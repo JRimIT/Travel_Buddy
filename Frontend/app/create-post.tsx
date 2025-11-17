@@ -15,6 +15,7 @@ import {
   Platform
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -28,6 +29,7 @@ export default function CreatePostScreen() {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [image, setImage] = useState<ImagePicker.ImagePickerAsset | null>(null);
+  const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
   // Hàm chọn ảnh
@@ -42,11 +44,29 @@ export default function CreatePostScreen() {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [4, 3],
-      quality: 0.7,
+      quality: 0.5, // Giảm quality để giảm kích thước file
+      base64: true, // Lấy base64 từ ImagePicker
     });
 
     if (!result.canceled) {
-      setImage(result.assets[0]);
+      const selectedImage = result.assets[0];
+      setImage(selectedImage);
+      
+      // Lấy base64 từ ImagePicker hoặc đọc từ file
+      if (selectedImage.base64) {
+        setImageBase64(selectedImage.base64);
+      } else {
+        // Nếu ImagePicker không trả về base64, đọc từ file
+        try {
+          const base64 = await FileSystem.readAsStringAsync(selectedImage.uri, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
+          setImageBase64(base64);
+        } catch (error) {
+          console.error('Error reading image as base64:', error);
+          Alert.alert('Error', 'Failed to process image');
+        }
+      }
     }
   };
 
@@ -59,11 +79,7 @@ export default function CreatePostScreen() {
     setUploading(true);
 
     try {
-      // Trong thực tế, bạn nên có một endpoint riêng để upload ảnh và nhận về URL.
-      // Ở đây, để đơn giản, ta sẽ giả lập URL của ảnh.
-      // Bạn cần thay thế logic này bằng việc upload ảnh lên Cloudinary.
-      const imageUrl = image ? image.uri : ''; 
-
+      // Gửi base64 lên backend để upload lên Cloudinary
       const response = await fetch(`${API_URL}/posts`, {
         method: 'POST',
         headers: {
@@ -73,16 +89,31 @@ export default function CreatePostScreen() {
         body: JSON.stringify({
           title,
           content,
-          imageUrl, // URL sau khi upload
+          imageBase64: imageBase64 || undefined, // Gửi base64 để backend upload lên Cloudinary
         }),
       });
 
+      // Kiểm tra Content-Type trước khi parse JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('Non-JSON response:', text.substring(0, 200));
+        throw new Error('Server returned invalid response. Please try again.');
+      }
+
       const data = await response.json();
-      if (!response.ok) throw new Error(data.message || 'Failed to create post');
+      if (!response.ok) {
+        throw new Error(data.message || data.details || 'Failed to create post');
+      }
       
       Alert.alert('Success', 'Your travel story has been posted!');
-      router.back();
+      // Đợi một chút để đảm bảo backend đã lưu xong, rồi mới quay lại
+      // Sử dụng router.replace thay vì router.back để force refresh
+      setTimeout(() => {
+        router.replace('/(tabs)/feed');
+      }, 500);
     } catch (error) {
+      console.error('Error creating post:', error);
       Alert.alert('Error', error instanceof Error ? error.message : 'An unknown error occurred');
     } finally {
       setUploading(false);

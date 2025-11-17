@@ -27,6 +27,7 @@ const CostTab = () => {
   const days = useSelector((state:any) => state.inforUserTravel.userSchedule);
   const hotelDefault = useSelector((state:any) => state.inforUserTravel.userInforHotel);
   const flightTicket = useSelector((state:any) => state.inforUserTravel.userFlightTicket); // Nếu có: ví dụ máy bay/tàu
+  const ticket = useSelector((state:any) => state.inforUserTravel.userTicket);
   const mainTransport = useSelector((state:any) => state.inforUserTravel.userTransportMain); // Phương tiện chính đi tới nơi đến
   const innerTransport = useSelector((state:any) => state.inforUserTravel.userTransportType); // Nội đô
   const fromLocation = useSelector((state:any) => state.inforUserTravel.userCurrentLocation);
@@ -65,27 +66,51 @@ console.log("days (Costabs): ", days);
       return;
     }
     const budgets = {
-      flight: Number(budgetFlight?.replace(/\./g, "")) || 0,
-      hotel: Number(budgetHotel?.replace(/\./g, "")) || 0,
-      fun: Number(budgetFun?.replace(/\./g, "")) || 0,
+      flight: Number((budgetFlight ?? "0").toString().replace(/\./g, "")) || 0,
+      hotel: Number((budgetHotel ?? "0").toString().replace(/\./g, "")) || 0,
+      fun: Number((budgetFun ?? "0").toString().replace(/\./g, "")) || 0,
     };
+
     const uriParts = image.split(".");
     const fileType = uriParts[uriParts.length - 1];
     const imageType = fileType ? `image/${fileType.toLowerCase()}` : "image/jpeg";
     const imageDataUrl = `data:${imageType};base64,${imageBase64}`;
 
+    // ⚠️ Hiển thị alert hỏi người dùng có muốn đặt giúp không
+    Alert.alert(
+      "Xác nhận",
+      "Bạn có muốn đặt giúp (booking) không?",
+      [
+        {
+          text: "Không",
+          onPress: async () => {
+            await saveTrip("not_booking"); // ❌ Không booking
+          },
+          style: "cancel",
+        },
+        {
+          text: "Có",
+          onPress: async () => {
+            await saveTrip("booking_pending"); // ⏳ Người dùng chọn đặt giúp, trạng thái chờ xử lý
+          },
+        },
+      ],
+      { cancelable: true }
+    );
+    const saveTrip = async (bookingStatus) => {
     const res = await confirmSchedule(
       title, description, isPublic, budgets, days,baseStay,
-      hotelDefault, flightTicket, mainTransport, innerTransport, fromLocation, province.name,
-      token, imageDataUrl,useHome ,startDate, 
-      endDate
+      hotelDefault, flightTicket,ticket, mainTransport, innerTransport, fromLocation, province.name,
+      token, imageDataUrl,useHome ,startDate,
+      endDate,bookingStatus
     );
-   
-   
+
+
     if (res?.success) {
       Alert.alert("Thành công", "Đã lưu lịch trình!");
       router.replace("/");
-    }
+        }
+    };
   };
 
   const pickImage = async () => {
@@ -120,7 +145,7 @@ console.log("days (Costabs): ", days);
       Alert.alert("Lỗi", "Không lấy được ảnh");
     }
   };
-  
+
   return (
     <ScrollView contentContainerStyle={styles.infoTabBox}>
       <View style={[
@@ -242,7 +267,7 @@ console.log("days (Costabs): ", days);
                   style={{
                     marginLeft: 8, fontWeight: "bold", color: "#4276e7",
                   }}>
-                  {image ? "Đổi ảnh đại diện" : "Chọn ảnh đại diện"}
+                    {image ? "Đổi ảnh đại diện" : "Chọn ảnh đại diện"}
                 </Text>
               </TouchableOpacity>
             </View>

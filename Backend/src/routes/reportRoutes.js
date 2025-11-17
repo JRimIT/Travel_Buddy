@@ -115,9 +115,16 @@ router.post("/trip-schedule", async (req, res) => {
 
         await report.save();
 
+        // 7. Ẩn lịch trình ngay lập tức để chờ admin xem xét
+        if (tripSchedule.isPublic || tripSchedule.status !== "pending_review") {
+            tripSchedule.isPublic = false;
+            tripSchedule.status = "pending_review";
+            await tripSchedule.save();
+        }
+
         return res.status(201).json({
             success: true,
-            message: "Báo cáo đã được gửi thành công",
+            message: "Báo cáo đã được gửi thành công. Lịch trình đã được ẩn để chờ xem xét.",
             data: report,
         });
     } catch (error) {

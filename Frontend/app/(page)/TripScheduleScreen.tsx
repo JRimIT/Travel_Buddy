@@ -19,6 +19,7 @@ import HotelTab from "../../components/RouteTabsSchedule/HotelTab";
 import DaySchedule from "../../components/RouteTabsSchedule/DaySchedule";
 import MoveTab from "../../components/RouteTabsSchedule/MoveTab";
 import CostTab from "../../components/RouteTabsSchedule/CostTab";
+import TransportTab from "../../components/RouteTabsSchedule/TransportTab";
 import HotelDetailsScreen from "../../components/RouteTabsSchedule/HotelDetailsTab";
 
 const screenWidth = Dimensions.get("window").width;
@@ -50,6 +51,7 @@ const TripScheduleScreen = () => {
     { key: "days", title: "Lịch trình" },
     { key: "hotel", title: "Khách sạn" },
     { key: "move", title: "Di chuyển" },
+    { key: "transport", title: "Phương tiện" },
     { key: "cost", title: "Quỹ tiền" },
   ]);
   const [days, setDays] = useState(daysData);
@@ -95,6 +97,12 @@ const TripScheduleScreen = () => {
       
   );
 
+  const TransportRoute = () => (
+
+        <TransportTab/>
+
+    );
+
   // Tab Quỹ tiền: card nổi và shadow vàng
   const CostRoute = () => (
    <CostTab/>
@@ -104,6 +112,7 @@ const TripScheduleScreen = () => {
     days: DaysRoute,
     hotel: HotelRoute,
     move: MoveRoute,
+    transport: TransportRoute,
     cost: CostRoute,
   });
 

@@ -4,21 +4,19 @@ import { useRouter } from "expo-router";
 import { Button } from "react-native";
 import TravelSchedulePublicScreen from "../../components/ScheduleComponent/TravelSchedulePublic";
 
-
-
 const Home = () => {
   const router = useRouter();
 
-  return (<>
-    {/* <Button
+  return (
+    <>
+      {/* <Button
       title="Lên kế hoạch du lịch"
       onPress={() => router.push('/TravelPlanner')}
     /> */}
-    {/* <NoteComponent/> */}
-    <TravelSchedulePublicScreen/>
-  </>
-    
+      {/* <NoteComponent/> */}
+      <TravelSchedulePublicScreen />
+    </>
   );
 };
 
-export default Home;  
+export default Home;

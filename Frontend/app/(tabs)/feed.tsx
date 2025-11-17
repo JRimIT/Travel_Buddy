@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View,
   FlatList,
@@ -14,7 +14,7 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
-import { Link, useFocusEffect } from 'expo-router';
+import { Link, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 import PostCard from '../../components/PostCard';
@@ -36,6 +36,25 @@ function useDebounce(value, delay) {
   return debouncedValue;
 }
 
+// --- Hàm chọn avatar hợp lý ---
+const getAvatarUri = (username?: string, profileImage?: string) => {
+  let uri = profileImage;
+
+  // Nếu chưa có ảnh riêng, dùng Dicebear theo username hoặc fallback
+  if (!uri) {
+    const seed = username || "default";
+    uri = `https://api.dicebear.com/7.x/avataaars/png?seed=${encodeURIComponent(seed)}`;
+  }
+
+  // Dicebear trả về svg => convert sang png cho React Native
+  if (uri.includes("/svg?")) {
+    uri = uri.replace("/svg?", "/png?");
+  }
+
+  return uri;
+};
+
+
 const CommentItem = ({ comment, onReplyPress }) => {
   if (!comment || !comment.user || !comment._id) {
     return null;
@@ -44,7 +63,7 @@ const CommentItem = ({ comment, onReplyPress }) => {
     <View style={styles.commentWrapper}>
       <View style={styles.commentItemContainer}>
         <Image
-          source={{ uri: comment.user.profileImage || 'https://via.placeholder.com/40' }}
+          source={{ uri: getAvatarUri(comment.user.username, comment.user.profileImage) }}
           style={styles.commentAvatar}
         />
         <View style={styles.commentContent}>
@@ -226,7 +245,10 @@ const CommentModal = ({ visible, onClose, postId, onCommentPosted }: {
                       />
                     )}
                     <View style={styles.inputContainer}>
-                        <Image source={{ uri: user?.profileImage || 'https://via.placeholder.com/40' }} style={styles.inputAvatar} />
+                        <Image
+                          source={{ uri: getAvatarUri(user?.username, user?.profileImage) }}
+                          style={styles.inputAvatar}
+                        />
                         <TextInput
                             style={styles.commentInput} // Dùng style đã tối ưu
                             placeholder={replyingTo ? `Trả lời @${replyingTo.user?.username || 'user'}...` : "Viết bình luận..."}
@@ -248,7 +270,11 @@ const CommentModal = ({ visible, onClose, postId, onCommentPosted }: {
 // --- COMPONENT FEEDSCREEN CHÍNH ---
 export default function FeedScreen() {
   const { token, user, setUser } = useAuthStore();
+  const params = useLocalSearchParams();
+  const router = useRouter();
   const [posts, setPosts] = useState<any[]>([]);
+  const [myPosts, setMyPosts] = useState<any[]>([]);
+  const [feedTab, setFeedTab] = useState("all"); // 'all' | 'my'
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -256,14 +282,31 @@ export default function FeedScreen() {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isCommentModalVisible, setCommentModalVisible] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  const hasOpenedFromParams = useRef<string | null>(null);
+  const flatListRef = useRef<FlatList>(null);
+  const hasScrolledToPost = useRef<string | null>(null);
 
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
+  
+  // Reset hasOpenedFromParams khi params.postId thay đổi
+  useEffect(() => {
+    const currentPostId = Array.isArray(params.postId) ? params.postId[0] : params.postId;
+    if (currentPostId && hasOpenedFromParams.current !== currentPostId) {
+      hasOpenedFromParams.current = null; // Reset để có thể mở modal với postId mới
+      hasScrolledToPost.current = null; // Reset scroll flag
+    }
+  }, [params.postId]);
 
   const fetchPosts = async () => {
     try {
-      const response = await fetch(`${API_URL}/posts`, { headers: { 'Authorization': `Bearer ${token}` } });
+      // Thêm timestamp để tránh cache
+      const response = await fetch(`${API_URL}/posts?t=${Date.now()}`, { 
+        headers: { 'Authorization': `Bearer ${token}` },
+        cache: 'no-store' // Không cache response
+      });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || 'Failed to fetch posts');
+      
       setPosts(data);
     } catch (error) {
       Alert.alert('Error', error instanceof Error ? error.message : 'Could not load feed');
@@ -273,26 +316,47 @@ export default function FeedScreen() {
     }
   };
 
+  const fetchMyPosts = async () => {
+    try {
+      // Thêm timestamp để tránh cache
+      const response = await fetch(`${API_URL}/posts/me?t=${Date.now()}`, { 
+        headers: { 'Authorization': `Bearer ${token}` },
+        cache: 'no-store' // Không cache response
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Failed to fetch my posts');
+      
+      setMyPosts(Array.isArray(data) ? data : []);
+    } catch (error) {
+      setMyPosts([]);
+    }
+  };
+
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     fetchPosts();
+    fetchMyPosts();
   }, []);
 
   const handleLike = async (postId: string) => {
-    setPosts(prevPosts =>
+    const updatePosts = (prevPosts: any[]) =>
       prevPosts.map(p => {
         if (p._id === postId) {
           const isLiked = p.likes.includes(user?._id);
           return { ...p, likes: isLiked ? p.likes.filter((id: string) => id !== user?._id) : [...p.likes, user?._id] };
         }
         return p;
-      })
-    );
+      });
+    
+    setPosts(updatePosts);
+    setMyPosts(updatePosts);
+    
     try {
       await fetch(`${API_URL}/posts/${postId}/like`, { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } });
     } catch (error) {
       console.error('Failed to update like status:', error);
-      fetchPosts(); 
+      fetchPosts();
+      fetchMyPosts();
     }
   };
   
@@ -322,11 +386,102 @@ export default function FeedScreen() {
     }
   }, [debouncedSearchQuery]);
 
+  // Tính toán displayedPosts trước khi sử dụng trong useEffect
+  const displayedPosts = searchQuery.trim().length > 0 
+    ? searchResults 
+    : feedTab === "my" 
+      ? myPosts 
+      : posts;
+
+  // Fetch post cụ thể nếu có postId trong params nhưng chưa có trong danh sách
+  useEffect(() => {
+    const currentPostId = Array.isArray(params.postId) ? params.postId[0] : params.postId;
+    if (currentPostId && displayedPosts.length > 0) {
+      const postExists = displayedPosts.find(p => p._id === currentPostId);
+      if (!postExists) {
+        // Fetch post cụ thể nếu chưa có trong danh sách
+        fetch(`${API_URL}/posts/${currentPostId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (data && data._id) {
+              // Thêm post vào đầu danh sách
+              const addPostToList = (prevPosts: any[]) => {
+                if (!prevPosts.find(p => p._id === data._id)) {
+                  return [data, ...prevPosts];
+                }
+                return prevPosts;
+              };
+              setPosts(addPostToList);
+              // Nếu là post của user, thêm vào myPosts
+              if (data.user?._id === user?._id) {
+                setMyPosts(addPostToList);
+              }
+            }
+          })
+          .catch(err => console.error('Failed to fetch post:', err));
+      }
+    }
+  }, [displayedPosts, params.postId, token, user?._id]);
+
+  // Scroll đến post khi có postId trong params
+  useEffect(() => {
+    const currentPostId = Array.isArray(params.postId) ? params.postId[0] : params.postId;
+    if (currentPostId && displayedPosts.length > 0 && hasScrolledToPost.current !== currentPostId) {
+      const postIndex = displayedPosts.findIndex(p => p._id === currentPostId);
+      if (postIndex !== -1) {
+        // Đợi một chút để FlatList render xong
+        setTimeout(() => {
+          flatListRef.current?.scrollToIndex({
+            index: postIndex,
+            animated: true,
+            viewPosition: 0.1, // Scroll để post hiện ở khoảng 10% từ đầu màn hình
+          });
+          hasScrolledToPost.current = currentPostId;
+        }, 300);
+      } else {
+        // Nếu post chưa có trong danh sách, đợi thêm một chút rồi thử lại
+        setTimeout(() => {
+          const newPostIndex = displayedPosts.findIndex(p => p._id === currentPostId);
+          if (newPostIndex !== -1 && flatListRef.current) {
+            flatListRef.current.scrollToIndex({
+              index: newPostIndex,
+              animated: true,
+              viewPosition: 0.1,
+            });
+            hasScrolledToPost.current = currentPostId;
+          }
+        }, 1000);
+      }
+    }
+  }, [displayedPosts, params.postId]);
+
+  // Fetch myPosts khi chuyển sang tab "Của tôi"
+  useEffect(() => {
+    if (feedTab === "my" && token) {
+      fetchMyPosts();
+    }
+  }, [feedTab, token]);
+
   useFocusEffect(useCallback(() => {
     if (!isCommentModalVisible) {
       fetchPosts();
+      // Fetch myPosts ngay khi vào màn hình để đảm bảo có dữ liệu khi chuyển tab
+      if (token) {
+        fetchMyPosts();
+      }
     }
-  }, [isCommentModalVisible]));
+    
+    // Nếu có postId từ params và chưa mở modal cho postId này, mở comment modal một lần
+    const currentPostId = Array.isArray(params.postId) ? params.postId[0] : params.postId;
+    const shouldOpenComments = params.openComments === 'true';
+    if (currentPostId && hasOpenedFromParams.current !== currentPostId && shouldOpenComments) {
+      setSelectedPostId(currentPostId);
+      setCommentModalVisible(true);
+      hasOpenedFromParams.current = currentPostId;
+    }
+  }, [isCommentModalVisible, params.postId, params.openComments]));
   
   // Sửa lỗi: Chỉ giữ lại một hàm handleCommentPress
   const handleCommentPress = (postId: string) => {
@@ -338,6 +493,10 @@ export default function FeedScreen() {
   const closeCommentModal = () => {
     setCommentModalVisible(false);
     setSelectedPostId(null);
+    // Clear params để tránh modal tự mở lại
+    if (params.postId) {
+      router.replace("/(tabs)/feed");
+    }
     fetchPosts(); // 🔁 Đồng bộ lại dữ liệu từ server (bao gồm commentCount)
     };
 
@@ -361,24 +520,25 @@ export default function FeedScreen() {
   };
 
     const onCommentPosted = (postId: string, newComment: any, parentId: string | null) => {
-    setPosts(prevPosts => 
+      const updatePostComments = (prevPosts: any[]) =>
         prevPosts.map(post => {
-        if (post._id === postId) {
+          if (post._id === postId) {
             const existingComments = post.comments ? [...post.comments] : [];
             const updatedComments = parentId
-            ? addReplyRecursively(existingComments, parentId, newComment)
-            : [newComment, ...existingComments];
+              ? addReplyRecursively(existingComments, parentId, newComment)
+              : [newComment, ...existingComments];
 
             return {
-            ...post,
-            comments: updatedComments,
-            commentCount: (post.commentCount || 0) + 1, // 🔼 tăng count
+              ...post,
+              comments: updatedComments,
+              commentCount: (post.commentCount || 0) + 1, // 🔼 tăng count
             };
-            
-        }
-        return post;
-        })
-    );
+          }
+          return post;
+        });
+      
+      setPosts(updatePostComments);
+      setMyPosts(updatePostComments);
     };
 
   const handleDeletePost = async (postId: string) => {
@@ -405,6 +565,7 @@ export default function FeedScreen() {
                             throw new Error("Không thể xóa bài viết. Vui lòng thử lại");
                         }
                         setPosts(prevPosts => prevPosts.filter(p => p._id !== postId));
+                        setMyPosts(prevPosts => prevPosts.filter(p => p._id !== postId));
                         setSearchResults(prevResults => prevResults.filter(p => p._id !== postId));
 
                     } catch (error) {
@@ -416,7 +577,6 @@ export default function FeedScreen() {
     );
 };
   
-  const displayedPosts = searchQuery.trim().length > 0 ? searchResults : posts;
   const showNoResults = searchQuery.trim().length > 0 && !isSearching && displayedPosts.length === 0;
   const handleSavePost = async (postId: string) => {
     if (!user) {
@@ -453,8 +613,59 @@ export default function FeedScreen() {
             <TextInput style={styles.searchInput} placeholder="Tìm kiếm..." value={searchQuery} onChangeText={setSearchQuery} />
             {isSearching && <ActivityIndicator size="small" />}
         </View>
+        
+        {/* Tabs: Tất cả và Của tôi */}
+        {!searchQuery.trim() && (
+          <View style={{
+            flexDirection: "row",
+            marginHorizontal: 12,
+            marginTop: 8,
+            marginBottom: 8,
+            borderBottomWidth: 1,
+            borderBottomColor: "#eee",
+          }}>
+            <TouchableOpacity
+              style={{
+                flex: 1,
+                paddingVertical: 12,
+                borderBottomWidth: 2,
+                borderBottomColor: feedTab === "all" ? "#2188ea" : "transparent",
+                alignItems: "center",
+              }}
+              onPress={() => setFeedTab("all")}
+            >
+              <Text style={{
+                color: feedTab === "all" ? "#2188ea" : "#888",
+                fontWeight: "600",
+                fontSize: 16,
+              }}>
+                Tất cả
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{
+                flex: 1,
+                paddingVertical: 12,
+                borderBottomWidth: 2,
+                borderBottomColor: feedTab === "my" ? "#2188ea" : "transparent",
+                alignItems: "center",
+              }}
+              onPress={() => setFeedTab("my")}
+            >
+              <Text style={{
+                color: feedTab === "my" ? "#2188ea" : "#888",
+                fontWeight: "600",
+                fontSize: 16,
+              }}>
+                Của tôi
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {showNoResults ? <Text style={styles.emptyText}>Không tìm thấy kết quả nào.</Text> : (
             <FlatList
+                ref={flatListRef}
                 data={displayedPosts}
                 keyExtractor={(item) => item._id}
                 extraData={posts}
@@ -467,12 +678,27 @@ export default function FeedScreen() {
                         onDelete={handleDeletePost}
                         userSavedPosts={user?.savedPosts || []}
                         onSave={handleSavePost}
-                        currentUserId={user?._id} 
+                        currentUserId={user?._id}
+                        onStatusChange={(postId, newStatus) => {
+                          const updateStatus = (prevPosts: any[]) =>
+                            prevPosts.map(p => p._id === postId ? { ...p, status: newStatus } : p);
+                          setPosts(updateStatus);
+                          setMyPosts(updateStatus);
+                        }}
                     />
                 )}
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
                 contentContainerStyle={{ padding: 12 }}
                 showsVerticalScrollIndicator={false}
+                onScrollToIndexFailed={(info) => {
+                    // Xử lý lỗi khi scroll đến index không hợp lệ
+                    const wait = new Promise(resolve => setTimeout(resolve, 500));
+                    wait.then(() => {
+                        if (flatListRef.current && info.index < displayedPosts.length) {
+                            flatListRef.current.scrollToIndex({ index: info.index, animated: true });
+                        }
+                    });
+                }}
             />
         )}
         <Link href="/create-post" asChild>
