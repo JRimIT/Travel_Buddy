@@ -51,6 +51,10 @@ const Profile = () => {
   // Notification state
   const [notificationModalVisible, setNotificationModalVisible] = useState(false);
   const [latestNotification, setLatestNotification] = useState(null);
+  
+  // Saved modal state
+  const [savedModalVisible, setSavedModalVisible] = useState(false);
+  const [savedTab, setSavedTab] = useState("posts"); // 'posts' | 'trips'
 
   // Search bar state
   const [searchOpen, setSearchOpen] = useState(false);
@@ -112,48 +116,36 @@ React.useEffect(() => {
       fetchSavedTrips(),
       fetchSharedData(),
       fetchUserPosts(),
+      fetchSavedPosts(),
     ]);
     setLoading(false);
   };
 
+  const fetchSavedPosts = async () => {
+    try {
+      const response = await fetch(`${API_URL}/posts/saved`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Lấy danh sách bài viết đã lưu lỗi");
+      setSavedPosts(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Error fetching saved posts:", error);
+      setSavedPosts([]);
+    }
+  };
+
   const fetchUserPosts = async () => {
     try {
-      const [createdResponse, savedResponse] = await Promise.all([
-        fetch(`${API_URL}/posts/me`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        fetch(`${API_URL}/posts/saved`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-      ]);
-      
-      const createdData = await createdResponse.json();
-      const savedData = await savedResponse.json();
-      
-      if (!createdResponse.ok) throw new Error(createdData.message || "Lấy danh sách bài viết lỗi");
-      if (!savedResponse.ok) throw new Error(savedData.message || "Lấy danh sách bài viết đã lưu lỗi");
-      
-      const created = Array.isArray(createdData) ? createdData : [];
-      const saved = Array.isArray(savedData) ? savedData : [];
-      
-      // Kết hợp và loại bỏ trùng lặp (nếu một bài viết vừa được tạo vừa được lưu)
-      const allPosts = [...created];
-      const savedIds = new Set(created.map(p => p._id));
-      saved.forEach(post => {
-        if (!savedIds.has(post._id)) {
-          allPosts.push(post);
-        }
+      const response = await fetch(`${API_URL}/posts/me`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
-      
-      // Sắp xếp theo thời gian tạo mới nhất
-      allPosts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-      
-      setUserPosts(allPosts);
-      setSavedPosts(saved);
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Lấy danh sách bài viết lỗi");
+      setUserPosts(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error fetching user posts:", error);
       setUserPosts([]);
-      setSavedPosts([]);
     }
   };
 
@@ -587,6 +579,19 @@ const renderTripItem = ({ item }) => {
             <TouchableOpacity onPress={() => router.push("/setting")}>
               <Ionicons
                 name="settings-outline"
+                size={23}
+                color={colors.primary}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity 
+              onPress={() => {
+                fetchSavedPosts(); // Refresh saved posts khi mở modal
+                setSavedModalVisible(true);
+              }}
+              style={{ marginRight: 12 }}
+            >
+              <Ionicons
+                name="bookmark-outline"
                 size={23}
                 color={colors.primary}
               />
@@ -1481,6 +1486,247 @@ const renderTripItem = ({ item }) => {
           </TouchableOpacity>
         </View>
       )}
+
+      {/* Saved Modal - Hiển thị feed đã lưu và trips đã lưu */}
+      <Modal
+        visible={savedModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setSavedModalVisible(false)}
+      >
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: "rgba(0,0,0,0.5)",
+            justifyContent: "flex-end",
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: colors.background,
+              borderTopLeftRadius: 20,
+              borderTopRightRadius: 20,
+              maxHeight: "90%",
+              paddingTop: 20,
+            }}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                paddingHorizontal: 20,
+                paddingBottom: 15,
+                borderBottomWidth: 1,
+                borderBottomColor: colors.border || "#eee",
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 20,
+                  fontWeight: "bold",
+                  color: colors.textPrimary,
+                }}
+              >
+                Đã lưu
+              </Text>
+              <TouchableOpacity
+                onPress={() => setSavedModalVisible(false)}
+              >
+                <Ionicons name="close" size={24} color={colors.textPrimary} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Tabs: Posts và Trips */}
+            <View
+              style={{
+                flexDirection: "row",
+                marginHorizontal: 20,
+                marginTop: 15,
+                marginBottom: 10,
+                borderBottomWidth: 1,
+                borderBottomColor: colors.border || "#eee",
+              }}
+            >
+              <TouchableOpacity
+                style={{
+                  flex: 1,
+                  paddingVertical: 12,
+                  borderBottomWidth: 2,
+                  borderBottomColor:
+                    savedTab === "posts" ? colors.primary : "transparent",
+                  alignItems: "center",
+                }}
+                onPress={() => setSavedTab("posts")}
+              >
+                <Text
+                  style={{
+                    color:
+                      savedTab === "posts"
+                        ? colors.primary
+                        : colors.textSecondary,
+                    fontWeight: "600",
+                    fontSize: 16,
+                  }}
+                >
+                  Bài viết ({savedPosts.length})
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={{
+                  flex: 1,
+                  paddingVertical: 12,
+                  borderBottomWidth: 2,
+                  borderBottomColor:
+                    savedTab === "trips" ? colors.primary : "transparent",
+                  alignItems: "center",
+                }}
+                onPress={() => setSavedTab("trips")}
+              >
+                <Text
+                  style={{
+                    color:
+                      savedTab === "trips"
+                        ? colors.primary
+                        : colors.textSecondary,
+                    fontWeight: "600",
+                    fontSize: 16,
+                  }}
+                >
+                  Chuyến đi ({savedTrips.length})
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Content */}
+            {savedTab === "posts" ? (
+              <FlatList
+                data={savedPosts}
+                keyExtractor={(item) => item._id}
+                renderItem={({ item }) => (
+                  <PostCard
+                    post={item}
+                    onLike={async (postId) => {
+                      try {
+                        const response = await fetch(
+                          `${API_URL}/posts/${postId}/like`,
+                          {
+                            method: "POST",
+                            headers: { Authorization: `Bearer ${token}` },
+                          }
+                        );
+                        if (response.ok) {
+                          fetchSavedPosts();
+                        }
+                      } catch (error) {
+                        console.error("Failed to like post:", error);
+                      }
+                    }}
+                    onCommentPress={(postId) => {
+                      setSavedModalVisible(false);
+                      router.push({
+                        pathname: "/(tabs)/feed",
+                        params: { postId, openComments: "true" },
+                      });
+                    }}
+                    onDelete={async (postId) => {
+                      try {
+                        const response = await fetch(
+                          `${API_URL}/posts/${postId}`,
+                          {
+                            method: "DELETE",
+                            headers: { Authorization: `Bearer ${token}` },
+                          }
+                        );
+                        if (response.ok) {
+                          fetchSavedPosts();
+                        }
+                      } catch (error) {
+                        Alert.alert("Lỗi", "Không thể xóa bài viết");
+                      }
+                    }}
+                    currentUserId={userInfo?._id}
+                    userSavedPosts={userInfo?.savedPosts || []}
+                    onSave={async (postId) => {
+                      try {
+                        await fetch(`${API_URL}/posts/${postId}/save`, {
+                          method: "POST",
+                          headers: { Authorization: `Bearer ${token}` },
+                        });
+                        fetchSavedPosts();
+                        fetchUserInfo();
+                      } catch (error) {
+                        console.error("Failed to save post:", error);
+                      }
+                    }}
+                    onStatusChange={(postId, newStatus) => {
+                      setSavedPosts((prevPosts) =>
+                        prevPosts.map((p) =>
+                          p._id === postId ? { ...p, status: newStatus } : p
+                        )
+                      );
+                    }}
+                  />
+                )}
+                contentContainerStyle={{ padding: 12 }}
+                showsVerticalScrollIndicator={false}
+                ListEmptyComponent={
+                  <View
+                    style={{
+                      padding: 40,
+                      alignItems: "center",
+                    }}
+                  >
+                    <Ionicons
+                      name="document-text-outline"
+                      size={50}
+                      color={colors.textSecondary}
+                    />
+                    <Text
+                      style={{
+                        color: colors.textSecondary,
+                        marginTop: 10,
+                      }}
+                    >
+                      Chưa có bài viết nào được lưu
+                    </Text>
+                  </View>
+                }
+              />
+            ) : (
+              <FlatList
+                data={savedTrips}
+                keyExtractor={(item) => item._id}
+                renderItem={renderTripItem}
+                contentContainerStyle={{ padding: 12 }}
+                showsVerticalScrollIndicator={false}
+                ListEmptyComponent={
+                  <View
+                    style={{
+                      padding: 40,
+                      alignItems: "center",
+                    }}
+                  >
+                    <Ionicons
+                      name="earth-outline"
+                      size={50}
+                      color={colors.textSecondary}
+                    />
+                    <Text
+                      style={{
+                        color: colors.textSecondary,
+                        marginTop: 10,
+                      }}
+                    >
+                      Chưa có chuyến đi nào được lưu
+                    </Text>
+                  </View>
+                }
+              />
+            )}
+          </View>
+        </View>
+      </Modal>
 
       {/* Modal sửa lịch trình */}
       {editModalVisible && (
