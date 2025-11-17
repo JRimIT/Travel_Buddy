@@ -65,6 +65,7 @@ const DaySchedule = () => {
   const startDate = useSelector(
     (state: any) => state.inforUserTravel.userStartDate
   )
+
   const fundNumber =
     funBudget && typeof funBudget === "string"
       ? parseInt(funBudget.replace(/\./g, ""))
@@ -82,6 +83,12 @@ const DaySchedule = () => {
     if (!v) return "";
     return v.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   };
+  // Clone schedule theo startDate khi mount hoặc khi userSchedule/startDate thay đổi
+    useEffect(() => {
+      if (startDate && numDays && userSchedule.length > 0) {
+        cloneScheduleToDate(startDate, numDays);
+      }
+    }, [startDate, numDays]);
 
   // AI auto xếp lịch khi có danh sách địa điểm
   const autoArrangeWithAI = async () => {
@@ -161,6 +168,27 @@ const DaySchedule = () => {
     updateScheduleAndDispatch(newSchedule);
     setModalShow(false);
   };
+
+    const cloneScheduleToDate = (newStartDate, numDays) => {
+      const start = new Date(newStartDate);
+      const newSchedule = [];
+
+      for (let i = 0; i < numDays; i++) {
+        let date = new Date(start);
+        date.setDate(start.getDate() + i);
+
+        // Lấy hoạt động cũ từ userSchedule nếu có
+        const oldDay = userSchedule[i];
+        newSchedule.push({
+          day: i + 1,
+          date: date.toISOString().split("T")[0],
+          activities: oldDay ? [...oldDay.activities] : [],
+        });
+      }
+
+      setSchedule(newSchedule);
+      dispatch(setUserSchedule(newSchedule));
+    };
 
   // Thêm từ đã tích chọn: submit sau khi chọn giờ/giá
   const handleAddSuggested = () => {

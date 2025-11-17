@@ -26,6 +26,31 @@ import { useAuthStore } from "../../store/authStore";
 import { router } from "expo-router";
 import COLORS from "../../constants/colors";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import {
+  setUserProvince,
+  setUserHomeType,
+  setUserStartDate,
+  setUserEndDate,
+  setUserTransportMain,
+  setUserTransportType,
+  setUserSchedule,
+  setUserInforHotel,
+  setUserFlightTicket,
+  setUserTicket,
+  setUserActivities,
+  setUserCurrentLocation,
+  setUserDistrict,
+  setUserFlightBudget,
+  setUserFunBudget,
+  setUserHotelBudget,
+  setUserTransportBudget,
+  setUserPlaygrounds,
+  setUserHomeAddress,
+  setUserChosenFlight,
+  setUserStartingPoint,
+  setUserTravelDays,
+
+} from "../../redux/inforUserTravel/inforUserTravelSlice";
 
 // Helper định dạng ngày tiếng Việt
 function beautifyDate(dateStr) {
@@ -354,6 +379,65 @@ const getAvatarUri = (uri?: string | null) => {
     }
   };
 
+    const handleDuplicateTrip = () => {
+      try {
+        if (!data) {
+          Alert.alert("Lỗi", "Không có dữ liệu để sao chép");
+          return;
+        }
+
+        // Helper để lấy string từ object hoặc string
+        const getName = (val: any) => {
+          if (!val) return "";
+          if (typeof val === "string") return val;
+          if (typeof val === "object" && val.name) return val.name;
+          return "";
+        };
+
+        // 1️⃣ Thông tin cơ bản
+        dispatch(setUserProvince(getName(data.province)));
+        dispatch(setUserCurrentLocation(getName(data.currentLocation)));
+        dispatch(setUserStartingPoint(getName(data.fromLocation)));
+        dispatch(setUserDistrict(getName(data.district)));
+        dispatch(setUserHomeType(getName(data.baseStayType)));
+        dispatch(setUserHomeAddress(data.home?.address || null));
+
+        // 2️⃣ Thời gian
+        dispatch(setUserStartDate(data.startDate || ""));
+        dispatch(setUserEndDate(data.endDate || ""));
+        dispatch(setUserTravelDays(data.days?.length || 0));
+
+        // 3️⃣ Ngân sách
+        dispatch(setUserHotelBudget(data.budget?.hotel || ""));
+        dispatch(setUserFlightBudget(data.budget?.flight || ""));
+        dispatch(setUserFunBudget(data.budget?.fun || ""));
+        dispatch(setUserTransportBudget(data.budget?.transport || ""));
+
+        // 4️⃣ Phương tiện
+        dispatch(setUserTransportMain(getName(data.mainTransport)));
+        dispatch(setUserTransportType(getName(data.innerTransport)));
+
+        // 5️⃣ Lịch trình, hoạt động, vé
+        dispatch(setUserSchedule(data.days || []));
+        dispatch(setUserActivities(data.activities || []));
+        dispatch(setUserInforHotel(data.hotelDefault || []));
+        dispatch(setUserFlightTicket(data.flightTicket || []));
+        dispatch(setUserTicket(data.ticket || null));
+        dispatch(setUserChosenFlight(data.chosenFlight || []));
+
+        // 6️⃣ Khu vui chơi nếu có
+        dispatch(setUserPlaygrounds(data.playgrounds || []));
+
+        // Điều hướng sang màn hình tạo/chỉnh sửa
+        router.push({
+          pathname: "/SelectStartDateScreen",
+          params: { isDuplicated: true },
+        });
+      } catch (error) {
+        console.error("Duplicate trip error:", error);
+        Alert.alert("Lỗi", "Không thể sao chép lịch trình");
+      }
+    };
 
   const handleGoToBookingPage = (user, scheduleId, fromLocation, province) => {
     router.push({
@@ -1459,8 +1543,8 @@ const getAvatarUri = (uri?: string | null) => {
                     keyboardType="numeric"
                     style={[
                       styles.editInput,
-                      { 
-                        borderColor: colors.border, 
+                      {
+                        borderColor: colors.border,
                         color: colors.textPrimary,
                         paddingRight: 40,  // ⭐ THÊM SPACE CHO "đ"
                       },
@@ -1521,6 +1605,20 @@ const getAvatarUri = (uri?: string | null) => {
             </View>
           </View>
         </Modal>
+        <View style={styles.bookingButtonWrap}>
+            <TouchableOpacity
+               style={[
+                   styles.bookingButton,
+                   { backgroundColor: "#9c27b0", shadowColor: "#9c27b0" },
+                   ]}
+                                onPress={handleDuplicateTrip}
+                              >
+                                <Ionicons name="copy-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
+                                <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>
+                                  Tạo bản sao & chỉnh sửa
+                                </Text>
+                              </TouchableOpacity>
+                              </View>
       </ScrollView>
     </>
   );

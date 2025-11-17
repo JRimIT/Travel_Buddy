@@ -97,6 +97,25 @@ const inforUserTravelSlice = createSlice({
     setUserHomeAddress: (state, action) => {
       state.userHomeAddress = action.payload;
     },
+    cloneUserSchedule: (state, action) => {
+          const { newStartDate } = action.payload; // đây là string ISO
+          if (!state.userSchedule || state.userSchedule.length === 0) return;
+
+          const clonedSchedule = state.userSchedule.map((day, idx) => {
+            const oldDate = new Date(day.date);
+            const newDate = new Date(newStartDate);
+            newDate.setDate(newDate.getDate() + idx);
+
+            return {
+              ...day,
+              date: newDate.toISOString().split("T")[0], // YYYY-MM-DD
+              activities: [...day.activities],
+            };
+          });
+
+          state.userSchedule = clonedSchedule;
+        },
+
     resetUserHomeAddress: (state) => { state.userHomeAddress = null; },
     resetUserHotel: (state) => { state.userInforHotel = null; },
     resetUserFunBudget: (state) => { state.userFunBudget = null; },
@@ -144,6 +163,7 @@ export const {
   resetUserFunBudget,
   resetUserHotelBudget,
   resetUserPlaygrounds,
-  setUserStartingPoint
+  setUserStartingPoint,
+  cloneUserSchedule
 } = inforUserTravelSlice.actions;
 export default inforUserTravelSlice.reducer;
