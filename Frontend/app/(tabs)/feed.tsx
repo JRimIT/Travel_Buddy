@@ -299,9 +299,32 @@ export default function FeedScreen() {
 
   const fetchPosts = async () => {
     try {
-      const response = await fetch(`${API_URL}/posts`, { headers: { 'Authorization': `Bearer ${token}` } });
+      // Thêm timestamp để tránh cache
+      const response = await fetch(`${API_URL}/posts?t=${Date.now()}`, { 
+        headers: { 'Authorization': `Bearer ${token}` },
+        cache: 'no-store' // Không cache response
+      });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || 'Failed to fetch posts');
+      
+      // Debug: Log posts với imageUrl để kiểm tra
+      const postsWithImageInfo = data.map((p: any) => ({ 
+        id: p._id, 
+        title: p.title, 
+        imageUrl: p.imageUrl,
+        hasImage: !!p.imageUrl,
+        imageUrlType: p.imageUrl ? (p.imageUrl.startsWith('http://') ? 'http' : p.imageUrl.startsWith('https://') ? 'https' : 'invalid') : 'none',
+        imageUrlLength: p.imageUrl?.length || 0
+      }));
+      console.log('📋 Fetched posts summary:', {
+        total: data.length,
+        withImages: postsWithImageInfo.filter(p => p.hasImage).length,
+        withHttpImages: postsWithImageInfo.filter(p => p.imageUrlType === 'http').length,
+        withHttpsImages: postsWithImageInfo.filter(p => p.imageUrlType === 'https').length,
+        invalidImages: postsWithImageInfo.filter(p => p.imageUrlType === 'invalid').length
+      });
+      console.log('📋 Posts details:', postsWithImageInfo);
+      
       setPosts(data);
     } catch (error) {
       Alert.alert('Error', error instanceof Error ? error.message : 'Could not load feed');
@@ -313,9 +336,29 @@ export default function FeedScreen() {
 
   const fetchMyPosts = async () => {
     try {
-      const response = await fetch(`${API_URL}/posts/me`, { headers: { 'Authorization': `Bearer ${token}` } });
+      // Thêm timestamp để tránh cache
+      const response = await fetch(`${API_URL}/posts/me?t=${Date.now()}`, { 
+        headers: { 'Authorization': `Bearer ${token}` },
+        cache: 'no-store' // Không cache response
+      });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || 'Failed to fetch my posts');
+      
+      // Debug: Log myPosts với imageUrl để kiểm tra
+      const myPostsWithImageInfo = data.map((p: any) => ({ 
+        id: p._id, 
+        title: p.title, 
+        imageUrl: p.imageUrl,
+        hasImage: !!p.imageUrl,
+        imageUrlType: p.imageUrl ? (p.imageUrl.startsWith('http://') ? 'http' : p.imageUrl.startsWith('https://') ? 'https' : 'invalid') : 'none'
+      }));
+      console.log('📋 Fetched myPosts summary:', {
+        total: data.length,
+        withImages: myPostsWithImageInfo.filter(p => p.hasImage).length,
+        withValidImages: myPostsWithImageInfo.filter(p => p.imageUrlType === 'https' || p.imageUrlType === 'http').length
+      });
+      console.log('📋 MyPosts details:', myPostsWithImageInfo);
+      
       setMyPosts(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Error fetching my posts:', error);
@@ -448,9 +491,20 @@ export default function FeedScreen() {
     }
   }, [displayedPosts, params.postId]);
 
+  // Fetch myPosts khi chuyển sang tab "Của tôi"
+  useEffect(() => {
+    if (feedTab === "my" && token) {
+      fetchMyPosts();
+    }
+  }, [feedTab, token]);
+
   useFocusEffect(useCallback(() => {
     if (!isCommentModalVisible) {
       fetchPosts();
+      // Fetch myPosts ngay khi vào màn hình để đảm bảo có dữ liệu khi chuyển tab
+      if (token) {
+        fetchMyPosts();
+      }
     }
     
     // Nếu có postId từ params và chưa mở modal cho postId này, mở comment modal một lần

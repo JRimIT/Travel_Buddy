@@ -8,6 +8,7 @@ import Comment from '../models/Comment.js'; // Thêm .js
 import PostShare from '../models/PostShare.js';
 import authMiddleware from '../middleware/auth.middleware.js';
 import protectRoute from '../middleware/auth.middleware.js';  // Giả sử bạn có middleware này để xác thực user
+import cloudinary from '../lib/cloudinary.js';
 
 const extractHashtags = (text) => {
   if (!text) return [];
@@ -41,8 +42,28 @@ router.get('/', async (req, res) => {
       ]
     })
       .populate('user', 'username profileImage')
-      .sort({ createdAt: 'desc' });
-    res.json(posts);
+      .sort({ createdAt: 'desc' })
+      .lean(); // Sử dụng lean() để trả về plain JavaScript objects
+    
+    // Loại bỏ local file URIs (file://) - chỉ giữ lại Cloudinary URLs (http/https)
+    const cleanedPosts = posts.map(post => {
+      // Tạo object mới để tránh mutate trực tiếp
+      const cleanedPost = { ...post };
+      if (cleanedPost.imageUrl && !cleanedPost.imageUrl.startsWith('http')) {
+        // Nếu là local URI, xóa nó đi
+        console.log('Removing local URI:', cleanedPost.imageUrl);
+        cleanedPost.imageUrl = '';
+      }
+      return cleanedPost;
+    });
+    
+    // Debug: Log số lượng posts có local URI đã được clean
+    const localUriCount = posts.filter(p => p.imageUrl && !p.imageUrl.startsWith('http')).length;
+    if (localUriCount > 0) {
+      console.log(`Cleaned ${localUriCount} posts with local URIs`);
+    }
+    
+    res.json(cleanedPosts);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -50,37 +71,77 @@ router.get('/', async (req, res) => {
 
 // Tạo bài đăng mới
 router.post('/', authMiddleware, async (req, res) => {
-    const { title, content, imageUrl } = req.body; // <-- Nhận thêm title
+    const { title, content, imageUrl, imageBase64 } = req.body; // Nhận imageBase64 để upload lên Cloudinary
     if (!title || !content) {
     return res.status(400).json({ message: 'Title and content are required' });
     }
-    // const post = new Post({
-    // title, // <-- Thêm title vào post mới
-    // content,
-    // imageUrl,
-    // hashtags,
-    // user: req.user.id,
-    // });
   try {
+    let finalImageUrl = imageUrl || '';
+    
+    // Nếu có imageBase64, upload lên Cloudinary
+    if (imageBase64) {
+      try {
+        // Cloudinary cần data URI format cho base64 uploads
+        // Nếu chưa có prefix, thêm vào
+        let uploadData = imageBase64;
+        if (!imageBase64.startsWith('data:')) {
+          uploadData = `data:image/jpeg;base64,${imageBase64}`;
+        }
+        
+        const uploadResponse = await cloudinary.uploader.upload(uploadData, {
+          folder: 'travel-buddy/posts',
+          resource_type: 'image'
+        });
+        finalImageUrl = uploadResponse.secure_url;
+      } catch (uploadError) {
+        console.error('Error uploading image to Cloudinary:', uploadError);
+        // Nếu upload thất bại, trả về lỗi JSON rõ ràng
+        return res.status(500).json({ 
+          message: 'Failed to upload image to Cloudinary', 
+          details: uploadError.message || 'Unknown error',
+          error: 'IMAGE_UPLOAD_FAILED'
+        });
+      }
+    } else if (imageUrl && !imageUrl.startsWith('http')) {
+      // Nếu imageUrl là local URI (file://), bỏ qua vì không thể truy cập từ máy khác
+      finalImageUrl = '';
+    }
+
     const hashtags = extractHashtags(content);
 
     const newPost = new Post({
       title,
       content,
-      imageUrl,
+      imageUrl: finalImageUrl,
       hashtags,
       user: req.user.id,
     });
 
     const savedPost = await newPost.save();
     
+    // Debug: Log saved post với imageUrl
+    console.log('Saved post:', {
+      id: savedPost._id,
+      title: savedPost.title,
+      imageUrl: savedPost.imageUrl,
+      hasImage: !!savedPost.imageUrl
+    });
+    
     // Populate thông tin user để trả về cho client, giống như các hàm khác
     const populatedPost = await Post.findById(savedPost._id).populate('user', 'username profileImage');
     
+    // Debug: Log populated post
+    console.log('Populated post response:', {
+      id: populatedPost._id,
+      title: populatedPost.title,
+      imageUrl: populatedPost.imageUrl,
+      hasImage: !!populatedPost.imageUrl
+    });
+    
     res.status(201).json(populatedPost);
   } catch (err) {
-    console.error('Error creating post:', error);
-    res.status(500).json({ message: 'Server error while creating post', details: error.message });
+    console.error('Error creating post:', err);
+    res.status(500).json({ message: 'Server error while creating post', details: err.message });
   }
 });
 
@@ -252,8 +313,21 @@ router.get('/me', protectRoute, async (req, res) => {
         const userId = req.user._id;
         const posts = await Post.find({ user: userId })
             .populate('user', 'username profileImage')
-            .sort({ createdAt: -1 });
-        res.status(200).json(posts);
+            .sort({ createdAt: -1 })
+            .lean();
+        
+        // Loại bỏ local file URIs (file://) - chỉ giữ lại Cloudinary URLs (http/https)
+        const cleanedPosts = posts.map(post => {
+            // Tạo object mới để tránh mutate trực tiếp
+            const cleanedPost = { ...post };
+            if (cleanedPost.imageUrl && !cleanedPost.imageUrl.startsWith('http')) {
+                // Nếu là local URI, xóa nó đi
+                cleanedPost.imageUrl = '';
+            }
+            return cleanedPost;
+        });
+        
+        res.status(200).json(cleanedPosts);
     } catch (error) {
         console.error("Error fetching user's posts:", error);
         res.status(500).json({ message: "Internal server error" });
@@ -275,9 +349,21 @@ router.get('/saved', protectRoute, async (req, res) => {
             '_id': { $in: user.savedPosts }
         })
         .populate('user', 'username profileImage') // Lấy thông tin người đăng bài
-        .sort({ createdAt: -1 }); // Sắp xếp bài mới nhất lên đầu
+        .sort({ createdAt: -1 }) // Sắp xếp bài mới nhất lên đầu
+        .lean();
+        
+        // Loại bỏ local file URIs (file://) - chỉ giữ lại Cloudinary URLs (http/https)
+        const cleanedPosts = savedPosts.map(post => {
+            // Tạo object mới để tránh mutate trực tiếp
+            const cleanedPost = { ...post };
+            if (cleanedPost.imageUrl && !cleanedPost.imageUrl.startsWith('http')) {
+                // Nếu là local URI, xóa nó đi
+                cleanedPost.imageUrl = '';
+            }
+            return cleanedPost;
+        });
 
-        res.status(200).json(savedPosts);
+        res.status(200).json(cleanedPosts);
 
     } catch (error) {
         console.error("Error fetching saved posts:", error);

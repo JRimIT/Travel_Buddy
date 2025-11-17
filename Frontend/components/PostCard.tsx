@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -349,9 +349,53 @@ const PostCard: React.FC<PostCardProps> = ({
       </ParsedText>
 
       {/* Ảnh trong bài đăng */}
-      {post.imageUrl && (
-        <Image source={{ uri: post.imageUrl }} style={styles.postImage} />
-      )}
+      {(() => {
+        // Helper function để kiểm tra và log imageUrl
+        const isValidImageUrl = (url: string | undefined): boolean => {
+          if (!url || !url.trim()) return false;
+          const trimmed = url.trim();
+          const isValid = trimmed.startsWith('http://') || trimmed.startsWith('https://');
+          
+          if (url && !isValid) {
+            console.warn('⚠️ Invalid imageUrl format:', {
+              postId: post._id,
+              imageUrl: url,
+              trimmed: trimmed,
+              length: trimmed.length
+            });
+          }
+          
+          return isValid;
+        };
+
+        const imageUrl = post.imageUrl;
+        const shouldRenderImage = isValidImageUrl(imageUrl);
+
+        if (shouldRenderImage) {
+          return (
+            <Image 
+              source={{ uri: imageUrl! }} 
+              style={styles.postImage}
+              resizeMode="cover"
+              onLoad={() => {
+                console.log('✅ Image loaded successfully:', {
+                  postId: post._id,
+                  imageUrl: imageUrl
+                });
+              }}
+              onError={(e) => {
+                console.error('❌ Error loading image:', {
+                  postId: post._id,
+                  imageUrl: imageUrl,
+                  error: e.nativeEvent?.error || 'Unknown error',
+                  errorMessage: e.nativeEvent?.error?.message || 'No error message'
+                });
+              }}
+            />
+          );
+        }
+        return null;
+      })()}
 
       {/* Hành động: like, comment, share, save */}
       <View style={styles.actionsContainer}>
