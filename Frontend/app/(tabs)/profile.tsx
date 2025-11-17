@@ -11,6 +11,7 @@ import {
   TextInput,
   Animated,
   Easing,
+  Modal,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
@@ -20,6 +21,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 import createProfileStyles from "../../assets/styles/profile.styles";
 import LogoutButton from "../../components/LogoutButton";
 import { useRouter, useFocusEffect, useLocalSearchParams } from "expo-router";
+import PostCard from "../../components/PostCard";
 
 const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
 
@@ -37,9 +39,18 @@ const Profile = () => {
   const [savedTrips, setSavedTrips] = useState([]);
   const [sharedTrips, setSharedTrips] = useState([]);
   const [pendingShares, setPendingShares] = useState([]);
+  const [pendingPostShares, setPendingPostShares] = useState([]);
+  const [acceptedPostShares, setAcceptedPostShares] = useState([]);
   const [showPendingShares, setShowPendingShares] = useState(true);
+  const [showPendingPostShares, setShowPendingPostShares] = useState(true);
   const [tab, setTab] = useState("created"); // 'created' | 'saved' | 'shared'
   const [createdTrips, setCreatedTrips] = useState([]);
+  const [userPosts, setUserPosts] = useState([]);
+  const [savedPosts, setSavedPosts] = useState([]);
+  
+  // Notification state
+  const [notificationModalVisible, setNotificationModalVisible] = useState(false);
+  const [latestNotification, setLatestNotification] = useState(null);
 
   // Search bar state
   const [searchOpen, setSearchOpen] = useState(false);
@@ -100,8 +111,50 @@ React.useEffect(() => {
       fetchUserTrips(),
       fetchSavedTrips(),
       fetchSharedData(),
+      fetchUserPosts(),
     ]);
     setLoading(false);
+  };
+
+  const fetchUserPosts = async () => {
+    try {
+      const [createdResponse, savedResponse] = await Promise.all([
+        fetch(`${API_URL}/posts/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch(`${API_URL}/posts/saved`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+      ]);
+      
+      const createdData = await createdResponse.json();
+      const savedData = await savedResponse.json();
+      
+      if (!createdResponse.ok) throw new Error(createdData.message || "Lấy danh sách bài viết lỗi");
+      if (!savedResponse.ok) throw new Error(savedData.message || "Lấy danh sách bài viết đã lưu lỗi");
+      
+      const created = Array.isArray(createdData) ? createdData : [];
+      const saved = Array.isArray(savedData) ? savedData : [];
+      
+      // Kết hợp và loại bỏ trùng lặp (nếu một bài viết vừa được tạo vừa được lưu)
+      const allPosts = [...created];
+      const savedIds = new Set(created.map(p => p._id));
+      saved.forEach(post => {
+        if (!savedIds.has(post._id)) {
+          allPosts.push(post);
+        }
+      });
+      
+      // Sắp xếp theo thời gian tạo mới nhất
+      allPosts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      
+      setUserPosts(allPosts);
+      setSavedPosts(saved);
+    } catch (error) {
+      console.error("Error fetching user posts:", error);
+      setUserPosts([]);
+      setSavedPosts([]);
+    }
   };
 
 // --- 1️⃣ Sau khi fetch user info ---
@@ -282,6 +335,37 @@ const fetchSharedData = async () => {
     );
     const pendingJson = await pendingRes.json();
     setPendingShares(Array.isArray(pendingJson) ? pendingJson : []);
+
+    // Lời mời chia sẻ post tới mình đang pending
+    const pendingPostRes = await fetch(
+      `${API_URL}/posts/shares/incoming?status=pending`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+    const pendingPostJson = await pendingPostRes.json();
+    setPendingPostShares(Array.isArray(pendingPostJson) ? pendingPostJson : []);
+
+    // Lấy các post shares đã được accept
+    const acceptedPostRes = await fetch(
+      `${API_URL}/posts/shares/incoming?status=accepted`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+    const acceptedPostJson = await acceptedPostRes.json();
+    setAcceptedPostShares(Array.isArray(acceptedPostJson) ? acceptedPostJson : []);
+
+    // Cập nhật latest notification nếu có post share mới
+    if (pendingPostJson.length > 0) {
+      const latest = pendingPostJson[0];
+      setLatestNotification({
+        type: 'post_share',
+        share: latest,
+        message: `${latest.from?.username || 'Ai đó'} đã chia sẻ bài viết "${latest.post?.title || 'bài viết'}" với bạn`,
+        createdAt: latest.createdAt,
+      });
+    }
   } catch (error) {
     console.log("Error fetchSharedData:", error);
   }
@@ -507,6 +591,37 @@ const renderTripItem = ({ item }) => {
                 color={colors.primary}
               />
             </TouchableOpacity>
+            <TouchableOpacity 
+              onPress={() => setNotificationModalVisible(true)}
+              style={{ position: 'relative' }}
+            >
+              <Ionicons
+                name="notifications-outline"
+                size={23}
+                color={colors.primary}
+              />
+              {pendingPostShares.length > 0 && (
+                <View
+                  style={{
+                    position: 'absolute',
+                    top: -5,
+                    right: -5,
+                    backgroundColor: '#ff4444',
+                    borderRadius: 10,
+                    width: 18,
+                    height: 18,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    borderWidth: 2,
+                    borderColor: colors.background,
+                  }}
+                >
+                  <Text style={{ color: '#fff', fontSize: 10, fontWeight: 'bold' }}>
+                    {pendingPostShares.length > 9 ? '9+' : pendingPostShares.length}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
           </View>
         </View>
         {/* Info */}
@@ -664,6 +779,26 @@ const renderTripItem = ({ item }) => {
             Chuyến đi được chia sẻ
           </Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={{
+            flex: 1,
+            padding: 10,
+            borderBottomWidth: 2,
+            borderBottomColor:
+              tab === "posts" ? colors.primary : "transparent",
+            alignItems: "center",
+          }}
+          onPress={() => setTab("posts")}
+        >
+          <Text
+            style={{
+              color: tab === "posts" ? colors.primary : colors.textSecondary,
+              fontWeight: "bold",
+            }}
+          >
+            Feed
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {tab === "shared" && pendingShares.length > 0 && (
@@ -789,29 +924,248 @@ const renderTripItem = ({ item }) => {
         </View>
       )}
 
-      <FlatList
-        data={tab === "shared" ? displayedSharedTrips : displayedTrips}
-        keyExtractor={(item) => item._id}
-        renderItem={renderTripItem}
-        contentContainerStyle={styles.tripsList}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            colors={[colors.primary]}
-            tintColor={colors.primary}
-          />
-        }
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
+      {tab === "shared" && pendingPostShares.length > 0 && (
+        <View style={{ marginHorizontal: 12, marginBottom: 10 }}>
+          <TouchableOpacity
+            onPress={() => setShowPendingPostShares((prev) => !prev)}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: showPendingPostShares ? 6 : 0,
+            }}
+          >
+            <Text
+              style={{
+                fontWeight: "bold",
+                color: colors.textPrimary,
+              }}
+            >
+              Chờ bạn chấp nhận - Bài viết ({pendingPostShares.length})
+            </Text>
             <Ionicons
-              name="earth-outline"
-              size={50}
+              name={showPendingPostShares ? "chevron-up" : "chevron-down"}
+              size={18}
               color={colors.textSecondary}
             />
-            <Text style={styles.emptyText}>
-              {tab === "shared"
+          </TouchableOpacity>
+
+          {showPendingPostShares &&
+            [...pendingPostShares]
+              .sort(
+                (a, b) =>
+                  new Date(b.createdAt).getTime() -
+                  new Date(a.createdAt).getTime()
+              )
+              .map((share) => (
+                <View
+                  key={share._id}
+                  style={{
+                    padding: 10,
+                    borderRadius: 10,
+                    backgroundColor: "#fff3e0",
+                    marginBottom: 6,
+                  }}
+                >
+                  <Text
+                    style={{ fontWeight: "600", color: colors.textPrimary }}
+                  >
+                    {share.post?.title || "Bài viết"}
+                  </Text>
+                  <Text style={{ color: colors.textSecondary, marginTop: 2 }}>
+                    Được chia sẻ bởi: {share.from?.username || "Người dùng"}
+                  </Text>
+                  {share.post?.content && (
+                    <Text
+                      style={{
+                        color: colors.textSecondary,
+                        marginTop: 4,
+                        fontSize: 12,
+                      }}
+                      numberOfLines={2}
+                    >
+                      {share.post.content}
+                    </Text>
+                  )}
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      marginTop: 8,
+                      justifyContent: "flex-end",
+                    }}
+                  >
+                    <TouchableOpacity
+                      style={{
+                        paddingVertical: 6,
+                        paddingHorizontal: 12,
+                        borderRadius: 8,
+                        borderWidth: 1,
+                        borderColor: "#ccc",
+                        marginRight: 8,
+                      }}
+                      onPress={async () => {
+                        try {
+                          await fetch(
+                            `${API_URL}/posts/shares/${share._id}/reject`,
+                            {
+                              method: "POST",
+                              headers: { Authorization: `Bearer ${token}` },
+                            }
+                          );
+                          fetchSharedData();
+                        } catch (e) {
+                          Alert.alert("Lỗi", "Không thể từ chối chia sẻ");
+                        }
+                      }}
+                    >
+                      <Text style={{ color: "#777", fontWeight: "500" }}>
+                        Từ chối
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={{
+                        paddingVertical: 6,
+                        paddingHorizontal: 12,
+                        borderRadius: 8,
+                        backgroundColor: colors.primary,
+                      }}
+                      onPress={async () => {
+                        try {
+                          await fetch(
+                            `${API_URL}/posts/shares/${share._id}/accept`,
+                            {
+                              method: "POST",
+                              headers: { Authorization: `Bearer ${token}` },
+                            }
+                          );
+                          fetchSharedData(); // Fetch lại shared data để cập nhật
+                          fetchAllData();
+                        } catch (e) {
+                          Alert.alert("Lỗi", "Không thể chấp nhận chia sẻ");
+                        }
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color: "#fff",
+                          fontWeight: "600",
+                        }}
+                      >
+                        Chấp nhận
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ))}
+        </View>
+      )}
+
+      {tab === "posts" ? (
+        <FlatList
+          data={userPosts}
+          keyExtractor={(item) => item._id}
+          renderItem={({ item }) => (
+            <PostCard
+              post={item}
+              onLike={async (postId) => {
+                try {
+                  const response = await fetch(`${API_URL}/posts/${postId}/like`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                  });
+                  if (response.ok) {
+                    fetchUserPosts();
+                  }
+                } catch (error) {
+                  console.error('Failed to like post:', error);
+                }
+              }}
+              onCommentPress={(postId) => {
+                router.push({
+                  pathname: "/(tabs)/feed",
+                  params: { postId, openComments: 'true' }
+                });
+              }}
+              onDelete={async (postId) => {
+                try {
+                  const response = await fetch(`${API_URL}/posts/${postId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                  });
+                  if (response.ok) {
+                    fetchUserPosts();
+                  }
+                } catch (error) {
+                  Alert.alert("Lỗi", "Không thể xóa bài viết");
+                }
+              }}
+              currentUserId={userInfo?._id}
+              userSavedPosts={userInfo?.savedPosts || []}
+              onSave={async (postId) => {
+                try {
+                  await fetch(`${API_URL}/posts/${postId}/save`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                  });
+                  fetchUserInfo();
+                } catch (error) {
+                  console.error('Failed to save post:', error);
+                }
+              }}
+              onStatusChange={(postId, newStatus) => {
+                setUserPosts(prevPosts =>
+                  prevPosts.map(p => p._id === postId ? { ...p, status: newStatus } : p)
+                );
+              }}
+            />
+          )}
+          contentContainerStyle={{ padding: 12 }}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              colors={[colors.primary]}
+              tintColor={colors.primary}
+            />
+          }
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Ionicons
+                name="document-text-outline"
+                size={50}
+                color={colors.textSecondary}
+              />
+              <Text style={styles.emptyText}>
+                Bạn chưa có bài viết nào
+              </Text>
+            </View>
+          }
+        />
+      ) : (
+        <FlatList
+          data={tab === "shared" ? displayedSharedTrips : displayedTrips}
+          keyExtractor={(item) => item._id}
+          renderItem={renderTripItem}
+          contentContainerStyle={styles.tripsList}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              colors={[colors.primary]}
+              tintColor={colors.primary}
+            />
+          }
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Ionicons
+                name="earth-outline"
+                size={50}
+                color={colors.textSecondary}
+              />
+              <Text style={styles.emptyText}>
+                {tab === "shared"
                 ? "Bạn chưa có chuyến đi được chia sẻ nào"
                 : "Bạn chưa có chuyến đi nào"}
             </Text>
@@ -824,22 +1178,309 @@ const renderTripItem = ({ item }) => {
                 <Text style={styles.addButtonText}>Tạo chuyến đi mới</Text>
               </TouchableOpacity>
             )}
-            <Ionicons
-              name="earth-outline"
-              size={50}
-              color={colors.textSecondary}
-            />
-            <Text style={styles.emptyText}>Bạn chưa có chuyến đi nào</Text>
-            <TouchableOpacity
-              style={styles.addButton}
-              onPress={() => router.push("/CreateScheduleScreen")}
-            >
-              <Ionicons name="add" size={24} color={colors.white} />
-              <Text style={styles.addButtonText}>Tạo chuyến đi mới</Text>
-            </TouchableOpacity>
           </View>
         }
       />
+      )}
+
+      {/* Notification Modal */}
+      <Modal
+        visible={notificationModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setNotificationModalVisible(false)}
+      >
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: "rgba(0,0,0,0.5)",
+            justifyContent: "flex-end",
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: colors.background,
+              borderTopLeftRadius: 20,
+              borderTopRightRadius: 20,
+              maxHeight: "80%",
+              paddingTop: 20,
+            }}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                paddingHorizontal: 20,
+                paddingBottom: 15,
+                borderBottomWidth: 1,
+                borderBottomColor: colors.border || "#eee",
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 20,
+                  fontWeight: "bold",
+                  color: colors.textPrimary,
+                }}
+              >
+                Thông báo
+              </Text>
+              <TouchableOpacity
+                onPress={() => setNotificationModalVisible(false)}
+              >
+                <Ionicons name="close" size={24} color={colors.textPrimary} />
+              </TouchableOpacity>
+            </View>
+
+            <FlatList
+              data={[
+                ...pendingPostShares.map(item => ({ ...item, isPending: true })),
+                ...acceptedPostShares.map(item => ({ ...item, isPending: false }))
+              ].sort(
+                (a, b) =>
+                  new Date(b.createdAt).getTime() -
+                  new Date(a.createdAt).getTime()
+              )}
+              keyExtractor={(item) => item._id}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={{
+                    padding: 15,
+                    borderBottomWidth: 1,
+                    borderBottomColor: colors.border || "#eee",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    backgroundColor: item.isPending ? "transparent" : (colors.cardBackground || "#f9f9f9"),
+                  }}
+                  onPress={() => {
+                    if (!item.isPending && item.post?._id) {
+                      // Navigate to post detail - chỉ scroll đến bài viết, không mở comment modal
+                      setNotificationModalVisible(false);
+                      router.push({
+                        pathname: "/(tabs)/feed",
+                        params: { 
+                          postId: item.post._id
+                        },
+                      });
+                    }
+                  }}
+                >
+                  {item.from?.profileImage ? (
+                    <Image
+                      source={{
+                        uri: item.from.profileImage.includes("/svg?")
+                          ? item.from.profileImage.replace("/svg?", "/png?")
+                          : item.from.profileImage,
+                      }}
+                      style={{
+                        width: 50,
+                        height: 50,
+                        borderRadius: 25,
+                        marginRight: 12,
+                      }}
+                    />
+                  ) : (
+                    <View
+                      style={{
+                        width: 50,
+                        height: 50,
+                        borderRadius: 25,
+                        backgroundColor: colors.primary + "20",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        marginRight: 12,
+                      }}
+                    >
+                      <Ionicons
+                        name="person-outline"
+                        size={24}
+                        color={colors.primary}
+                      />
+                    </View>
+                  )}
+                  <View style={{ flex: 1 }}>
+                    <Text
+                      style={{
+                        color: colors.textPrimary,
+                        fontSize: 14,
+                        marginBottom: 4,
+                      }}
+                    >
+                      <Text style={{ fontWeight: "600" }}>
+                        {item.from?.username || "Người dùng"}
+                      </Text>
+                      {" đã chia sẻ cho bạn bài viết "}
+                      <Text style={{ fontWeight: "600" }}>
+                        "{item.post?.title || "bài viết"}"
+                      </Text>
+                    </Text>
+                    <Text
+                      style={{
+                        color: colors.textSecondary,
+                        fontSize: 11,
+                        marginTop: 2,
+                      }}
+                    >
+                      {new Date(item.createdAt).toLocaleString("vi-VN")}
+                    </Text>
+                  </View>
+                  {item.isPending ? (
+                    <View style={{ flexDirection: "row", gap: 8 }}>
+                      <TouchableOpacity
+                        style={{
+                          paddingVertical: 6,
+                          paddingHorizontal: 12,
+                          borderRadius: 8,
+                          borderWidth: 1,
+                          borderColor: "#ccc",
+                        }}
+                        onPress={async () => {
+                          try {
+                            await fetch(
+                              `${API_URL}/posts/shares/${item._id}/reject`,
+                              {
+                                method: "POST",
+                                headers: { Authorization: `Bearer ${token}` },
+                              }
+                            );
+                            fetchSharedData();
+                          } catch (e) {
+                            Alert.alert("Lỗi", "Không thể từ chối chia sẻ");
+                          }
+                        }}
+                      >
+                        <Text style={{ color: "#777", fontWeight: "500", fontSize: 12 }}>
+                          Từ chối
+                        </Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={{
+                          paddingVertical: 6,
+                          paddingHorizontal: 12,
+                          borderRadius: 8,
+                          backgroundColor: colors.primary,
+                        }}
+                        onPress={async () => {
+                          try {
+                            await fetch(
+                              `${API_URL}/posts/shares/${item._id}/accept`,
+                              {
+                                method: "POST",
+                                headers: { Authorization: `Bearer ${token}` },
+                              }
+                            );
+                            fetchSharedData();
+                            setNotificationModalVisible(false);
+                          } catch (e) {
+                            Alert.alert("Lỗi", "Không thể chấp nhận chia sẻ");
+                          }
+                        }}
+                      >
+                        <Text
+                          style={{
+                            color: "#fff",
+                            fontWeight: "600",
+                            fontSize: 12,
+                          }}
+                        >
+                          Chấp nhận
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  ) : (
+                    <Ionicons
+                      name="chevron-forward"
+                      size={20}
+                      color={colors.textSecondary}
+                    />
+                  )}
+                </TouchableOpacity>
+              )}
+              ListEmptyComponent={
+                <View
+                  style={{
+                    padding: 40,
+                    alignItems: "center",
+                  }}
+                >
+                  <Ionicons
+                    name="notifications-off-outline"
+                    size={50}
+                    color={colors.textSecondary}
+                  />
+                  <Text
+                    style={{
+                      color: colors.textSecondary,
+                      marginTop: 10,
+                    }}
+                  >
+                    Không có thông báo nào
+                  </Text>
+                </View>
+              }
+            />
+          </View>
+        </View>
+      </Modal>
+
+      {/* Latest Notification Toast */}
+      {latestNotification && (
+        <View
+          style={{
+            position: "absolute",
+            top: 100,
+            left: 20,
+            right: 20,
+            backgroundColor: colors.cardBackground || "#fff",
+            borderRadius: 12,
+            padding: 15,
+            flexDirection: "row",
+            alignItems: "center",
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.25,
+            shadowRadius: 3.84,
+            elevation: 5,
+            zIndex: 1000,
+          }}
+        >
+          <View
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 20,
+              backgroundColor: colors.primary + "20",
+              justifyContent: "center",
+              alignItems: "center",
+              marginRight: 12,
+            }}
+          >
+            <Ionicons
+              name="document-text-outline"
+              size={20}
+              color={colors.primary}
+            />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text
+              style={{
+                fontWeight: "600",
+                color: colors.textPrimary,
+                fontSize: 14,
+              }}
+            >
+              {latestNotification.message}
+            </Text>
+          </View>
+          <TouchableOpacity
+            onPress={() => setLatestNotification(null)}
+            style={{ marginLeft: 8 }}
+          >
+            <Ionicons name="close" size={20} color={colors.textSecondary} />
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* Modal sửa lịch trình */}
       {editModalVisible && (

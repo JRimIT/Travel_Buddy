@@ -84,8 +84,11 @@ const TravelSchedulePublicScreen = () => {
       // save rawData to ref for filter/sort usage
       rawDataRef.current = res || [];
       setData(res || []);
-    } catch (e) {
-      Alert.alert("Lỗi", "Không thể lấy dữ liệu lịch trình public.\n" + e.message);
+    } catch (e: any) {
+      // Không hiển thị Alert nếu lỗi là 401 (đã được xử lý ở interceptor)
+      if (e.response?.status !== 401) {
+        Alert.alert("Lỗi", "Không thể lấy dữ liệu lịch trình public.\n" + (e.message || ""));
+      }
     }
   };
 
@@ -99,8 +102,11 @@ const TravelSchedulePublicScreen = () => {
         setSavedTrips(savedTripIds);
         setUser({ ...user, savedTripSchedules: savedTripIds });
       }
-    } catch (error) {
-      console.error("Failed to fetch saved trips:", error);
+    } catch (error: any) {
+      // Không log error nếu lỗi là 401 (đã được xử lý ở interceptor)
+      if (error.response?.status !== 401) {
+        console.error("Failed to fetch saved trips:", error);
+      }
     }
   };
 

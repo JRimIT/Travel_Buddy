@@ -5,6 +5,7 @@ const router = Router();
 import User from '../models/User.js';
 import Post from '../models/Post.js'; // Thêm .js
 import Comment from '../models/Comment.js'; // Thêm .js
+import PostShare from '../models/PostShare.js';
 import authMiddleware from '../middleware/auth.middleware.js';
 import protectRoute from '../middleware/auth.middleware.js';  // Giả sử bạn có middleware này để xác thực user
 
@@ -29,11 +30,17 @@ const populateReplies = async (comments) => {
 };
 
 
-// Lấy tất cả bài đăng (cho feed)
+// Lấy tất cả bài đăng (cho feed) - chỉ hiển thị public posts
 router.get('/', async (req, res) => {
   try {
-    const posts = await Post.find()
-      .populate('user', 'username profileImage') // <-- THÊM DÒNG NÀY
+    // Lấy posts có status = 'public' hoặc không có field status (backward compatibility)
+    const posts = await Post.find({
+      $or: [
+        { status: 'public' },
+        { status: { $exists: false } }
+      ]
+    })
+      .populate('user', 'username profileImage')
       .sort({ createdAt: 'desc' });
     res.json(posts);
   } catch (err) {
@@ -163,10 +170,18 @@ router.get('/search', authMiddleware, async (req, res) => {
   }
 
   try {
-    const posts = await Post.find(
-      { $text: { $search: searchQuery } },
-      { score: { $meta: "textScore" } }
-    )
+    // Chỉ tìm kiếm trong các bài viết public hoặc không có field status
+    const posts = await Post.find({
+      $and: [
+        { $text: { $search: searchQuery } },
+        {
+          $or: [
+            { status: 'public' },
+            { status: { $exists: false } }
+          ]
+        }
+      ]
+    }, { score: { $meta: "textScore" } })
     .sort({ score: { $meta: "textScore" } })
     .populate('user', 'username profileImage');
 
@@ -340,6 +355,194 @@ router.post('/:postId/comments', protectRoute, async (req, res) => {
   } catch (error) {
     console.error("Error creating comment:", error);
     res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+// === CHIA SẺ POST ===
+
+// Gửi lời mời chia sẻ post tới user khác
+router.post('/:id/share', protectRoute, async (req, res) => {
+  try {
+    const postId = req.params.id;
+    const { toUserId, toUsername, toEmail } = req.body;
+
+    if (!toUserId && !toUsername && !toEmail) {
+      return res.status(400).json({ error: "Thiếu thông tin người nhận" });
+    }
+
+    const post = await Post.findById(postId);
+    if (!post) return res.status(404).json({ error: "Không tìm thấy bài viết" });
+
+    if (toUserId && String(toUserId) === String(req.user._id)) {
+      return res.status(400).json({ error: "Không thể tự chia sẻ cho chính mình" });
+    }
+
+    let toUser = null;
+    if (toUserId) {
+      toUser = await User.findById(toUserId);
+    } else if (toUsername) {
+      toUser = await User.findOne({ username: toUsername });
+    } else if (toEmail) {
+      toUser = await User.findOne({ email: toEmail });
+    }
+
+    if (!toUser) return res.status(404).json({ error: "Người nhận không tồn tại" });
+
+    // Nếu đã có invite pending giống hệt thì không tạo thêm
+    const existing = await PostShare.findOne({
+      post: postId,
+      from: req.user._id,
+      to: toUser._id,
+      status: "pending",
+    });
+    if (existing) {
+      return res.json({ success: true, share: existing, duplicated: true });
+    }
+
+    const share = await PostShare.create({
+      post: postId,
+      from: req.user._id,
+      to: toUser._id,
+      status: "pending",
+    });
+
+    res.json({ success: true, share });
+  } catch (error) {
+    console.error("Error sharing post:", error);
+    res.status(500).json({ error: "Không thể chia sẻ bài viết" });
+  }
+});
+
+// Lấy danh sách share gửi tới mình
+router.get('/shares/incoming', protectRoute, async (req, res) => {
+  try {
+    const status = req.query.status || "pending";
+
+    const shares = await PostShare.find({
+      to: req.user._id,
+      status,
+    })
+      .populate("post", "title content imageUrl user")
+      .populate("from", "username profileImage");
+
+    res.json(shares);
+  } catch (error) {
+    console.error("Error fetching incoming post shares:", error);
+    res.status(500).json({ error: "Không thể lấy danh sách chia sẻ" });
+  }
+});
+
+// Người nhận chấp nhận chia sẻ
+router.post('/shares/:shareId/accept', protectRoute, async (req, res) => {
+  try {
+    const { shareId } = req.params;
+
+    const share = await PostShare.findOne({
+      _id: shareId,
+      to: req.user._id,
+      status: "pending",
+    }).populate("post");
+
+    if (!share) {
+      return res.status(404).json({ error: "Lời mời chia sẻ không tồn tại hoặc đã xử lý" });
+    }
+
+    const post = share.post;
+    if (!post) {
+      return res.status(404).json({ error: "Bài viết không còn tồn tại" });
+    }
+
+    // Thêm post vào danh sách shared posts của user (nếu chưa có)
+    const user = await User.findById(req.user._id);
+    if (!user.sharedPosts) {
+      user.sharedPosts = [];
+    }
+    if (!user.sharedPosts.includes(post._id)) {
+      user.sharedPosts.push(post._id);
+      await user.save();
+    }
+
+    share.status = "accepted";
+    await share.save();
+
+    res.json({ success: true, post });
+  } catch (error) {
+    console.error("Error accepting post share:", error);
+    res.status(500).json({ error: "Không thể chấp nhận chia sẻ" });
+  }
+});
+
+// Người nhận từ chối chia sẻ
+router.post('/shares/:shareId/reject', protectRoute, async (req, res) => {
+  try {
+    const { shareId } = req.params;
+
+    const share = await PostShare.findOne({
+      _id: shareId,
+      to: req.user._id,
+      status: "pending",
+    });
+
+    if (!share) {
+      return res.status(404).json({ error: "Lời mời chia sẻ không tồn tại hoặc đã xử lý" });
+    }
+
+    share.status = "rejected";
+    await share.save();
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error rejecting post share:", error);
+    res.status(500).json({ error: "Không thể từ chối chia sẻ" });
+  }
+});
+
+// Lấy danh sách posts đã được chia sẻ và mình đã chấp nhận
+router.get('/shared/my', protectRoute, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user || !user.sharedPosts || user.sharedPosts.length === 0) {
+      return res.json([]);
+    }
+
+    const posts = await Post.find({
+      _id: { $in: user.sharedPosts }
+    })
+      .populate('user', 'username profileImage')
+      .sort({ createdAt: -1 });
+
+    res.json(posts);
+  } catch (error) {
+    console.error("Error fetching shared posts:", error);
+    res.status(500).json({ error: "Không thể lấy danh sách bài viết được chia sẻ" });
+  }
+});
+
+// Cập nhật status của bài viết (chỉ chủ bài viết mới được phép)
+router.patch('/:id/status', protectRoute, async (req, res) => {
+  try {
+    const { status } = req.body;
+    if (!status || !['public', 'private'].includes(status)) {
+      return res.status(400).json({ error: 'Status phải là "public" hoặc "private"' });
+    }
+
+    const post = await Post.findById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ error: 'Không tìm thấy bài viết' });
+    }
+
+    // Chỉ chủ bài viết mới được phép thay đổi status
+    if (String(post.user) !== String(req.user._id)) {
+      return res.status(403).json({ error: 'Bạn không có quyền thay đổi status của bài viết này' });
+    }
+
+    post.status = status;
+    await post.save();
+
+    res.json({ success: true, post });
+  } catch (error) {
+    console.error("Error updating post status:", error);
+    res.status(500).json({ error: "Không thể cập nhật status" });
   }
 });
 

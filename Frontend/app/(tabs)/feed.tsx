@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View,
   FlatList,
@@ -14,7 +14,7 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
-import { Link, useFocusEffect } from 'expo-router';
+import { Link, useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
 import PostCard from '../../components/PostCard';
@@ -270,6 +270,8 @@ const CommentModal = ({ visible, onClose, postId, onCommentPosted }: {
 // --- COMPONENT FEEDSCREEN CHÍNH ---
 export default function FeedScreen() {
   const { token, user, setUser } = useAuthStore();
+  const params = useLocalSearchParams();
+  const router = useRouter();
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -278,8 +280,20 @@ export default function FeedScreen() {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isCommentModalVisible, setCommentModalVisible] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  const hasOpenedFromParams = useRef<string | null>(null);
+  const flatListRef = useRef<FlatList>(null);
+  const hasScrolledToPost = useRef<string | null>(null);
 
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
+  
+  // Reset hasOpenedFromParams khi params.postId thay đổi
+  useEffect(() => {
+    const currentPostId = Array.isArray(params.postId) ? params.postId[0] : params.postId;
+    if (currentPostId && hasOpenedFromParams.current !== currentPostId) {
+      hasOpenedFromParams.current = null; // Reset để có thể mở modal với postId mới
+      hasScrolledToPost.current = null; // Reset scroll flag
+    }
+  }, [params.postId]);
 
   const fetchPosts = async () => {
     try {
@@ -344,11 +358,80 @@ export default function FeedScreen() {
     }
   }, [debouncedSearchQuery]);
 
+  // Fetch post cụ thể nếu có postId trong params nhưng chưa có trong danh sách
+  useEffect(() => {
+    const currentPostId = Array.isArray(params.postId) ? params.postId[0] : params.postId;
+    if (currentPostId && displayedPosts.length > 0) {
+      const postExists = displayedPosts.find(p => p._id === currentPostId);
+      if (!postExists) {
+        // Fetch post cụ thể nếu chưa có trong danh sách
+        fetch(`${API_URL}/posts/${currentPostId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (data && data._id) {
+              // Thêm post vào đầu danh sách
+              setPosts(prevPosts => {
+                // Kiểm tra xem post đã có chưa
+                if (!prevPosts.find(p => p._id === data._id)) {
+                  return [data, ...prevPosts];
+                }
+                return prevPosts;
+              });
+            }
+          })
+          .catch(err => console.error('Failed to fetch post:', err));
+      }
+    }
+  }, [displayedPosts, params.postId, token]);
+
+  // Scroll đến post khi có postId trong params
+  useEffect(() => {
+    const currentPostId = Array.isArray(params.postId) ? params.postId[0] : params.postId;
+    if (currentPostId && displayedPosts.length > 0 && hasScrolledToPost.current !== currentPostId) {
+      const postIndex = displayedPosts.findIndex(p => p._id === currentPostId);
+      if (postIndex !== -1) {
+        // Đợi một chút để FlatList render xong
+        setTimeout(() => {
+          flatListRef.current?.scrollToIndex({
+            index: postIndex,
+            animated: true,
+            viewPosition: 0.1, // Scroll để post hiện ở khoảng 10% từ đầu màn hình
+          });
+          hasScrolledToPost.current = currentPostId;
+        }, 300);
+      } else {
+        // Nếu post chưa có trong danh sách, đợi thêm một chút rồi thử lại
+        setTimeout(() => {
+          const newPostIndex = displayedPosts.findIndex(p => p._id === currentPostId);
+          if (newPostIndex !== -1 && flatListRef.current) {
+            flatListRef.current.scrollToIndex({
+              index: newPostIndex,
+              animated: true,
+              viewPosition: 0.1,
+            });
+            hasScrolledToPost.current = currentPostId;
+          }
+        }, 1000);
+      }
+    }
+  }, [displayedPosts, params.postId]);
+
   useFocusEffect(useCallback(() => {
     if (!isCommentModalVisible) {
       fetchPosts();
     }
-  }, [isCommentModalVisible]));
+    
+    // Nếu có postId từ params và chưa mở modal cho postId này, mở comment modal một lần
+    const currentPostId = Array.isArray(params.postId) ? params.postId[0] : params.postId;
+    const shouldOpenComments = params.openComments === 'true';
+    if (currentPostId && hasOpenedFromParams.current !== currentPostId && shouldOpenComments) {
+      setSelectedPostId(currentPostId);
+      setCommentModalVisible(true);
+      hasOpenedFromParams.current = currentPostId;
+    }
+  }, [isCommentModalVisible, params.postId, params.openComments]));
   
   // Sửa lỗi: Chỉ giữ lại một hàm handleCommentPress
   const handleCommentPress = (postId: string) => {
@@ -360,6 +443,10 @@ export default function FeedScreen() {
   const closeCommentModal = () => {
     setCommentModalVisible(false);
     setSelectedPostId(null);
+    // Clear params để tránh modal tự mở lại
+    if (params.postId) {
+      router.replace("/(tabs)/feed");
+    }
     fetchPosts(); // 🔁 Đồng bộ lại dữ liệu từ server (bao gồm commentCount)
     };
 
@@ -477,6 +564,7 @@ export default function FeedScreen() {
         </View>
         {showNoResults ? <Text style={styles.emptyText}>Không tìm thấy kết quả nào.</Text> : (
             <FlatList
+                ref={flatListRef}
                 data={displayedPosts}
                 keyExtractor={(item) => item._id}
                 extraData={posts}
@@ -489,12 +577,26 @@ export default function FeedScreen() {
                         onDelete={handleDeletePost}
                         userSavedPosts={user?.savedPosts || []}
                         onSave={handleSavePost}
-                        currentUserId={user?._id} 
+                        currentUserId={user?._id}
+                        onStatusChange={(postId, newStatus) => {
+                          setPosts(prevPosts =>
+                            prevPosts.map(p => p._id === postId ? { ...p, status: newStatus } : p)
+                          );
+                        }}
                     />
                 )}
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
                 contentContainerStyle={{ padding: 12 }}
                 showsVerticalScrollIndicator={false}
+                onScrollToIndexFailed={(info) => {
+                    // Xử lý lỗi khi scroll đến index không hợp lệ
+                    const wait = new Promise(resolve => setTimeout(resolve, 500));
+                    wait.then(() => {
+                        if (flatListRef.current && info.index < displayedPosts.length) {
+                            flatListRef.current.scrollToIndex({ index: info.index, animated: true });
+                        }
+                    });
+                }}
             />
         )}
         <Link href="/create-post" asChild>
