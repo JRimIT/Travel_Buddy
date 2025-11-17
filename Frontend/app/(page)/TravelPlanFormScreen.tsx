@@ -65,24 +65,28 @@ const TravelPlanFormScreen = () => {
     return `${day}/${month}/${year}`;
     };
 
-   const goToHomeTypeScreen = () => {
-  const numDays = getTripDays(startDate, endDate);
-  const daysArr = [];
+  const goToHomeTypeScreen = () => {
+    if (!startDate || !endDate) return;
 
-  for (let i = 0; i < numDays; i++) {
-    daysArr.push({
-      day: i + 1,
-      date: addDays(startDate, i),
-      activities: [],
-    });
-  }
+    const numDays = getTripDays(startDate, endDate);
+    const daysArr = [];
 
-  dispatch(setUserStartDate(formatDate(startDate)))
-  dispatch(setUserEndDate(formatDate(endDate)))
-  dispatch(setUserTravelDays(numDays))
-  dispatch(setUserSchedule(daysArr));   
-  router.push('HomeTypeScreen');
-}
+    for (let i = 0; i < numDays; i++) {
+      daysArr.push({
+        day: i + 1,
+        date: addDays(startDate, i),
+        activities: [],
+      });
+    }
+
+    dispatch(setUserStartDate(addDays(startDate, 0))); // ISO format
+    dispatch(setUserEndDate(addDays(endDate, 0)));     // ISO format
+    dispatch(setUserTravelDays(numDays));
+    dispatch(setUserSchedule(daysArr));
+
+    router.push('HomeTypeScreen');
+  };
+
 
 
   return (

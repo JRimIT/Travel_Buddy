@@ -196,5 +196,2633 @@
     "soGheTrong": 72,
     "gioDi": "08:42",
     "gioDen": "08:42"
-  }
+  },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Hà Nội",
+      "ngayDi": "2025-12-01",
+      "chuyenTau": "HÀ1",
+      "soGheTrong": 49,
+      "gioDi": "22:07",
+      "gioDen": "13:48"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Hà Nội",
+      "ngayDi": "2025-11-13",
+      "chuyenTau": "HÀ2",
+      "soGheTrong": 96,
+      "gioDi": "04:12",
+      "gioDen": "12:39"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Hà Nội",
+      "ngayDi": "2025-11-29",
+      "chuyenTau": "HÀ3",
+      "soGheTrong": 92,
+      "gioDi": "08:21",
+      "gioDen": "05:15"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Hà Nội",
+      "ngayDi": "2025-11-15",
+      "chuyenTau": "HÀ4",
+      "soGheTrong": 89,
+      "gioDi": "22:30",
+      "gioDen": "13:31"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Hà Nội",
+      "ngayDi": "2025-11-18",
+      "chuyenTau": "HÀ5",
+      "soGheTrong": 5,
+      "gioDi": "22:24",
+      "gioDen": "17:46"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Thành phố Hồ Chí Minh",
+      "ngayDi": "2025-11-16",
+      "chuyenTau": "TH1",
+      "soGheTrong": 15,
+      "gioDi": "13:31",
+      "gioDen": "18:20"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Thành phố Hồ Chí Minh",
+      "ngayDi": "2025-12-01",
+      "chuyenTau": "TH2",
+      "soGheTrong": 8,
+      "gioDi": "04:35",
+      "gioDen": "16:55"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Thành phố Hồ Chí Minh",
+      "ngayDi": "2025-12-02",
+      "chuyenTau": "TH3",
+      "soGheTrong": 93,
+      "gioDi": "20:36",
+      "gioDen": "23:13"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Thành phố Hồ Chí Minh",
+      "ngayDi": "2025-11-29",
+      "chuyenTau": "TH4",
+      "soGheTrong": 12,
+      "gioDi": "10:03",
+      "gioDen": "15:59"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Thành phố Hồ Chí Minh",
+      "ngayDi": "2025-11-16",
+      "chuyenTau": "TH5",
+      "soGheTrong": 19,
+      "gioDi": "08:40",
+      "gioDen": "23:25"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Hải Phòng",
+      "ngayDi": "2025-11-25",
+      "chuyenTau": "HẢ1",
+      "soGheTrong": 99,
+      "gioDi": "13:40",
+      "gioDen": "17:16"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Hải Phòng",
+      "ngayDi": "2025-12-02",
+      "chuyenTau": "HẢ2",
+      "soGheTrong": 12,
+      "gioDi": "18:07",
+      "gioDen": "08:13"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Hải Phòng",
+      "ngayDi": "2025-11-13",
+      "chuyenTau": "HẢ3",
+      "soGheTrong": 45,
+      "gioDi": "23:22",
+      "gioDen": "07:35"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Hải Phòng",
+      "ngayDi": "2025-11-21",
+      "chuyenTau": "HẢ4",
+      "soGheTrong": 59,
+      "gioDi": "04:19",
+      "gioDen": "07:27"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Hải Phòng",
+      "ngayDi": "2025-11-16",
+      "chuyenTau": "HẢ5",
+      "soGheTrong": 35,
+      "gioDi": "07:41",
+      "gioDen": "01:23"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Đà Nẵng",
+      "ngayDi": "2025-11-20",
+      "chuyenTau": "ĐÀ1",
+      "soGheTrong": 61,
+      "gioDi": "12:19",
+      "gioDen": "01:28"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Đà Nẵng",
+      "ngayDi": "2025-11-16",
+      "chuyenTau": "ĐÀ2",
+      "soGheTrong": 47,
+      "gioDi": "12:38",
+      "gioDen": "01:07"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Cần Thơ",
+      "ngayDi": "2025-11-24",
+      "chuyenTau": "CẦ1",
+      "soGheTrong": 24,
+      "gioDi": "20:37",
+      "gioDen": "20:15"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Cần Thơ",
+      "ngayDi": "2025-12-02",
+      "chuyenTau": "CẦ2",
+      "soGheTrong": 17,
+      "gioDi": "21:07",
+      "gioDen": "23:21"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Cần Thơ",
+      "ngayDi": "2025-11-20",
+      "chuyenTau": "CẦ3",
+      "soGheTrong": 54,
+      "gioDi": "11:27",
+      "gioDen": "15:49"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Cần Thơ",
+      "ngayDi": "2025-11-28",
+      "chuyenTau": "CẦ4",
+      "soGheTrong": 66,
+      "gioDi": "11:38",
+      "gioDen": "07:21"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Cần Thơ",
+      "ngayDi": "2025-11-26",
+      "chuyenTau": "CẦ5",
+      "soGheTrong": 20,
+      "gioDi": "21:15",
+      "gioDen": "03:58"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Huế",
+      "ngayDi": "2025-11-15",
+      "chuyenTau": "HU1",
+      "soGheTrong": 79,
+      "gioDi": "02:40",
+      "gioDen": "13:42"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Huế",
+      "ngayDi": "2025-11-17",
+      "chuyenTau": "HU2",
+      "soGheTrong": 66,
+      "gioDi": "18:48",
+      "gioDen": "18:37"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Huế",
+      "ngayDi": "2025-11-19",
+      "chuyenTau": "HU3",
+      "soGheTrong": 83,
+      "gioDi": "17:49",
+      "gioDen": "16:24"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Huế",
+      "ngayDi": "2025-11-18",
+      "chuyenTau": "HU4",
+      "soGheTrong": 14,
+      "gioDi": "08:47",
+      "gioDen": "11:47"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Huế",
+      "ngayDi": "2025-11-30",
+      "chuyenTau": "HU5",
+      "soGheTrong": 15,
+      "gioDi": "15:08",
+      "gioDen": "01:02"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Vĩnh Phúc",
+      "ngayDi": "2025-11-17",
+      "chuyenTau": "VĨ1",
+      "soGheTrong": 14,
+      "gioDi": "09:03",
+      "gioDen": "11:42"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Vĩnh Phúc",
+      "ngayDi": "2025-11-30",
+      "chuyenTau": "VĨ2",
+      "soGheTrong": 89,
+      "gioDi": "14:21",
+      "gioDen": "18:57"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Vĩnh Phúc",
+      "ngayDi": "2025-11-27",
+      "chuyenTau": "VĨ3",
+      "soGheTrong": 81,
+      "gioDi": "17:39",
+      "gioDen": "18:17"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Vĩnh Phúc",
+      "ngayDi": "2025-11-19",
+      "chuyenTau": "VĨ4",
+      "soGheTrong": 86,
+      "gioDi": "11:24",
+      "gioDen": "18:47"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Vĩnh Phúc",
+      "ngayDi": "2025-11-26",
+      "chuyenTau": "VĨ5",
+      "soGheTrong": 5,
+      "gioDi": "01:28",
+      "gioDen": "21:10"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bắc Ninh",
+      "ngayDi": "2025-11-21",
+      "chuyenTau": "BẮ1",
+      "soGheTrong": 11,
+      "gioDi": "08:11",
+      "gioDen": "06:08"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bắc Ninh",
+      "ngayDi": "2025-11-25",
+      "chuyenTau": "BẮ2",
+      "soGheTrong": 92,
+      "gioDi": "11:02",
+      "gioDen": "09:31"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bắc Ninh",
+      "ngayDi": "2025-11-13",
+      "chuyenTau": "BẮ3",
+      "soGheTrong": 12,
+      "gioDi": "19:30",
+      "gioDen": "13:29"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bắc Ninh",
+      "ngayDi": "2025-11-18",
+      "chuyenTau": "BẮ4",
+      "soGheTrong": 96,
+      "gioDi": "10:58",
+      "gioDen": "04:09"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bắc Ninh",
+      "ngayDi": "2025-11-29",
+      "chuyenTau": "BẮ5",
+      "soGheTrong": 83,
+      "gioDi": "15:43",
+      "gioDen": "23:36"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Quảng Ninh",
+      "ngayDi": "2025-11-12",
+      "chuyenTau": "QU1",
+      "soGheTrong": 95,
+      "gioDi": "22:15",
+      "gioDen": "11:23"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Quảng Ninh",
+      "ngayDi": "2025-11-28",
+      "chuyenTau": "QU2",
+      "soGheTrong": 45,
+      "gioDi": "13:24",
+      "gioDen": "04:32"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Quảng Ninh",
+      "ngayDi": "2025-11-29",
+      "chuyenTau": "QU3",
+      "soGheTrong": 34,
+      "gioDi": "21:50",
+      "gioDen": "16:30"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Quảng Ninh",
+      "ngayDi": "2025-11-15",
+      "chuyenTau": "QU4",
+      "soGheTrong": 51,
+      "gioDi": "18:51",
+      "gioDen": "22:01"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Quảng Ninh",
+      "ngayDi": "2025-11-16",
+      "chuyenTau": "QU5",
+      "soGheTrong": 87,
+      "gioDi": "04:40",
+      "gioDen": "18:08"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Hải Dương",
+      "ngayDi": "2025-11-12",
+      "chuyenTau": "HẢ1",
+      "soGheTrong": 63,
+      "gioDi": "20:01",
+      "gioDen": "18:52"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Hải Dương",
+      "ngayDi": "2025-11-21",
+      "chuyenTau": "HẢ2",
+      "soGheTrong": 14,
+      "gioDi": "21:29",
+      "gioDen": "23:05"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Hải Dương",
+      "ngayDi": "2025-11-30",
+      "chuyenTau": "HẢ3",
+      "soGheTrong": 69,
+      "gioDi": "04:47",
+      "gioDen": "14:24"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Hải Dương",
+      "ngayDi": "2025-11-13",
+      "chuyenTau": "HẢ4",
+      "soGheTrong": 80,
+      "gioDi": "00:01",
+      "gioDen": "22:08"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Hải Dương",
+      "ngayDi": "2025-11-23",
+      "chuyenTau": "HẢ5",
+      "soGheTrong": 92,
+      "gioDi": "16:28",
+      "gioDen": "18:59"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Hưng Yên",
+      "ngayDi": "2025-11-14",
+      "chuyenTau": "HƯ1",
+      "soGheTrong": 79,
+      "gioDi": "05:42",
+      "gioDen": "04:47"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Hưng Yên",
+      "ngayDi": "2025-11-25",
+      "chuyenTau": "HƯ2",
+      "soGheTrong": 22,
+      "gioDi": "18:32",
+      "gioDen": "22:00"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Hưng Yên",
+      "ngayDi": "2025-11-16",
+      "chuyenTau": "HƯ3",
+      "soGheTrong": 32,
+      "gioDi": "01:01",
+      "gioDen": "21:36"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Hưng Yên",
+      "ngayDi": "2025-11-13",
+      "chuyenTau": "HƯ4",
+      "soGheTrong": 42,
+      "gioDi": "10:44",
+      "gioDen": "05:53"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Hưng Yên",
+      "ngayDi": "2025-11-14",
+      "chuyenTau": "HƯ5",
+      "soGheTrong": 71,
+      "gioDi": "22:32",
+      "gioDen": "18:03"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Thái Bình",
+      "ngayDi": "2025-11-14",
+      "chuyenTau": "TH1",
+      "soGheTrong": 60,
+      "gioDi": "06:16",
+      "gioDen": "22:55"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Thái Bình",
+      "ngayDi": "2025-11-17",
+      "chuyenTau": "TH2",
+      "soGheTrong": 61,
+      "gioDi": "08:05",
+      "gioDen": "23:37"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Thái Bình",
+      "ngayDi": "2025-12-02",
+      "chuyenTau": "TH3",
+      "soGheTrong": 59,
+      "gioDi": "13:47",
+      "gioDen": "07:31"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Thái Bình",
+      "ngayDi": "2025-11-26",
+      "chuyenTau": "TH4",
+      "soGheTrong": 80,
+      "gioDi": "00:36",
+      "gioDen": "13:03"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Thái Bình",
+      "ngayDi": "2025-11-12",
+      "chuyenTau": "TH5",
+      "soGheTrong": 100,
+      "gioDi": "13:09",
+      "gioDen": "04:05"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Hà Nam",
+      "ngayDi": "2025-11-25",
+      "chuyenTau": "HÀ1",
+      "soGheTrong": 74,
+      "gioDi": "07:55",
+      "gioDen": "17:55"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Hà Nam",
+      "ngayDi": "2025-11-25",
+      "chuyenTau": "HÀ2",
+      "soGheTrong": 8,
+      "gioDi": "07:58",
+      "gioDen": "02:15"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Hà Nam",
+      "ngayDi": "2025-11-23",
+      "chuyenTau": "HÀ3",
+      "soGheTrong": 100,
+      "gioDi": "20:35",
+      "gioDen": "00:34"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Hà Nam",
+      "ngayDi": "2025-11-27",
+      "chuyenTau": "HÀ4",
+      "soGheTrong": 20,
+      "gioDi": "18:19",
+      "gioDen": "00:20"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Hà Nam",
+      "ngayDi": "2025-11-25",
+      "chuyenTau": "HÀ5",
+      "soGheTrong": 63,
+      "gioDi": "02:38",
+      "gioDen": "08:20"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Nam Định",
+      "ngayDi": "2025-11-22",
+      "chuyenTau": "NA1",
+      "soGheTrong": 85,
+      "gioDi": "03:51",
+      "gioDen": "07:38"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Nam Định",
+      "ngayDi": "2025-11-18",
+      "chuyenTau": "NA2",
+      "soGheTrong": 86,
+      "gioDi": "07:27",
+      "gioDen": "10:54"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Nam Định",
+      "ngayDi": "2025-11-22",
+      "chuyenTau": "NA3",
+      "soGheTrong": 26,
+      "gioDi": "07:34",
+      "gioDen": "22:37"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Nam Định",
+      "ngayDi": "2025-11-21",
+      "chuyenTau": "NA4",
+      "soGheTrong": 44,
+      "gioDi": "12:19",
+      "gioDen": "15:43"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Nam Định",
+      "ngayDi": "2025-11-12",
+      "chuyenTau": "NA5",
+      "soGheTrong": 62,
+      "gioDi": "02:06",
+      "gioDen": "14:18"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Ninh Bình",
+      "ngayDi": "2025-11-12",
+      "chuyenTau": "NI1",
+      "soGheTrong": 90,
+      "gioDi": "22:43",
+      "gioDen": "02:54"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Ninh Bình",
+      "ngayDi": "2025-11-17",
+      "chuyenTau": "NI2",
+      "soGheTrong": 98,
+      "gioDi": "05:21",
+      "gioDen": "04:19"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Ninh Bình",
+      "ngayDi": "2025-11-14",
+      "chuyenTau": "NI3",
+      "soGheTrong": 30,
+      "gioDi": "22:23",
+      "gioDen": "16:16"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Ninh Bình",
+      "ngayDi": "2025-11-24",
+      "chuyenTau": "NI4",
+      "soGheTrong": 38,
+      "gioDi": "04:50",
+      "gioDen": "03:54"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Ninh Bình",
+      "ngayDi": "2025-12-01",
+      "chuyenTau": "NI5",
+      "soGheTrong": 37,
+      "gioDi": "21:39",
+      "gioDen": "18:47"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Hà Giang",
+      "ngayDi": "2025-11-30",
+      "chuyenTau": "HÀ1",
+      "soGheTrong": 55,
+      "gioDi": "22:01",
+      "gioDen": "00:01"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Hà Giang",
+      "ngayDi": "2025-11-16",
+      "chuyenTau": "HÀ2",
+      "soGheTrong": 42,
+      "gioDi": "04:52",
+      "gioDen": "21:00"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Hà Giang",
+      "ngayDi": "2025-11-24",
+      "chuyenTau": "HÀ3",
+      "soGheTrong": 21,
+      "gioDi": "21:35",
+      "gioDen": "18:22"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Hà Giang",
+      "ngayDi": "2025-11-15",
+      "chuyenTau": "HÀ4",
+      "soGheTrong": 44,
+      "gioDi": "03:03",
+      "gioDen": "20:54"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Hà Giang",
+      "ngayDi": "2025-11-18",
+      "chuyenTau": "HÀ5",
+      "soGheTrong": 7,
+      "gioDi": "14:36",
+      "gioDen": "00:56"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Cao Bằng",
+      "ngayDi": "2025-11-16",
+      "chuyenTau": "CA1",
+      "soGheTrong": 41,
+      "gioDi": "17:54",
+      "gioDen": "16:25"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Cao Bằng",
+      "ngayDi": "2025-11-15",
+      "chuyenTau": "CA2",
+      "soGheTrong": 68,
+      "gioDi": "22:12",
+      "gioDen": "20:29"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Cao Bằng",
+      "ngayDi": "2025-11-15",
+      "chuyenTau": "CA3",
+      "soGheTrong": 93,
+      "gioDi": "22:54",
+      "gioDen": "15:20"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Cao Bằng",
+      "ngayDi": "2025-11-28",
+      "chuyenTau": "CA4",
+      "soGheTrong": 72,
+      "gioDi": "06:25",
+      "gioDen": "14:57"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Cao Bằng",
+      "ngayDi": "2025-11-16",
+      "chuyenTau": "CA5",
+      "soGheTrong": 21,
+      "gioDi": "02:51",
+      "gioDen": "14:27"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bắc Kạn",
+      "ngayDi": "2025-11-25",
+      "chuyenTau": "BẮ1",
+      "soGheTrong": 79,
+      "gioDi": "04:11",
+      "gioDen": "13:26"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bắc Kạn",
+      "ngayDi": "2025-11-14",
+      "chuyenTau": "BẮ2",
+      "soGheTrong": 56,
+      "gioDi": "06:58",
+      "gioDen": "11:55"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bắc Kạn",
+      "ngayDi": "2025-11-14",
+      "chuyenTau": "BẮ3",
+      "soGheTrong": 34,
+      "gioDi": "14:31",
+      "gioDen": "00:54"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bắc Kạn",
+      "ngayDi": "2025-11-20",
+      "chuyenTau": "BẮ4",
+      "soGheTrong": 36,
+      "gioDi": "09:11",
+      "gioDen": "21:21"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bắc Kạn",
+      "ngayDi": "2025-11-12",
+      "chuyenTau": "BẮ5",
+      "soGheTrong": 70,
+      "gioDi": "11:50",
+      "gioDen": "07:18"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Tuyên Quang",
+      "ngayDi": "2025-12-02",
+      "chuyenTau": "TU1",
+      "soGheTrong": 41,
+      "gioDi": "14:18",
+      "gioDen": "00:09"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Tuyên Quang",
+      "ngayDi": "2025-12-01",
+      "chuyenTau": "TU2",
+      "soGheTrong": 59,
+      "gioDi": "06:48",
+      "gioDen": "09:06"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Tuyên Quang",
+      "ngayDi": "2025-11-24",
+      "chuyenTau": "TU3",
+      "soGheTrong": 42,
+      "gioDi": "13:16",
+      "gioDen": "18:24"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Tuyên Quang",
+      "ngayDi": "2025-11-30",
+      "chuyenTau": "TU4",
+      "soGheTrong": 18,
+      "gioDi": "19:35",
+      "gioDen": "15:22"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Tuyên Quang",
+      "ngayDi": "2025-11-12",
+      "chuyenTau": "TU5",
+      "soGheTrong": 44,
+      "gioDi": "20:48",
+      "gioDen": "05:48"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Lào Cai",
+      "ngayDi": "2025-11-13",
+      "chuyenTau": "LÀ1",
+      "soGheTrong": 79,
+      "gioDi": "07:12",
+      "gioDen": "22:59"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Lào Cai",
+      "ngayDi": "2025-11-14",
+      "chuyenTau": "LÀ2",
+      "soGheTrong": 82,
+      "gioDi": "19:36",
+      "gioDen": "14:01"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Lào Cai",
+      "ngayDi": "2025-11-26",
+      "chuyenTau": "LÀ3",
+      "soGheTrong": 49,
+      "gioDi": "21:35",
+      "gioDen": "18:01"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Lào Cai",
+      "ngayDi": "2025-11-22",
+      "chuyenTau": "LÀ4",
+      "soGheTrong": 48,
+      "gioDi": "20:18",
+      "gioDen": "18:30"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Lào Cai",
+      "ngayDi": "2025-11-30",
+      "chuyenTau": "LÀ5",
+      "soGheTrong": 86,
+      "gioDi": "14:13",
+      "gioDen": "20:35"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Yên Bái",
+      "ngayDi": "2025-11-28",
+      "chuyenTau": "YÊ1",
+      "soGheTrong": 16,
+      "gioDi": "17:43",
+      "gioDen": "07:54"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Yên Bái",
+      "ngayDi": "2025-11-15",
+      "chuyenTau": "YÊ2",
+      "soGheTrong": 82,
+      "gioDi": "05:42",
+      "gioDen": "08:49"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Yên Bái",
+      "ngayDi": "2025-11-29",
+      "chuyenTau": "YÊ3",
+      "soGheTrong": 74,
+      "gioDi": "10:02",
+      "gioDen": "13:48"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Yên Bái",
+      "ngayDi": "2025-11-14",
+      "chuyenTau": "YÊ4",
+      "soGheTrong": 5,
+      "gioDi": "20:02",
+      "gioDen": "20:37"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Yên Bái",
+      "ngayDi": "2025-11-22",
+      "chuyenTau": "YÊ5",
+      "soGheTrong": 38,
+      "gioDi": "08:43",
+      "gioDen": "00:52"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Lai Châu",
+      "ngayDi": "2025-11-26",
+      "chuyenTau": "LA1",
+      "soGheTrong": 21,
+      "gioDi": "12:44",
+      "gioDen": "04:02"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Lai Châu",
+      "ngayDi": "2025-11-13",
+      "chuyenTau": "LA2",
+      "soGheTrong": 13,
+      "gioDi": "12:22",
+      "gioDen": "18:54"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Lai Châu",
+      "ngayDi": "2025-12-01",
+      "chuyenTau": "LA3",
+      "soGheTrong": 62,
+      "gioDi": "23:04",
+      "gioDen": "03:06"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Lai Châu",
+      "ngayDi": "2025-11-22",
+      "chuyenTau": "LA4",
+      "soGheTrong": 93,
+      "gioDi": "03:03",
+      "gioDen": "20:53"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Lai Châu",
+      "ngayDi": "2025-11-22",
+      "chuyenTau": "LA5",
+      "soGheTrong": 88,
+      "gioDi": "02:14",
+      "gioDen": "17:12"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Sơn La",
+      "ngayDi": "2025-11-30",
+      "chuyenTau": "SƠ1",
+      "soGheTrong": 56,
+      "gioDi": "07:17",
+      "gioDen": "06:47"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Sơn La",
+      "ngayDi": "2025-11-17",
+      "chuyenTau": "SƠ2",
+      "soGheTrong": 75,
+      "gioDi": "03:45",
+      "gioDen": "02:30"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Sơn La",
+      "ngayDi": "2025-12-02",
+      "chuyenTau": "SƠ3",
+      "soGheTrong": 87,
+      "gioDi": "01:28",
+      "gioDen": "03:02"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Sơn La",
+      "ngayDi": "2025-11-28",
+      "chuyenTau": "SƠ4",
+      "soGheTrong": 10,
+      "gioDi": "13:11",
+      "gioDen": "17:00"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Sơn La",
+      "ngayDi": "2025-11-28",
+      "chuyenTau": "SƠ5",
+      "soGheTrong": 96,
+      "gioDi": "23:40",
+      "gioDen": "00:29"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Hòa Bình",
+      "ngayDi": "2025-11-24",
+      "chuyenTau": "HÒ1",
+      "soGheTrong": 12,
+      "gioDi": "08:57",
+      "gioDen": "19:21"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Hòa Bình",
+      "ngayDi": "2025-11-19",
+      "chuyenTau": "HÒ2",
+      "soGheTrong": 10,
+      "gioDi": "21:25",
+      "gioDen": "11:09"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Hòa Bình",
+      "ngayDi": "2025-11-23",
+      "chuyenTau": "HÒ3",
+      "soGheTrong": 64,
+      "gioDi": "04:39",
+      "gioDen": "13:24"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Hòa Bình",
+      "ngayDi": "2025-11-18",
+      "chuyenTau": "HÒ4",
+      "soGheTrong": 30,
+      "gioDi": "13:31",
+      "gioDen": "08:40"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Hòa Bình",
+      "ngayDi": "2025-11-26",
+      "chuyenTau": "HÒ5",
+      "soGheTrong": 16,
+      "gioDi": "03:47",
+      "gioDen": "15:18"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Thái Nguyên",
+      "ngayDi": "2025-11-29",
+      "chuyenTau": "TH1",
+      "soGheTrong": 77,
+      "gioDi": "09:25",
+      "gioDen": "04:28"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Thái Nguyên",
+      "ngayDi": "2025-11-27",
+      "chuyenTau": "TH2",
+      "soGheTrong": 92,
+      "gioDi": "01:15",
+      "gioDen": "07:16"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Thái Nguyên",
+      "ngayDi": "2025-12-02",
+      "chuyenTau": "TH3",
+      "soGheTrong": 32,
+      "gioDi": "06:26",
+      "gioDen": "03:05"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Thái Nguyên",
+      "ngayDi": "2025-11-28",
+      "chuyenTau": "TH4",
+      "soGheTrong": 64,
+      "gioDi": "09:32",
+      "gioDen": "07:49"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Thái Nguyên",
+      "ngayDi": "2025-11-12",
+      "chuyenTau": "TH5",
+      "soGheTrong": 9,
+      "gioDi": "08:03",
+      "gioDen": "08:10"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Lạng Sơn",
+      "ngayDi": "2025-11-27",
+      "chuyenTau": "LẠ1",
+      "soGheTrong": 40,
+      "gioDi": "06:28",
+      "gioDen": "02:54"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Lạng Sơn",
+      "ngayDi": "2025-11-17",
+      "chuyenTau": "LẠ2",
+      "soGheTrong": 67,
+      "gioDi": "22:05",
+      "gioDen": "21:12"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Lạng Sơn",
+      "ngayDi": "2025-11-30",
+      "chuyenTau": "LẠ3",
+      "soGheTrong": 90,
+      "gioDi": "11:36",
+      "gioDen": "11:11"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Lạng Sơn",
+      "ngayDi": "2025-11-17",
+      "chuyenTau": "LẠ4",
+      "soGheTrong": 17,
+      "gioDi": "18:23",
+      "gioDen": "10:57"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Lạng Sơn",
+      "ngayDi": "2025-11-28",
+      "chuyenTau": "LẠ5",
+      "soGheTrong": 92,
+      "gioDi": "14:17",
+      "gioDen": "20:43"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Phú Thọ",
+      "ngayDi": "2025-11-16",
+      "chuyenTau": "PH1",
+      "soGheTrong": 55,
+      "gioDi": "14:53",
+      "gioDen": "02:28"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Phú Thọ",
+      "ngayDi": "2025-12-02",
+      "chuyenTau": "PH2",
+      "soGheTrong": 79,
+      "gioDi": "19:28",
+      "gioDen": "05:31"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Phú Thọ",
+      "ngayDi": "2025-11-21",
+      "chuyenTau": "PH3",
+      "soGheTrong": 57,
+      "gioDi": "02:55",
+      "gioDen": "13:33"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Phú Thọ",
+      "ngayDi": "2025-11-30",
+      "chuyenTau": "PH4",
+      "soGheTrong": 96,
+      "gioDi": "09:27",
+      "gioDen": "14:13"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Phú Thọ",
+      "ngayDi": "2025-11-22",
+      "chuyenTau": "PH5",
+      "soGheTrong": 36,
+      "gioDi": "22:13",
+      "gioDen": "19:34"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bắc Giang",
+      "ngayDi": "2025-11-17",
+      "chuyenTau": "BẮ1",
+      "soGheTrong": 49,
+      "gioDi": "10:51",
+      "gioDen": "21:26"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bắc Giang",
+      "ngayDi": "2025-11-21",
+      "chuyenTau": "BẮ2",
+      "soGheTrong": 80,
+      "gioDi": "07:06",
+      "gioDen": "01:51"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bắc Giang",
+      "ngayDi": "2025-11-29",
+      "chuyenTau": "BẮ3",
+      "soGheTrong": 45,
+      "gioDi": "13:46",
+      "gioDen": "20:19"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bắc Giang",
+      "ngayDi": "2025-11-30",
+      "chuyenTau": "BẮ4",
+      "soGheTrong": 12,
+      "gioDi": "21:31",
+      "gioDen": "04:22"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bắc Giang",
+      "ngayDi": "2025-11-18",
+      "chuyenTau": "BẮ5",
+      "soGheTrong": 84,
+      "gioDi": "16:07",
+      "gioDen": "02:22"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Quảng Bình",
+      "ngayDi": "2025-11-22",
+      "chuyenTau": "QU1",
+      "soGheTrong": 93,
+      "gioDi": "15:02",
+      "gioDen": "17:09"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Quảng Bình",
+      "ngayDi": "2025-12-01",
+      "chuyenTau": "QU2",
+      "soGheTrong": 10,
+      "gioDi": "14:29",
+      "gioDen": "18:58"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Quảng Bình",
+      "ngayDi": "2025-11-12",
+      "chuyenTau": "QU3",
+      "soGheTrong": 73,
+      "gioDi": "07:43",
+      "gioDen": "05:54"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Quảng Bình",
+      "ngayDi": "2025-11-14",
+      "chuyenTau": "QU4",
+      "soGheTrong": 65,
+      "gioDi": "12:55",
+      "gioDen": "00:57"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Quảng Bình",
+      "ngayDi": "2025-11-18",
+      "chuyenTau": "QU5",
+      "soGheTrong": 29,
+      "gioDi": "20:12",
+      "gioDen": "03:03"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Quảng Nam",
+      "ngayDi": "2025-11-23",
+      "chuyenTau": "QU1",
+      "soGheTrong": 83,
+      "gioDi": "18:03",
+      "gioDen": "18:49"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Quảng Nam",
+      "ngayDi": "2025-12-01",
+      "chuyenTau": "QU2",
+      "soGheTrong": 42,
+      "gioDi": "00:45",
+      "gioDen": "13:18"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Quảng Nam",
+      "ngayDi": "2025-11-16",
+      "chuyenTau": "QU3",
+      "soGheTrong": 88,
+      "gioDi": "13:58",
+      "gioDen": "16:33"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Quảng Nam",
+      "ngayDi": "2025-11-29",
+      "chuyenTau": "QU4",
+      "soGheTrong": 33,
+      "gioDi": "06:48",
+      "gioDen": "18:23"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Quảng Nam",
+      "ngayDi": "2025-11-14",
+      "chuyenTau": "QU5",
+      "soGheTrong": 16,
+      "gioDi": "23:20",
+      "gioDen": "02:40"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Quảng Ngãi",
+      "ngayDi": "2025-11-12",
+      "chuyenTau": "QU1",
+      "soGheTrong": 98,
+      "gioDi": "20:15",
+      "gioDen": "03:01"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Quảng Ngãi",
+      "ngayDi": "2025-11-26",
+      "chuyenTau": "QU2",
+      "soGheTrong": 13,
+      "gioDi": "17:55",
+      "gioDen": "02:25"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Quảng Ngãi",
+      "ngayDi": "2025-11-24",
+      "chuyenTau": "QU3",
+      "soGheTrong": 35,
+      "gioDi": "00:52",
+      "gioDen": "08:01"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Quảng Ngãi",
+      "ngayDi": "2025-11-20",
+      "chuyenTau": "QU4",
+      "soGheTrong": 22,
+      "gioDi": "23:09",
+      "gioDen": "00:25"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Quảng Ngãi",
+      "ngayDi": "2025-11-24",
+      "chuyenTau": "QU5",
+      "soGheTrong": 10,
+      "gioDi": "18:40",
+      "gioDen": "02:49"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Kon Tum",
+      "ngayDi": "2025-11-29",
+      "chuyenTau": "KO1",
+      "soGheTrong": 50,
+      "gioDi": "08:53",
+      "gioDen": "20:33"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Kon Tum",
+      "ngayDi": "2025-11-29",
+      "chuyenTau": "KO2",
+      "soGheTrong": 70,
+      "gioDi": "10:08",
+      "gioDen": "11:47"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Kon Tum",
+      "ngayDi": "2025-11-30",
+      "chuyenTau": "KO3",
+      "soGheTrong": 43,
+      "gioDi": "08:52",
+      "gioDen": "01:38"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Kon Tum",
+      "ngayDi": "2025-11-12",
+      "chuyenTau": "KO4",
+      "soGheTrong": 49,
+      "gioDi": "11:50",
+      "gioDen": "12:46"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Kon Tum",
+      "ngayDi": "2025-11-20",
+      "chuyenTau": "KO5",
+      "soGheTrong": 20,
+      "gioDi": "03:39",
+      "gioDen": "08:06"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Gia Lai",
+      "ngayDi": "2025-12-01",
+      "chuyenTau": "GI1",
+      "soGheTrong": 34,
+      "gioDi": "09:34",
+      "gioDen": "13:41"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Gia Lai",
+      "ngayDi": "2025-11-18",
+      "chuyenTau": "GI2",
+      "soGheTrong": 21,
+      "gioDi": "21:37",
+      "gioDen": "07:15"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Gia Lai",
+      "ngayDi": "2025-11-15",
+      "chuyenTau": "GI3",
+      "soGheTrong": 29,
+      "gioDi": "20:48",
+      "gioDen": "19:48"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Gia Lai",
+      "ngayDi": "2025-11-15",
+      "chuyenTau": "GI4",
+      "soGheTrong": 15,
+      "gioDi": "01:59",
+      "gioDen": "16:34"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Gia Lai",
+      "ngayDi": "2025-11-16",
+      "chuyenTau": "GI5",
+      "soGheTrong": 5,
+      "gioDi": "07:56",
+      "gioDen": "23:47"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Đắk Lắk",
+      "ngayDi": "2025-11-12",
+      "chuyenTau": "ĐẮ1",
+      "soGheTrong": 53,
+      "gioDi": "13:17",
+      "gioDen": "21:59"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Đắk Lắk",
+      "ngayDi": "2025-11-22",
+      "chuyenTau": "ĐẮ2",
+      "soGheTrong": 95,
+      "gioDi": "07:52",
+      "gioDen": "04:27"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Đắk Lắk",
+      "ngayDi": "2025-11-22",
+      "chuyenTau": "ĐẮ3",
+      "soGheTrong": 10,
+      "gioDi": "15:37",
+      "gioDen": "02:43"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Đắk Lắk",
+      "ngayDi": "2025-11-13",
+      "chuyenTau": "ĐẮ4",
+      "soGheTrong": 37,
+      "gioDi": "03:10",
+      "gioDen": "04:37"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Đắk Lắk",
+      "ngayDi": "2025-11-28",
+      "chuyenTau": "ĐẮ5",
+      "soGheTrong": 5,
+      "gioDi": "12:03",
+      "gioDen": "18:14"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Đắk Nông",
+      "ngayDi": "2025-11-18",
+      "chuyenTau": "ĐẮ1",
+      "soGheTrong": 99,
+      "gioDi": "22:27",
+      "gioDen": "23:38"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Đắk Nông",
+      "ngayDi": "2025-11-16",
+      "chuyenTau": "ĐẮ2",
+      "soGheTrong": 61,
+      "gioDi": "23:17",
+      "gioDen": "15:44"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Đắk Nông",
+      "ngayDi": "2025-11-23",
+      "chuyenTau": "ĐẮ3",
+      "soGheTrong": 8,
+      "gioDi": "00:18",
+      "gioDen": "01:39"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Đắk Nông",
+      "ngayDi": "2025-11-25",
+      "chuyenTau": "ĐẮ4",
+      "soGheTrong": 35,
+      "gioDi": "02:25",
+      "gioDen": "01:57"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Đắk Nông",
+      "ngayDi": "2025-11-25",
+      "chuyenTau": "ĐẮ5",
+      "soGheTrong": 91,
+      "gioDi": "21:25",
+      "gioDen": "02:05"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bình Phước",
+      "ngayDi": "2025-12-02",
+      "chuyenTau": "BÌ1",
+      "soGheTrong": 5,
+      "gioDi": "04:34",
+      "gioDen": "03:12"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bình Phước",
+      "ngayDi": "2025-11-12",
+      "chuyenTau": "BÌ2",
+      "soGheTrong": 13,
+      "gioDi": "23:19",
+      "gioDen": "05:29"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bình Phước",
+      "ngayDi": "2025-11-19",
+      "chuyenTau": "BÌ3",
+      "soGheTrong": 31,
+      "gioDi": "16:53",
+      "gioDen": "04:26"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bình Phước",
+      "ngayDi": "2025-11-17",
+      "chuyenTau": "BÌ4",
+      "soGheTrong": 82,
+      "gioDi": "05:58",
+      "gioDen": "11:46"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bình Phước",
+      "ngayDi": "2025-12-02",
+      "chuyenTau": "BÌ5",
+      "soGheTrong": 45,
+      "gioDi": "17:43",
+      "gioDen": "20:28"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bình Dương",
+      "ngayDi": "2025-11-25",
+      "chuyenTau": "BÌ1",
+      "soGheTrong": 17,
+      "gioDi": "00:34",
+      "gioDen": "20:27"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bình Dương",
+      "ngayDi": "2025-11-28",
+      "chuyenTau": "BÌ2",
+      "soGheTrong": 63,
+      "gioDi": "04:42",
+      "gioDen": "08:00"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bình Dương",
+      "ngayDi": "2025-11-12",
+      "chuyenTau": "BÌ3",
+      "soGheTrong": 81,
+      "gioDi": "01:06",
+      "gioDen": "15:22"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bình Dương",
+      "ngayDi": "2025-11-20",
+      "chuyenTau": "BÌ4",
+      "soGheTrong": 41,
+      "gioDi": "22:28",
+      "gioDen": "13:22"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bình Dương",
+      "ngayDi": "2025-12-01",
+      "chuyenTau": "BÌ5",
+      "soGheTrong": 99,
+      "gioDi": "15:06",
+      "gioDen": "04:29"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bình Thuận",
+      "ngayDi": "2025-11-13",
+      "chuyenTau": "BÌ1",
+      "soGheTrong": 81,
+      "gioDi": "18:26",
+      "gioDen": "15:59"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bình Thuận",
+      "ngayDi": "2025-11-23",
+      "chuyenTau": "BÌ2",
+      "soGheTrong": 33,
+      "gioDi": "21:41",
+      "gioDen": "21:25"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bình Thuận",
+      "ngayDi": "2025-11-20",
+      "chuyenTau": "BÌ3",
+      "soGheTrong": 45,
+      "gioDi": "01:08",
+      "gioDen": "13:42"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bình Thuận",
+      "ngayDi": "2025-11-29",
+      "chuyenTau": "BÌ4",
+      "soGheTrong": 96,
+      "gioDi": "03:15",
+      "gioDen": "12:22"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bình Thuận",
+      "ngayDi": "2025-11-20",
+      "chuyenTau": "BÌ5",
+      "soGheTrong": 31,
+      "gioDi": "23:34",
+      "gioDen": "03:06"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "An Giang",
+      "ngayDi": "2025-11-25",
+      "chuyenTau": "AN1",
+      "soGheTrong": 96,
+      "gioDi": "07:58",
+      "gioDen": "21:22"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "An Giang",
+      "ngayDi": "2025-11-27",
+      "chuyenTau": "AN2",
+      "soGheTrong": 33,
+      "gioDi": "13:21",
+      "gioDen": "04:14"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "An Giang",
+      "ngayDi": "2025-11-20",
+      "chuyenTau": "AN3",
+      "soGheTrong": 14,
+      "gioDi": "14:27",
+      "gioDen": "19:46"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "An Giang",
+      "ngayDi": "2025-11-12",
+      "chuyenTau": "AN4",
+      "soGheTrong": 53,
+      "gioDi": "09:38",
+      "gioDen": "21:07"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "An Giang",
+      "ngayDi": "2025-11-13",
+      "chuyenTau": "AN5",
+      "soGheTrong": 95,
+      "gioDi": "17:26",
+      "gioDen": "08:44"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Kiên Giang",
+      "ngayDi": "2025-11-13",
+      "chuyenTau": "KI1",
+      "soGheTrong": 61,
+      "gioDi": "21:09",
+      "gioDen": "06:42"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Kiên Giang",
+      "ngayDi": "2025-12-01",
+      "chuyenTau": "KI2",
+      "soGheTrong": 84,
+      "gioDi": "07:03",
+      "gioDen": "14:59"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Kiên Giang",
+      "ngayDi": "2025-11-24",
+      "chuyenTau": "KI3",
+      "soGheTrong": 13,
+      "gioDi": "02:58",
+      "gioDen": "06:26"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Kiên Giang",
+      "ngayDi": "2025-11-30",
+      "chuyenTau": "KI4",
+      "soGheTrong": 64,
+      "gioDi": "16:40",
+      "gioDen": "23:55"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Kiên Giang",
+      "ngayDi": "2025-11-29",
+      "chuyenTau": "KI5",
+      "soGheTrong": 41,
+      "gioDi": "15:34",
+      "gioDen": "19:57"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Cà Mau",
+      "ngayDi": "2025-11-25",
+      "chuyenTau": "CÀ1",
+      "soGheTrong": 14,
+      "gioDi": "00:29",
+      "gioDen": "00:18"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Cà Mau",
+      "ngayDi": "2025-11-14",
+      "chuyenTau": "CÀ2",
+      "soGheTrong": 53,
+      "gioDi": "11:06",
+      "gioDen": "08:39"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Cà Mau",
+      "ngayDi": "2025-11-23",
+      "chuyenTau": "CÀ3",
+      "soGheTrong": 6,
+      "gioDi": "19:07",
+      "gioDen": "01:32"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Cà Mau",
+      "ngayDi": "2025-11-19",
+      "chuyenTau": "CÀ4",
+      "soGheTrong": 11,
+      "gioDi": "17:32",
+      "gioDen": "12:00"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Cà Mau",
+      "ngayDi": "2025-11-19",
+      "chuyenTau": "CÀ5",
+      "soGheTrong": 32,
+      "gioDi": "16:40",
+      "gioDen": "09:56"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bạc Liêu",
+      "ngayDi": "2025-11-22",
+      "chuyenTau": "BẠ1",
+      "soGheTrong": 84,
+      "gioDi": "21:19",
+      "gioDen": "19:23"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bạc Liêu",
+      "ngayDi": "2025-11-13",
+      "chuyenTau": "BẠ2",
+      "soGheTrong": 45,
+      "gioDi": "13:07",
+      "gioDen": "10:05"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bạc Liêu",
+      "ngayDi": "2025-11-30",
+      "chuyenTau": "BẠ3",
+      "soGheTrong": 26,
+      "gioDi": "03:21",
+      "gioDen": "19:47"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bạc Liêu",
+      "ngayDi": "2025-11-28",
+      "chuyenTau": "BẠ4",
+      "soGheTrong": 46,
+      "gioDi": "07:41",
+      "gioDen": "03:49"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bạc Liêu",
+      "ngayDi": "2025-11-23",
+      "chuyenTau": "BẠ5",
+      "soGheTrong": 19,
+      "gioDi": "07:36",
+      "gioDen": "06:14"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Sóc Trăng",
+      "ngayDi": "2025-11-29",
+      "chuyenTau": "SÓ1",
+      "soGheTrong": 48,
+      "gioDi": "16:00",
+      "gioDen": "09:34"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Sóc Trăng",
+      "ngayDi": "2025-11-24",
+      "chuyenTau": "SÓ2",
+      "soGheTrong": 70,
+      "gioDi": "03:37",
+      "gioDen": "11:10"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Sóc Trăng",
+      "ngayDi": "2025-11-28",
+      "chuyenTau": "SÓ3",
+      "soGheTrong": 100,
+      "gioDi": "21:37",
+      "gioDen": "04:28"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Sóc Trăng",
+      "ngayDi": "2025-11-21",
+      "chuyenTau": "SÓ4",
+      "soGheTrong": 45,
+      "gioDi": "18:44",
+      "gioDen": "01:25"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Sóc Trăng",
+      "ngayDi": "2025-11-22",
+      "chuyenTau": "SÓ5",
+      "soGheTrong": 14,
+      "gioDi": "12:30",
+      "gioDen": "00:55"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Trà Vinh",
+      "ngayDi": "2025-11-16",
+      "chuyenTau": "TR1",
+      "soGheTrong": 83,
+      "gioDi": "15:39",
+      "gioDen": "03:44"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Trà Vinh",
+      "ngayDi": "2025-11-29",
+      "chuyenTau": "TR2",
+      "soGheTrong": 13,
+      "gioDi": "02:01",
+      "gioDen": "15:18"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Trà Vinh",
+      "ngayDi": "2025-11-19",
+      "chuyenTau": "TR3",
+      "soGheTrong": 8,
+      "gioDi": "06:52",
+      "gioDen": "19:20"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Trà Vinh",
+      "ngayDi": "2025-11-15",
+      "chuyenTau": "TR4",
+      "soGheTrong": 69,
+      "gioDi": "16:44",
+      "gioDen": "04:50"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Trà Vinh",
+      "ngayDi": "2025-11-23",
+      "chuyenTau": "TR5",
+      "soGheTrong": 74,
+      "gioDi": "18:47",
+      "gioDen": "22:04"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Vĩnh Long",
+      "ngayDi": "2025-11-22",
+      "chuyenTau": "VĨ1",
+      "soGheTrong": 10,
+      "gioDi": "22:05",
+      "gioDen": "15:44"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Vĩnh Long",
+      "ngayDi": "2025-11-28",
+      "chuyenTau": "VĨ2",
+      "soGheTrong": 98,
+      "gioDi": "23:37",
+      "gioDen": "15:20"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Vĩnh Long",
+      "ngayDi": "2025-11-13",
+      "chuyenTau": "VĨ3",
+      "soGheTrong": 17,
+      "gioDi": "22:46",
+      "gioDen": "15:28"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Vĩnh Long",
+      "ngayDi": "2025-11-29",
+      "chuyenTau": "VĨ4",
+      "soGheTrong": 78,
+      "gioDi": "14:48",
+      "gioDen": "19:02"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Vĩnh Long",
+      "ngayDi": "2025-12-02",
+      "chuyenTau": "VĨ5",
+      "soGheTrong": 54,
+      "gioDi": "12:49",
+      "gioDen": "14:02"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Long An",
+      "ngayDi": "2025-11-21",
+      "chuyenTau": "LO1",
+      "soGheTrong": 82,
+      "gioDi": "03:23",
+      "gioDen": "23:06"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Long An",
+      "ngayDi": "2025-11-29",
+      "chuyenTau": "LO2",
+      "soGheTrong": 32,
+      "gioDi": "18:02",
+      "gioDen": "05:08"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Long An",
+      "ngayDi": "2025-12-02",
+      "chuyenTau": "LO3",
+      "soGheTrong": 66,
+      "gioDi": "00:45",
+      "gioDen": "23:29"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Long An",
+      "ngayDi": "2025-11-26",
+      "chuyenTau": "LO4",
+      "soGheTrong": 12,
+      "gioDi": "00:05",
+      "gioDen": "15:50"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Long An",
+      "ngayDi": "2025-11-23",
+      "chuyenTau": "LO5",
+      "soGheTrong": 30,
+      "gioDi": "08:36",
+      "gioDen": "15:45"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Tiền Giang",
+      "ngayDi": "2025-11-22",
+      "chuyenTau": "TI1",
+      "soGheTrong": 87,
+      "gioDi": "11:30",
+      "gioDen": "13:36"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Tiền Giang",
+      "ngayDi": "2025-11-29",
+      "chuyenTau": "TI2",
+      "soGheTrong": 59,
+      "gioDi": "02:33",
+      "gioDen": "04:36"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Tiền Giang",
+      "ngayDi": "2025-11-21",
+      "chuyenTau": "TI3",
+      "soGheTrong": 44,
+      "gioDi": "17:22",
+      "gioDen": "15:07"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Tiền Giang",
+      "ngayDi": "2025-11-22",
+      "chuyenTau": "TI4",
+      "soGheTrong": 66,
+      "gioDi": "16:26",
+      "gioDen": "18:53"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Tiền Giang",
+      "ngayDi": "2025-11-24",
+      "chuyenTau": "TI5",
+      "soGheTrong": 84,
+      "gioDi": "03:09",
+      "gioDen": "03:34"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bến Tre",
+      "ngayDi": "2025-11-25",
+      "chuyenTau": "BẾ1",
+      "soGheTrong": 14,
+      "gioDi": "23:40",
+      "gioDen": "22:11"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bến Tre",
+      "ngayDi": "2025-11-24",
+      "chuyenTau": "BẾ2",
+      "soGheTrong": 24,
+      "gioDi": "18:02",
+      "gioDen": "05:57"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bến Tre",
+      "ngayDi": "2025-12-02",
+      "chuyenTau": "BẾ3",
+      "soGheTrong": 61,
+      "gioDi": "22:59",
+      "gioDen": "21:37"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bến Tre",
+      "ngayDi": "2025-11-30",
+      "chuyenTau": "BẾ4",
+      "soGheTrong": 98,
+      "gioDi": "04:51",
+      "gioDen": "20:43"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bến Tre",
+      "ngayDi": "2025-11-15",
+      "chuyenTau": "BẾ5",
+      "soGheTrong": 9,
+      "gioDi": "00:35",
+      "gioDen": "12:50"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Đồng Tháp",
+      "ngayDi": "2025-11-19",
+      "chuyenTau": "ĐỒ1",
+      "soGheTrong": 92,
+      "gioDi": "15:43",
+      "gioDen": "23:18"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Đồng Tháp",
+      "ngayDi": "2025-11-28",
+      "chuyenTau": "ĐỒ2",
+      "soGheTrong": 47,
+      "gioDi": "15:23",
+      "gioDen": "00:29"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Đồng Tháp",
+      "ngayDi": "2025-12-02",
+      "chuyenTau": "ĐỒ3",
+      "soGheTrong": 60,
+      "gioDi": "01:10",
+      "gioDen": "12:29"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Đồng Tháp",
+      "ngayDi": "2025-11-26",
+      "chuyenTau": "ĐỒ4",
+      "soGheTrong": 71,
+      "gioDi": "10:10",
+      "gioDen": "17:54"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Đồng Tháp",
+      "ngayDi": "2025-11-17",
+      "chuyenTau": "ĐỒ5",
+      "soGheTrong": 6,
+      "gioDi": "07:57",
+      "gioDen": "09:39"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "An Giang",
+      "ngayDi": "2025-11-22",
+      "chuyenTau": "AN1",
+      "soGheTrong": 86,
+      "gioDi": "06:57",
+      "gioDen": "05:12"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "An Giang",
+      "ngayDi": "2025-11-18",
+      "chuyenTau": "AN2",
+      "soGheTrong": 90,
+      "gioDi": "15:42",
+      "gioDen": "02:49"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "An Giang",
+      "ngayDi": "2025-11-16",
+      "chuyenTau": "AN3",
+      "soGheTrong": 70,
+      "gioDi": "12:11",
+      "gioDen": "20:07"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "An Giang",
+      "ngayDi": "2025-11-26",
+      "chuyenTau": "AN4",
+      "soGheTrong": 27,
+      "gioDi": "00:05",
+      "gioDen": "16:43"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "An Giang",
+      "ngayDi": "2025-11-19",
+      "chuyenTau": "AN5",
+      "soGheTrong": 44,
+      "gioDi": "16:26",
+      "gioDen": "06:57"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bình Định",
+      "ngayDi": "2025-11-27",
+      "chuyenTau": "BÌ1",
+      "soGheTrong": 45,
+      "gioDi": "06:07",
+      "gioDen": "05:37"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bình Định",
+      "ngayDi": "2025-11-24",
+      "chuyenTau": "BÌ2",
+      "soGheTrong": 26,
+      "gioDi": "13:09",
+      "gioDen": "11:10"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bình Định",
+      "ngayDi": "2025-11-17",
+      "chuyenTau": "BÌ3",
+      "soGheTrong": 14,
+      "gioDi": "23:42",
+      "gioDen": "15:21"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bình Định",
+      "ngayDi": "2025-11-13",
+      "chuyenTau": "BÌ4",
+      "soGheTrong": 37,
+      "gioDi": "00:13",
+      "gioDen": "22:42"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bình Định",
+      "ngayDi": "2025-11-12",
+      "chuyenTau": "BÌ5",
+      "soGheTrong": 72,
+      "gioDi": "04:32",
+      "gioDen": "23:42"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Khánh Hòa",
+      "ngayDi": "2025-11-16",
+      "chuyenTau": "KH1",
+      "soGheTrong": 70,
+      "gioDi": "16:51",
+      "gioDen": "05:01"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Khánh Hòa",
+      "ngayDi": "2025-11-18",
+      "chuyenTau": "KH2",
+      "soGheTrong": 88,
+      "gioDi": "13:34",
+      "gioDen": "07:21"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Khánh Hòa",
+      "ngayDi": "2025-11-24",
+      "chuyenTau": "KH3",
+      "soGheTrong": 64,
+      "gioDi": "00:07",
+      "gioDen": "00:42"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Khánh Hòa",
+      "ngayDi": "2025-11-27",
+      "chuyenTau": "KH4",
+      "soGheTrong": 70,
+      "gioDi": "21:56",
+      "gioDen": "10:05"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Khánh Hòa",
+      "ngayDi": "2025-11-25",
+      "chuyenTau": "KH5",
+      "soGheTrong": 80,
+      "gioDi": "02:43",
+      "gioDen": "06:46"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Phú Yên",
+      "ngayDi": "2025-11-12",
+      "chuyenTau": "PH1",
+      "soGheTrong": 64,
+      "gioDi": "21:02",
+      "gioDen": "22:09"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Phú Yên",
+      "ngayDi": "2025-12-02",
+      "chuyenTau": "PH2",
+      "soGheTrong": 70,
+      "gioDi": "20:53",
+      "gioDen": "20:53"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Phú Yên",
+      "ngayDi": "2025-11-14",
+      "chuyenTau": "PH3",
+      "soGheTrong": 18,
+      "gioDi": "04:41",
+      "gioDen": "09:40"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Phú Yên",
+      "ngayDi": "2025-11-14",
+      "chuyenTau": "PH4",
+      "soGheTrong": 42,
+      "gioDi": "05:20",
+      "gioDen": "00:55"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Phú Yên",
+      "ngayDi": "2025-11-20",
+      "chuyenTau": "PH5",
+      "soGheTrong": 53,
+      "gioDi": "18:59",
+      "gioDen": "22:06"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Tây Ninh",
+      "ngayDi": "2025-11-18",
+      "chuyenTau": "TÂ1",
+      "soGheTrong": 92,
+      "gioDi": "20:29",
+      "gioDen": "23:53"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Tây Ninh",
+      "ngayDi": "2025-11-16",
+      "chuyenTau": "TÂ2",
+      "soGheTrong": 96,
+      "gioDi": "23:20",
+      "gioDen": "09:43"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Tây Ninh",
+      "ngayDi": "2025-11-14",
+      "chuyenTau": "TÂ3",
+      "soGheTrong": 91,
+      "gioDi": "02:01",
+      "gioDen": "10:12"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Tây Ninh",
+      "ngayDi": "2025-11-24",
+      "chuyenTau": "TÂ4",
+      "soGheTrong": 30,
+      "gioDi": "21:13",
+      "gioDen": "01:54"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Tây Ninh",
+      "ngayDi": "2025-11-16",
+      "chuyenTau": "TÂ5",
+      "soGheTrong": 96,
+      "gioDi": "09:14",
+      "gioDen": "21:56"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Hậu Giang",
+      "ngayDi": "2025-11-12",
+      "chuyenTau": "HẬ1",
+      "soGheTrong": 58,
+      "gioDi": "03:19",
+      "gioDen": "13:49"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Hậu Giang",
+      "ngayDi": "2025-11-26",
+      "chuyenTau": "HẬ2",
+      "soGheTrong": 32,
+      "gioDi": "11:59",
+      "gioDen": "19:19"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Hậu Giang",
+      "ngayDi": "2025-11-13",
+      "chuyenTau": "HẬ3",
+      "soGheTrong": 59,
+      "gioDi": "15:40",
+      "gioDen": "00:36"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Hậu Giang",
+      "ngayDi": "2025-11-13",
+      "chuyenTau": "HẬ4",
+      "soGheTrong": 33,
+      "gioDi": "09:34",
+      "gioDen": "09:12"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Hậu Giang",
+      "ngayDi": "2025-11-19",
+      "chuyenTau": "HẬ5",
+      "soGheTrong": 71,
+      "gioDi": "11:08",
+      "gioDen": "08:46"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Ninh Thuận",
+      "ngayDi": "2025-11-19",
+      "chuyenTau": "NI1",
+      "soGheTrong": 37,
+      "gioDi": "11:32",
+      "gioDen": "04:35"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Ninh Thuận",
+      "ngayDi": "2025-11-18",
+      "chuyenTau": "NI2",
+      "soGheTrong": 18,
+      "gioDi": "20:46",
+      "gioDen": "08:01"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Ninh Thuận",
+      "ngayDi": "2025-12-01",
+      "chuyenTau": "NI3",
+      "soGheTrong": 32,
+      "gioDi": "10:23",
+      "gioDen": "09:09"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Ninh Thuận",
+      "ngayDi": "2025-11-18",
+      "chuyenTau": "NI4",
+      "soGheTrong": 24,
+      "gioDi": "23:37",
+      "gioDen": "03:57"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Ninh Thuận",
+      "ngayDi": "2025-11-18",
+      "chuyenTau": "NI5",
+      "soGheTrong": 44,
+      "gioDi": "12:20",
+      "gioDen": "03:39"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bình Phước",
+      "ngayDi": "2025-12-02",
+      "chuyenTau": "BÌ1",
+      "soGheTrong": 12,
+      "gioDi": "19:41",
+      "gioDen": "18:02"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bình Phước",
+      "ngayDi": "2025-12-01",
+      "chuyenTau": "BÌ2",
+      "soGheTrong": 12,
+      "gioDi": "14:47",
+      "gioDen": "00:11"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bình Phước",
+      "ngayDi": "2025-11-23",
+      "chuyenTau": "BÌ3",
+      "soGheTrong": 27,
+      "gioDi": "14:27",
+      "gioDen": "03:19"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bình Phước",
+      "ngayDi": "2025-11-14",
+      "chuyenTau": "BÌ4",
+      "soGheTrong": 65,
+      "gioDi": "11:21",
+      "gioDen": "10:25"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Bình Phước",
+      "ngayDi": "2025-11-24",
+      "chuyenTau": "BÌ5",
+      "soGheTrong": 17,
+      "gioDi": "14:27",
+      "gioDen": "14:36"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Quảng Trị",
+      "ngayDi": "2025-11-12",
+      "chuyenTau": "QU1",
+      "soGheTrong": 41,
+      "gioDi": "11:44",
+      "gioDen": "17:54"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Quảng Trị",
+      "ngayDi": "2025-11-30",
+      "chuyenTau": "QU2",
+      "soGheTrong": 37,
+      "gioDi": "21:56",
+      "gioDen": "09:56"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Quảng Trị",
+      "ngayDi": "2025-11-27",
+      "chuyenTau": "QU3",
+      "soGheTrong": 91,
+      "gioDi": "04:35",
+      "gioDen": "10:27"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Quảng Trị",
+      "ngayDi": "2025-11-28",
+      "chuyenTau": "QU4",
+      "soGheTrong": 40,
+      "gioDi": "02:57",
+      "gioDen": "19:13"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Quảng Trị",
+      "ngayDi": "2025-11-23",
+      "chuyenTau": "QU5",
+      "soGheTrong": 64,
+      "gioDi": "13:13",
+      "gioDen": "21:22"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Thừa Thiên Huế",
+      "ngayDi": "2025-11-14",
+      "chuyenTau": "TH1",
+      "soGheTrong": 87,
+      "gioDi": "03:03",
+      "gioDen": "04:31"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Thừa Thiên Huế",
+      "ngayDi": "2025-11-14",
+      "chuyenTau": "TH2",
+      "soGheTrong": 17,
+      "gioDi": "10:25",
+      "gioDen": "00:47"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Thừa Thiên Huế",
+      "ngayDi": "2025-12-02",
+      "chuyenTau": "TH3",
+      "soGheTrong": 67,
+      "gioDi": "00:58",
+      "gioDen": "08:39"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Thừa Thiên Huế",
+      "ngayDi": "2025-11-14",
+      "chuyenTau": "TH4",
+      "soGheTrong": 96,
+      "gioDi": "17:55",
+      "gioDen": "05:22"
+    },
+    {
+      "gaDi": "Đà Nẵng",
+      "gaDen": "Thừa Thiên Huế",
+      "ngayDi": "2025-11-28",
+      "chuyenTau": "TH5",
+      "soGheTrong": 63,
+      "gioDi": "21:57",
+      "gioDen": "09:00"
+    }
 ]
