@@ -61,6 +61,13 @@ const PROVINCES = [
     // { name: "Vinh Long", code: "VL", latitude: 10.243, longitude: 105.958, image: require('../assets/background/VinhLong.jpg') },
     // { name: "Vinh Phuc", code: "VP", latitude: 21.308, longitude: 105.604, image: require('../assets/background/VinhPhuc.jpg') },
     // { name: "Yen Bai", code: "YB", latitude: 21.705, longitude: 104.870, image: require('../assets/background/YenBai.jpg') },
+    { name: "Da Nang", code: "DNA", latitude: 15.573, longitude: 108.474, image: require('../assets/background/DaNang.jpg') },
+    { name: "Hue", code: "HUE", latitude: 15.573, longitude: 108.474, image: require('../assets/background/Hue.jpg') },
+    { name: "Da Lat", code: "DLT", latitude: 15.573, longitude: 108.474, image: require('../assets/background/DaLat.jpg') },
+    { name: "Thanh Pho Ho Chi Minh", code: "HCM", latitude: 15.573, longitude: 108.474, image: require('../assets/background/HCM.jpg') },
+    { name: "Quang Binh", code: "QBH", latitude: 15.573, longitude: 108.474, image: require('../assets/background/QuangBinh.jpg') },
+    { name: "Cao Bang", code: "CBG", latitude: 15.573, longitude: 108.474, image: require('../assets/background/CaoBang.jpg') },
+    { name: "Hai Phong", code: "CBG", latitude: 15.573, longitude: 108.474, image: require('../assets/background/HaiPhong.jpg') },
 ];
 
 export default PROVINCES;
